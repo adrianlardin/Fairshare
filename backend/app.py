@@ -3,6 +3,8 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 from database import db
+from flask_migrate import Migrate
+from models.models import User, Group, GroupMember, Expense, ExpenseSplit, Settlement
 
 load_dotenv()
 
@@ -13,6 +15,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 CORS(app)
 db.init_app(app)
+migrate = Migrate(app, db)
 
 @app.route("/")
 def home():
@@ -20,6 +23,4 @@ def home():
 
 
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
