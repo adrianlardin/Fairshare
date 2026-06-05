@@ -1,21 +1,25 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from models.models import User
 from database import db
+import bcrypt
 
 user_bp = Blueprint("user", __name__)
 
-@user_bp.route("/api/user", methods=["GET"])
-def get_users():
 
-    return jsonify({"message": "todo funcionando correctamente"})
+@user_bp.route("/user/<int:user_id>", methods=["GET"])
+def get_user():
 
-@user_bp.route("/api/user/register", methods=["POST"])
-def register_user():
-    body = request.get_json()
-    print(body)
+    return jsonify({"message": "Usuarios"}), 200
 
-    return jsonify({"message": "Registro correctamente"})
 
-@user_bp.route("/api/user/login", methods=["POST"])
-def login_user():
+@user_bp.route("/user/<int:user_id>", methods=["PUT"])
+def update_user():
 
-    return jsonify({"message": "Logeado correctamente"})
+    return jsonify({"message": "Usuario modificado correctamente"}), 200
+
+
+@user_bp.route("/user/<int:user_id>", methods=["DELETE"])
+def delete_user():
+
+    return jsonify({"message": "Usuario eliminado correctamente"}), 200
