@@ -1,7 +1,4 @@
-{"timestamp":"00:00:00.626","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:00:22.618","source":"Browser","level":"ERROR","message":"./src/app/page.js:7:5\nExpression expected\n   5 |     <>\n   6 |       <\n>  7 |     </>\n     |     ^\n   8 |   );\n   9 | }\n  10 |\n\nParsing ecmascript source code failed"}
-{"timestamp":"00:00:22.618","source":"Browser","level":"ERROR","message":"./src/app/page.js:7:6\nUnterminated regexp literal\n   5 |     <>\n   6 |       <\n>  7 |     </>\n     |      ^^\n   8 |   );\n   9 | }\n  10 |\n\nParsing ecmascript source code failed"}
-{"timestamp":"00:00:36.621","source":"Server","level":"ERROR","message":"[browser] \"./src/app/page.js:7:5\\nExpression expected\\n   5 |     <>\\n   6 |       <\\n>  7 |     </>\\n     |     ^\\n   8 |   );\\n   9 | }\\n  10 |\\n\\nParsing ecmascript source code failed\" \"\""}
-{"timestamp":"00:00:36.621","source":"Browser","level":"ERROR","message":"./src/app/page.js:7:5\nExpression expected\n   5 |     <>\n   6 |       <\n>  7 |     </>\n     |     ^\n   8 |   );\n   9 | }\n  10 |\n\nParsing ecmascript source code failed \"\""}
-{"timestamp":"00:00:36.622","source":"Server","level":"ERROR","message":"[browser] \"./src/app/page.js:7:6\\nUnterminated regexp literal\\n   5 |     <>\\n   6 |       <\\n>  7 |     </>\\n     |      ^^\\n   8 |   );\\n   9 | }\\n  10 |\\n\\nParsing ecmascript source code failed\" \"\""}
-{"timestamp":"00:00:36.622","source":"Browser","level":"ERROR","message":"./src/app/page.js:7:6\nUnterminated regexp literal\n   5 |     <>\n   6 |       <\n>  7 |     </>\n     |      ^^\n   8 |   );\n   9 | }\n  10 |\n\nParsing ecmascript source code failed \"\""}
+{"timestamp":"00:00:01.036","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:52.275","source":"Server","level":"ERROR","message":"⨯ ReferenceError: localStorage is not defined"}
+{"timestamp":"00:00:59.459","source":"Server","level":"ERROR","message":"⨯ ReferenceError: localStorage is not defined"}
+{"timestamp":"00:02:08.545","source":"Server","level":"ERROR","message":"⨯ ReferenceError: localStorage is not defined"}
