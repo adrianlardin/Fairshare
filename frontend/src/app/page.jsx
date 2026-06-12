@@ -11,16 +11,14 @@ export default function LandingPage() {
       <div className="landing-card">
         <h1>FairShare</h1>
 
-        <p>Comparte gastos de forma sencilla</p>
-
+        <p>
+          Gestiona y comparte gastos con amigos, familia o compañeros de forma
+          rápida y sencilla.
+        </p>
         <div className="landing-buttons">
-          <button onClick={() => router.push("/Login")}>
-            Iniciar sesión
-          </button>
+          <button onClick={() => router.push("/Login")}>Iniciar sesión</button>
 
-          <button onClick={() => router.push("/Register")}>
-            Registrarse
-          </button>
+          <button onClick={() => router.push("/Register")}>Registrarse</button>
         </div>
       </div>
     </div>

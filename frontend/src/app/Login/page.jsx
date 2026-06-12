@@ -3,7 +3,7 @@
 import { useState } from "react";
 import "./login.css";
 import { useRouter } from "next/navigation";
-// comentario facundo
+
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -28,7 +28,7 @@ export default function Login() {
     const data = await response.json();
 
     if (!response.ok) {
-      setError(data.error);
+      setError(data.error || "Error al iniciar sesión");
       return;
     }
 
@@ -38,7 +38,7 @@ export default function Login() {
 localStorage.setItem("token", data.token);
 localStorage.setItem("user", JSON.stringify(data.user));
 
-router.push("/Home");
+router.push("/groups");
 
   } catch (err) {
     setError("Error al conectar con el servidor");

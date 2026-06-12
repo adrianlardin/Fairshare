@@ -36,11 +36,10 @@ export default function Register() {
 
       const data = await response.json();
 
-      console.log("Respuesta:", data);
-      console.log("Status:", response.status);
+    
 
       if (!response.ok) {
-        setError(data.error);
+       setError(data.error || "Error al registrar usuario");
         return;
       }
 
@@ -50,7 +49,7 @@ export default function Register() {
         router.push("/Login");
       }, 2000);
 
-    } catch (error) {
+    } catch (err) {
       setError("Error al conectar con el servidor");
     }
   };

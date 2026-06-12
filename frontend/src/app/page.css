@@ -1,5 +1,5 @@
 .landing-container {
-  background: #000;
+  background: #0d1117;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -8,7 +8,7 @@
 
 .landing-card {
   text-align: center;
-  background: #111;
+  background: #161b22;
   padding: 50px;
   border-radius: 20px;
   box-shadow: 0 0 25px rgba(123, 211, 137, 0.2);
@@ -26,6 +26,8 @@
 .landing-card p {
   color: white;
   margin-bottom: 25px;
+  font-size: 1.1rem;
+  line-height: 1.6;
 }
 
 .landing-buttons {
@@ -41,8 +43,9 @@
   cursor: pointer;
   font-weight: bold;
   background: linear-gradient(to right, #f5d142, #7bd389);
+  transition: all 0.3s ease;
 }
 
 .landing-buttons button:hover {
-  transform: scale(1.05);
+  transform: translateY(-2px);
 }
