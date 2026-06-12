@@ -67,8 +67,3 @@ def login():
         "token": access_token,
         "user": user.serialize()
     }), 200
-
-
-@auth_bp.route("/logout", methods=["POST"])
-def logout():
-    return jsonify({"message": "Sesión cerrada"}), 200
