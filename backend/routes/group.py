@@ -123,15 +123,56 @@ def delete_group(group_id):
 #    MIEMBROS 
 
 @group_bp.route("/group/<int:group_id>/members", methods=["POST"])
-def add_member():
+@jwt_required()
+def add_member(group_id):
+    current_user_id = int(get_jwt_identity())
 
-    return jsonify({"message": "Añadir miembro"}), 201
+    # solo el admin puede añadir miembros
+    admin = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id, role="admin").first()
+    if not admin:
+        return jsonify({"error": "No tienes permiso para añadir miembros"}), 403
+
+    data = request.get_json()
+    user_id = data.get("user_id")
+
+    if not user_id:
+        return jsonify({"error": "user_id es obligatorio"}), 400
+
+    # comprueba que el usuario existe
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    # comprueba que el usuario no sea ya miembro
+    existing = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
+    if existing:
+        return jsonify({"error": "El usuario ya es miembro del grupo"}), 400
+
+    new_member = GroupMember(group_id=group_id, user_id=user_id, role="member")
+    db.session.add(new_member)
+    db.session.commit()
+
+    return jsonify(new_member.serialize()), 201
 
 
 @group_bp.route("/group/<int:group_id>/members/<int:user_id>", methods=["DELETE"])
-def remove_member():
+@jwt_required()
+def remove_member(group_id, user_id):
+    current_user_id = int(get_jwt_identity())
 
-    return jsonify({"message": "Miembro eliminado"}), 200
+    # solo el admin puede eliminar miembros
+    admin = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id, role="admin").first()
+    if not admin:
+        return jsonify({"error": "No tienes permiso para eliminar miembros"}), 403
+
+    member = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
+    if not member:
+        return jsonify({"error": "Miembro no encontrado"}), 404
+
+    db.session.delete(member)
+    db.session.commit()
+
+    return jsonify({"message": "Miembro eliminado correctamente"}), 200
 
 
 #    GASTOS 
