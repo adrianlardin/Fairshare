@@ -10,7 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
- const handleLogin = async () => {
+  const handleLogin = async () => {
   setError("");
 
   try {
