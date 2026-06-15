@@ -19,7 +19,7 @@ const LockIcon = () => (
 );
  
 const EyeOffIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#718096" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: "pointer" }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#718096" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="cursor-pointer">
     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
     <line x1="1" y1="1" x2="23" y2="23"/>
   </svg>
@@ -52,335 +52,141 @@ export default function Login() {
  
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Aquí puedes añadir tu lógica de autenticación
     console.log({ email, password, rememberMe });
   };
  
   return (
-  <div style={styles.container2}>
-    
-    <div style={styles.page}>
-      <Navbar/>
-      {/* Fondo decorativo con líneas abstractas simuladas por CSS */}
-      <div style={styles.bgOverlay} />
+    <div className="flex flex-col relative">
       
-      <div style={styles.container}>
-        {/* Encabezado */}
-        <div style={styles.header}>
-          <div style={styles.logoWrap}>
-            <LogoIcon />
+      {/* Contenedor de la página con posicionamiento fixed */}
+      <div className="bg-[#111111] fixed top-0 left-0 w-screen h-screen flex flex-col items-center justify-center overflow-y-auto p-6 z-20 font-sans antialiased">
+        
+        {/* Tu Navbar integrado */}
+        <Navbar/>
+        
+        {/* Fondo decorativo con gradientes radiales */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(243,208,76,0.03)_0%,transparent_50%),radial-gradient(circle_at_20%_80%,rgba(74,222,128,0.02)_0%,transparent_50%)] pointer-events-none" />
+        
+        {/* Estructura del Login */}
+        <div className="w-full max-w-[440px] flex flex-col gap-6 z-10">
+          
+          {/* Encabezado */}
+          <div className="text-center">
+            <div className="flex justify-center mb-4">
+              <LogoIcon />
+            </div>
+            <h1 className="text-[#E2E8F0] text-[28px] font-semibold m-0 mb-2 tracking-tight">
+              Te damos la bienvenida
+            </h1>
+            <p className="text-[#8E8E8E] text-sm m-0">
+              Inicia sesión para gestionar tus gastos compartidos.
+            </p>
           </div>
-          <h1 style={styles.title}>Te damos la bienvenida</h1>
-          <p style={styles.subtitle}>Inicia sesión para gestionar tus gastos compartidos.</p>
-        </div>
  
-        {/* Tarjeta de Login */}
-        <div style={styles.card}>
-          <form onSubmit={handleSubmit} style={styles.form}>
-            
-            {/* Input Email */}
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Correo electrónico</label>
-              <div style={styles.inputWrapper}>
-                <span style={styles.inputIcon}><MailIcon /></span>
+          {/* Tarjeta de Login */}
+          <div className="bg-[#222222] rounded-xl border-t-2 border-t-[#F3D04C] border-x border-b border-white/8 p-8 shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              
+              {/* Input Email */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[#8E8E8E] text-xs font-medium tracking-wider">
+                  Correo electrónico
+                </label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3 flex items-center">
+                    <MailIcon />
+                  </span>
+                  <input
+                    type="email"
+                    placeholder="tu@ejemplo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-[#333333] border border-white/8 rounded-md py-3 pl-[38px] pr-3 text-[#E2E8F0] text-sm outline-none transition-colors duration-200 focus:border-[#F3D04C]/50"
+                    required
+                  />
+                </div>
+              </div>
+ 
+              {/* Input Password */}
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center w-full">
+                  <label className="text-[#8E8E8E] text-xs font-medium tracking-wider">
+                    Contraseña
+                  </label>
+                  <a href="#" className="text-[#F3D04C] text-[11px] no-underline font-medium tracking-wider hover:underline">
+                    ¿Olvidaste tu contraseña?
+                  </a>
+                </div>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3 flex items-center">
+                    <LockIcon />
+                  </span>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-[#333333] border border-white/8 rounded-md py-3 pl-[38px] pr-[38px] text-[#E2E8F0] text-sm outline-none transition-colors duration-200 focus:border-[#F3D04C]/50"
+                    required
+                  />
+                  <span className="absolute right-3 flex items-center">
+                    <EyeOffIcon />
+                  </span>
+                </div>
+              </div>
+ 
+              {/* Checkbox Remember Me */}
+              <div className="flex items-center gap-[10px]">
                 <input
-                  type="email"
-                  placeholder="tu@ejemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={styles.input}
-                  required
+                  type="checkbox"
+                  id="remember"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="accent-[#F3D04C] cursor-pointer w-[15px] h-[15px]"
                 />
+                <label htmlFor="remember" className="text-[#8E8E8E] text-xs cursor-pointer select-none tracking-wider">
+                  Recordarme por 30 días
+                </label>
               </div>
-            </div>
  
-            {/* Input Password */}
-            <div style={styles.inputGroup}>
-              <div style={styles.labelRow}>
-                <label style={styles.label}>Contraseña</label>
-                <a href="#" style={styles.forgotLink}>¿Olvidaste tu contraseña?</a>
-              </div>
-              <div style={styles.inputWrapper}>
-                <span style={styles.inputIcon}><LockIcon /></span>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={styles.input}
-                  required
-                />
-                <span style={styles.inputIconRight}><EyeOffIcon /></span>
-              </div>
-            </div>
- 
-            {/* Checkbox Remember Me */}
-            <div style={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                id="remember"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                style={styles.checkbox}
-              />
-              <label htmlFor="remember" style={styles.checkboxLabel}>
-                Recordarme por 30 días
-              </label>
-            </div>
- 
-            {/* Botón Principal de Sign In */}
-            <button type="submit" style={styles.signInBtn}>
-              Iniciar sesión <span>→</span>
-            </button>
- 
-            {/* Separador */}
-            <div style={styles.dividerRow}>
-              <div style={styles.dividerLine} />
-              <span style={styles.dividerText}>O CONTINUAR CON</span>
-              <div style={styles.dividerLine} />
-            </div>
- 
-            {/* Botones de Proveedores Sociales */}
-            <div style={styles.socialRow}>
-              <button type="button" style={styles.socialBtn}>
-                <GoogleIcon />
-                <span>Google</span>
+              {/* Botón Principal de Sign In */}
+              <button type="submit" className="bg-[#F3D04C] text-[#111111] border-none rounded-md py-3.5 text-span font-semibold cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-90">
+                Iniciar sesión <span>→</span>
               </button>
-              <button type="button" style={styles.socialBtn}>
-                <AppleIcon />
-                <span>Apple</span>
-              </button>
-            </div>
  
-          </form>
-        </div>
+              {/* Separador */}
+              <div className="flex items-center gap-3 my-2">
+                <div className="flex-1 h-[1px] bg-white/8" />
+                <span className="text-[#8E8E8E] text-[10px] font-semibold tracking-widest">
+                  O CONTINUAR CON
+                </span>
+                <div className="flex-1 h-[1px] bg-white/8" />
+              </div>
  
-        {/* Footer del Login */}
-        <div style={styles.footer}>
-          <span style={styles.footerText}>¿No tienes una cuenta? </span>
-          <a href="#" style={styles.signUpLink}>Regístrate</a>
+              {/* Botones de Proveedores Sociales */}
+              <div className="flex gap-3">
+                <button type="button" className="flex-1 bg-transparent border border-white/8 rounded-md py-2.5 flex items-center justify-center gap-2 text-[#E2E8F0] text-xs font-medium cursor-pointer transition-colors duration-200 hover:bg-white/5">
+                  <GoogleIcon />
+                  <span>Google</span>
+                </button>
+                <button type="button" className="flex-1 bg-transparent border border-white/8 rounded-md py-2.5 flex items-center justify-center gap-2 text-[#E2E8F0] text-xs font-medium cursor-pointer transition-colors duration-200 hover:bg-white/5">
+                  <AppleIcon />
+                  <span>Apple</span>
+                </button>
+              </div>
+ 
+            </form>
+          </div>
+ 
+          {/* Footer del Login */}
+          <div className="text-center text-sm">
+            <span className="text-[#8E8E8E]">¿No tienes una cuenta? </span>
+            <a href="#" className="text-[#F3D04C] no-underline font-semibold hover:underline">
+              Regístrate
+            </a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   );
 }
- 
-// ── Estilos correspondientes a la imagen ─────────────────────────────────────────
-const BG = "#111111"; // Fondo oscuro de la imagen
-const CARD_BG = "#222222"; // Tarjeta gris oscuro
-const ACCENT_YELLOW = "#F3D04C"; // Color amarillo del botón principal
-const TEXT_LIGHT = "#E2E8F0"; 
-const TEXT_MUTED = "#8E8E8E";
-const INPUT_BG = "#333333";
-const BORDER_COLOR = "rgba(255, 255, 255, 0.08)";
- 
-const styles = {
-  container2: {
-    display: "flex",
-    flexDirection: "column",
-    position: "relative"
-  },
-  page: {
-    background: BG,
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    height: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-    overflowY: "auto",
-    padding: "24px",
-    zIndex: 20,
-  },
-  bgOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundImage: "radial-gradient(circle at 80% 20%, rgba(243,208,76,0.03) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(74,222,128,0.02) 0%, transparent 50%)",
-    pointerEvents: "none",
-  },
-  container: {
-    width: "100%",
-    maxWidth: 440,
-    display: "flex",
-    flexDirection: "column",
-    gap: 24,
-    zIndex: 10,
-  },
-  header: {
-    textAlign: "center",
-  },
-  logoWrap: {
-    display: "flex",
-    justifyContent: "center",
-    marginBottom: 16,
-  },
-  title: {
-    color: TEXT_LIGHT,
-    fontSize: 28,
-    fontWeight: 600,
-    margin: "0 0 8px 0",
-    letterSpacing: "-0.5px",
-  },
-  subtitle: {
-    color: TEXT_MUTED,
-    fontSize: 14,
-    margin: 0,
-  },
-  card: {
-    background: CARD_BG,
-    borderRadius: 12,
-    borderTop: `2px solid ${ACCENT_YELLOW}`, // Detalle de la línea superior amarilla
-    borderLeft: `1px solid ${BORDER_COLOR}`,
-    borderRight: `1px solid ${BORDER_COLOR}`,
-    borderBottom: `1px solid ${BORDER_COLOR}`,
-    padding: "32px",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 20,
-  },
-  inputGroup: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-  },
-  labelRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  label: {
-    color: TEXT_MUTED,
-    fontSize: 12,
-    fontWeight: 500,
-    letterSpacing: "0.5px",
-    flex: 1,
-  },
-  forgotLink: {
-    color: ACCENT_YELLOW,
-    fontSize: 11,
-    textDecoration: "none",
-    fontWeight: 500,
-    letterSpacing: "0.5px",
-  },
-  inputWrapper: {
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-  },
-  inputIcon: {
-    position: "absolute",
-    left: 12,
-    display: "flex",
-    alignItems: "center",
-  },
-  inputIconRight: {
-    position: "absolute",
-    right: 12,
-    display: "flex",
-    alignItems: "center",
-  },
-  input: {
-    width: "100%",
-    background: INPUT_BG,
-    border: `1px solid ${BORDER_COLOR}`,
-    borderRadius: 6,
-    padding: "12px 12px 12px 38px",
-    color: TEXT_LIGHT,
-    fontSize: 14,
-    outline: "none",
-    transition: "border-color 0.2s",
-  },
-  checkboxRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-  },
-  checkbox: {
-    accentColor: ACCENT_YELLOW,
-    cursor: "pointer",
-    width: 15,
-    height: 15,
-  },
-  checkboxLabel: {
-    color: TEXT_MUTED,
-    fontSize: 12,
-    cursor: "pointer",
-    userSelect: "none",
-    letterSpacing: "0.5px",
-  },
-  signInBtn: {
-    background: ACCENT_YELLOW,
-    color: "#111111",
-    border: "none",
-    borderRadius: 6,
-    padding: "14px",
-    fontSize: 15,
-    fontWeight: 600,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    transition: "opacity 0.2s",
-  },
-  dividerRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    margin: "8px 0",
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    background: BORDER_COLOR,
-  },
-  dividerText: {
-    color: TEXT_MUTED,
-    fontSize: 10,
-    fontWeight: 600,
-    letterSpacing: "1px",
-  },
-  socialRow: {
-    display: "flex",
-    gap: 12,
-  },
-  socialBtn: {
-    flex: 1,
-    background: "transparent",
-    border: `1px solid ${BORDER_COLOR}`,
-    borderRadius: 6,
-    padding: "10px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    color: TEXT_LIGHT,
-    fontSize: 13,
-    fontWeight: 500,
-    cursor: "pointer",
-    transition: "background 0.2s",
-  },
-  footer: {
-    textAlign: "center",
-    fontSize: 14,
-  },
-  footerText: {
-    color: TEXT_MUTED,
-  },
-  signUpLink: {
-    color: ACCENT_YELLOW,
-    textDecoration: "none",
-    fontWeight: 600,
-  },
-};
