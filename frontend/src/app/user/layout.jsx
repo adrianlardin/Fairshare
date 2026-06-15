@@ -23,10 +23,14 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="m-0 p-0 text-white">
-          <main className="w-full min-h-screen">
+      <body className="m-0 p-0 bg-[#121212] text-white">
+        <div className="relative min-h-screen w-full">
+          <Sidebar />
+          <main className="w-full min-h-screen flex items-center justify-center p-10">
             {children}
           </main>
+        </div>
+
       </body>
     </html>
   );
