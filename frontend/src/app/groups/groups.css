@@ -1,46 +1,54 @@
 .groups-container {
   min-height: 100vh;
-  background: #0f1117;
-  padding: 40px;
+  background: #08142c;
   color: white;
+  padding: 40px;
 }
 
 .groups-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 50px;
 }
 
 .groups-header h1 {
-  font-size: 2rem;
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.groups-header p {
+  color: #9ca3af;
 }
 
 .create-btn {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: bold;
   background: linear-gradient(
     90deg,
-    #f2c94c,
-    #a8e6a3
+    #f3d04c,
+    #b7e89f
   );
+
+  color: #111;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 .groups-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
 }
 
 .group-card {
-  background: #171b24;
-  border-radius: 16px;
-  padding: 20px;
+  background: #18233b;
+  border-radius: 18px;
+  padding: 24px;
+  text-decoration: none;
+  color: white;
   transition: 0.3s;
-  cursor: pointer;
 }
 
 .group-card:hover {
@@ -48,16 +56,15 @@
 }
 
 .group-card h2 {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .group-card p {
-  color: #bdbdbd;
-  margin-bottom: 15px;
+  color: #9ca3af;
+  margin-bottom: 20px;
 }
 
 .group-card span {
-  color: #7bd389;
-  font-size: 1.3rem;
+  color: #22c55e;
   font-weight: bold;
 }

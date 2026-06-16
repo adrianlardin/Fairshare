@@ -1,11 +1,49 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import "./groups.css";
 
 export default function Groups() {
+  const [groups, setGroups] = useState([]);
+
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(
+          "http://127.0.0.1:5000/groups",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Error al obtener grupos");
+        }
+
+        const data = await response.json();
+        setGroups(data);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+
+    fetchGroups();
+  }, []);
+
   return (
     <div className="groups-container">
 
       <div className="groups-header">
-        <h1>Select Group</h1>
+        <div>
+          <h1>Select Group</h1>
+          <p>Manage your shared travel expenses.</p>
+        </div>
+
         <button className="create-btn">
           + Create New Group
         </button>
@@ -13,29 +51,27 @@ export default function Groups() {
 
       <div className="groups-grid">
 
-        <div className="group-card">
-          <h2>Piso</h2>
-          <p>Apartment expenses</p>
-          <span>€120.00</span>
-        </div>
+        {groups.length === 0 ? (
+          <p>No groups found.</p>
+        ) : (
+          groups.map((group) => (
+            <Link
+              key={group.id}
+              href={`/groups/${group.id}`}
+              className="group-card"
+            >
+              <h2>{group.name}</h2>
 
-        <div className="group-card">
-          <h2>Viaje a Madrid</h2>
-          <p>Vacation expenses</p>
-          <span>€45.00</span>
-        </div>
+              <p>
+                {group.description || "Travel expenses"}
+              </p>
 
-        <div className="group-card">
-          <h2>Cena Jueves</h2>
-          <p>Dinner expenses</p>
-          <span>€0.00</span>
-        </div>
-
-        <div className="group-card">
-          <h2>Gym Buddies</h2>
-          <p>Sports expenses</p>
-          <span>€15.50</span>
-        </div>
+              <span>
+                {group.category || "Open Group"}
+              </span>
+            </Link>
+          ))
+        )}
 
       </div>
 
