@@ -60,8 +60,8 @@ export function Navbar() {
           ))}
         </ul>
         <div style={styles.navActions}>
-          <a href="#" style={styles.loginBtn}>Iniciar sesión</a>
-          <a href="#" style={styles.primaryBtn}>Comenzar</a>
+          <a href="/Login" style={styles.loginBtn} >Iniciar sesión</a>
+          <a href="/Register" style={styles.primaryBtn}>Comenzar</a>
         </div>
       </div>
     </nav>
