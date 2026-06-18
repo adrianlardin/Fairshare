@@ -122,6 +122,19 @@ def delete_group(group_id):
 
 #    MIEMBROS 
 
+@group_bp.route("/group/<int:group_id>/members", methods=["GET"])
+@jwt_required()
+def get_members(group_id):
+    current_user_id = int(get_jwt_identity())
+
+    member = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id).first()
+    if not member:
+        return jsonify({"error": "No tienes acceso a este grupo"}), 403
+
+    members = GroupMember.query.filter_by(group_id=group_id).all()
+    return jsonify([m.serialize() for m in members]), 200
+
+
 @group_bp.route("/group/<int:group_id>/members", methods=["POST"])
 @jwt_required()
 def add_member(group_id):
@@ -178,32 +191,142 @@ def remove_member(group_id, user_id):
 #    GASTOS 
 
 @group_bp.route("/group/<int:group_id>/expenses", methods=["GET"])
-def get_expenses():
+@jwt_required()
+def get_expenses(group_id):
+    current_user_id = int(get_jwt_identity())
 
-    return jsonify({"message": "Gastos"}), 200
+    # comprueba que el usuario pertenece al grupo
+    member = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id).first()
+    if not member:
+        return jsonify({"error": "No tienes acceso a este grupo"}), 403
+
+    expenses = Expense.query.filter_by(group_id=group_id).all()
+
+    return jsonify([e.serialize() for e in expenses]), 200
 
 
 @group_bp.route("/group/<int:group_id>/expenses", methods=["POST"])
-def create_expense():
+@jwt_required()
+def create_expense(group_id):
+    current_user_id = int(get_jwt_identity())
 
-    return jsonify({"message": "Gasto creado"}), 201
+    # comprueba que el usuario pertenece al grupo
+    member = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id).first()
+    if not member:
+        return jsonify({"error": "No tienes acceso a este grupo"}), 403
+
+    data = request.get_json()
+    description = data.get("description")
+    amount = data.get("amount")
+    splits = data.get("splits")  # lista de { user_id, amount }
+
+    if not description or not amount:
+        return jsonify({"error": "Descripcion y cantidad son obligatorios"}), 400
+
+    new_expense = Expense(
+        description=description,
+        amount=amount,
+        paid_by=current_user_id,
+        group_id=group_id
+    )
+
+    db.session.add(new_expense)
+    db.session.flush()
+
+    # crea los splits si vienen en la peticion
+    if splits:
+        for split in splits:
+            new_split = ExpenseSplit(
+                expense_id=new_expense.id,
+                user_id=split["user_id"],
+                amount=split["amount"]
+            )
+            db.session.add(new_split)
+
+    db.session.commit()
+
+    return jsonify(new_expense.serialize()), 201
 
 
 @group_bp.route("/expense/<int:expense_id>", methods=["DELETE"])
-def delete_expense():
+@jwt_required()
+def delete_expense(expense_id):
+    current_user_id = int(get_jwt_identity())
 
-    return jsonify({"message": "Gasto eliminado"}), 200
+    expense = Expense.query.get(expense_id)
+    if not expense:
+        return jsonify({"error": "Gasto no encontrado"}), 404
+
+    # solo quien pagó el gasto puede eliminarlo
+    if expense.paid_by != current_user_id:
+        return jsonify({"error": "No tienes permiso para eliminar este gasto"}), 403
+
+    db.session.delete(expense)
+    db.session.commit()
+
+    return jsonify({"message": "Gasto eliminado correctamente"}), 200
 
 
 #    PAGOS 
 
 @group_bp.route("/group/<int:group_id>/settlements", methods=["GET"])
-def get_settlements():
+@jwt_required()
+def get_settlements(group_id):
+    current_user_id = int(get_jwt_identity())
 
-    return jsonify({"message": "Pagos"}), 200
+    # comprueba que el usuario pertenece al grupo
+    member = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id).first()
+    if not member:
+        return jsonify({"error": "No tienes acceso a este grupo"}), 403
+
+    settlements = Settlement.query.filter_by(group_id=group_id).all()
+
+    return jsonify([s.serialize() for s in settlements]), 200
 
 
 @group_bp.route("/group/<int:group_id>/settlements", methods=["POST"])
-def create_settlement():
+@jwt_required()
+def create_settlement(group_id):
+    current_user_id = int(get_jwt_identity())
 
-    return jsonify({"message": "Pago creado"}), 201
+    # comprueba que el usuario pertenece al grupo
+    member = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id).first()
+    if not member:
+        return jsonify({"error": "No tienes acceso a este grupo"}), 403
+
+    data = request.get_json()
+    paid_to = data.get("paid_to")
+    amount = data.get("amount")
+
+    if not paid_to or not amount:
+        return jsonify({"error": "paid_to y amount son obligatorios"}), 400
+
+    new_settlement = Settlement(
+        group_id=group_id,
+        paid_by=current_user_id,
+        paid_to=paid_to,
+        amount=amount
+    )
+
+    db.session.add(new_settlement)
+    db.session.commit()
+
+    return jsonify(new_settlement.serialize()), 201
+
+@group_bp.route("/settlement/<int:settlement_id>/pay", methods=["PATCH"])
+@jwt_required()
+def pay_settlement(settlement_id):
+    current_user_id = int(get_jwt_identity())
+
+    settlement = db.session.get(Settlement, settlement_id)
+    if not settlement:
+        return jsonify({"error": "Pago no encontrado"}), 404
+
+    # solo quien debe pagar puede marcarlo como pagado
+    if settlement.paid_by != current_user_id:
+        return jsonify({"error": "No tienes permiso para realizar este pago"}), 403
+
+    settlement.status = "paid"
+    db.session.commit()
+
+    return jsonify(settlement.serialize()), 200

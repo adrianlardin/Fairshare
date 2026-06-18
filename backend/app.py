@@ -9,6 +9,7 @@ from models.models import User, Group, GroupMember, Expense, ExpenseSplit, Settl
 from routes.auth import auth_bp
 from routes.user import user_bp
 from routes.group import group_bp
+from routes.invitation import invitation_bp
 
 load_dotenv()
 
@@ -26,6 +27,7 @@ jwt = JWTManager(app)
 app.register_blueprint(auth_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(group_bp)
+app.register_blueprint(invitation_bp)
 
 @app.route("/")
 def home():
