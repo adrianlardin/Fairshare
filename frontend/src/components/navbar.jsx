@@ -50,7 +50,7 @@ export function Navbar() {
       <div style={styles.navInner}>
         <div style={styles.logo}>
           <LogoIcon />
-          <span style={styles.logoText}>SplitSync</span>
+          <span style={styles.logoText}>FairShare</span>
         </div>
         <ul style={styles.navLinks}>
           {NAV_LINKS.map((l) => (
