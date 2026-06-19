@@ -21,8 +21,8 @@ const Register = () => {
   return (
     <div className="w-full min-h-screen bg-[#121212] flex flex-col items-center justify-center p-4 font-sans text-white">
 
-      <Navbar/>
-      
+      <Navbar />
+
       <div className="w-12 h-12 bg-[#008744]/20 border border-[#008744] text-[#008744] rounded-full flex items-center justify-center text-2xl font-bold mb-6">
         +
       </div>
@@ -32,7 +32,7 @@ const Register = () => {
 
       <div className="w-full max-w-md bg-[#1a1a1a] border-t-2 border-[#eec24b] rounded-2xl p-8 shadow-2xl">
         <form onSubmit={handleRegister} className="space-y-5">
-          
+
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-2">Nombre completo</label>
             <div className="relative">
@@ -50,7 +50,7 @@ const Register = () => {
             </div>
           </div>
 
-<div>
+          <div>
             <label className="block text-xs font-medium text-gray-400 mb-2">Apellido</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
@@ -125,7 +125,6 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Checkbox: Términos y condiciones */}
           <div className="flex items-center space-x-2 pt-1">
             <input
               type="checkbox"
