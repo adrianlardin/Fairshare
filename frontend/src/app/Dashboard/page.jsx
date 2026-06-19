@@ -1,12 +1,14 @@
-"use client";
+"use client"; 
 
 import React, { useState, useEffect } from "react";
 
 const Dashboard = () => {
+    
+    // Variables
     const [usuario, setUsuario] = useState(null);
     const [grupos, setGrupos] = useState([]);
     const [amigos, setAmigos] = useState([]);
-
+    
     const [totalMeDeben, setTotalMeDeben] = useState(0.00);
     const [totalDebo, setTotalDebo] = useState(0.00);
 
@@ -14,10 +16,22 @@ const Dashboard = () => {
     const [modalLiquidar, setModalLiquidar] = useState(false);
     const [modalGrupo, setModalGrupo] = useState(false);
     const [modalAmigo, setModalAmigo] = useState(false);
-
     const [modalAmigoGrupo, setModalAmigoGrupo] = useState(false);
+    
     const [grupoSeleccionado, setGrupoSeleccionado] = useState("");
 
+    const [historial, setHistorial] = useState([]);
+    const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "success" });
+    const [cargando, setCargando] = useState(false);
+
+    
+    // Funciones 
+    const mostrarToast = (mensaje, tipo = "success") => {
+        setToast({ mostrar: true, mensaje, tipo });
+        setTimeout(() => setToast({ mostrar: false, mensaje: "", tipo: "success" }), 3000);
+    };
+
+    // Conexión backend
     const obtenerUsuario = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -56,7 +70,7 @@ const Dashboard = () => {
 
             if (respuesta.ok) {
                 const datos = await respuesta.json();
-
+                
                 if (Array.isArray(datos)) {
                     setGrupos(datos);
                 }
@@ -71,120 +85,224 @@ const Dashboard = () => {
         obtenerDatosDashboard();
     }, []);
 
-    const manejarSubmitGasto = (e) => {
-        e.preventDefault();
+   
+    // Formularios
+    const manejarSubmitGasto = async (e) => {
+        e.preventDefault(); 
+        const descripcion = e.target[0].value.trim();
         const cantidad = parseFloat(e.target[1].value);
 
-        if (!isNaN(cantidad)) {
+        if (!descripcion || isNaN(cantidad) || cantidad <= 0) {
+            mostrarToast("Introduce una descripción válida y un monto mayor a 0", "error");
+            return;
+        }
+
+        setCargando(true);
+        try {
             setTotalMeDeben(totalMeDeben + cantidad);
+            setHistorial([
+                { id: Date.now(), texto: `Añadiste el gasto "${descripcion}" de ${cantidad.toFixed(2)} €` },
+                ...historial
+            ]);
+            mostrarToast("Gasto guardado correctamente");
+            e.target.reset(); 
+            setModalGasto(false); 
+        } catch (error) {
+            mostrarToast("Error al guardar el gasto", "error");
+        } finally {
+            setCargando(false);
         }
-
-        e.target.reset();
-        setModalGasto(false);
     };
 
-    const manejarSubmitLiquidar = (e) => {
+    const manejarSubmitLiquidar = async (e) => {
         e.preventDefault();
+        const amigo = e.target[0].value.trim();
         const cantidad = parseFloat(e.target[1].value);
 
-        if (!isNaN(cantidad)) {
-            setTotalDebo(Math.max(0, totalDebo - cantidad));
+        if (!amigo || isNaN(cantidad) || cantidad <= 0) {
+            mostrarToast("Introduce un nombre válido y un monto mayor a 0", "error");
+            return;
         }
 
-        e.target.reset();
-        setModalLiquidar(false);
+        setCargando(true);
+        try {
+            setTotalDebo(Math.max(0, totalDebo - cantidad));
+            setHistorial([
+                { id: Date.now(), texto: `Registraste un pago de ${cantidad.toFixed(2)} € a ${amigo}` },
+                ...historial
+            ]);
+            mostrarToast("Pago registrado correctamente");
+            e.target.reset();
+            setModalLiquidar(false);
+        } catch (error) {
+            mostrarToast("Error al registrar el pago", "error");
+        } finally {
+            setCargando(false);
+        }
     };
 
-    const manejarSubmitGrupo = (e) => {
+    const manejarSubmitGrupo = async (e) => {
         e.preventDefault();
-        const nombreNuevoGrupo = e.target[0].value;
+        const nombreNuevoGrupo = e.target[0].value.trim();
 
-        const nuevoGrupo = {
-            id: Date.now(),
-            nombre: nombreNuevoGrupo,
-            saldo: 0
-        };
+        if (!nombreNuevoGrupo) {
+            mostrarToast("El nombre del grupo no puede estar vacío", "error");
+            return;
+        }
 
-        setGrupos([...grupos, nuevoGrupo]);
-        e.target.reset();
-        setModalGrupo(false);
+        setCargando(true);
+        try {
+            const nuevoGrupo = {
+                id: Date.now(),
+                nombre: nombreNuevoGrupo,
+                saldo: 0
+            };
+
+            setGrupos([...grupos, nuevoGrupo]);
+            setHistorial([
+                { id: Date.now(), texto: `Creaste el grupo "${nombreNuevoGrupo}"` },
+                ...historial
+            ]);
+            mostrarToast("Grupo creado con éxito");
+            e.target.reset();
+            setModalGrupo(false);
+        } catch (error) {
+            mostrarToast("Error al crear el grupo", "error");
+        } finally {
+            setCargando(false);
+        }
     };
 
-    const manejarSubmitAmigo = (e) => {
+    const manejarSubmitAmigo = async (e) => {
         e.preventDefault();
-        const nombreAmigo = e.target[0].value;
+        const nombreAmigo = e.target[0].value.trim();
 
-        const nuevoAmigo = {
-            id: Date.now(),
-            inicial: nombreAmigo.charAt(0).toUpperCase(),
-            nombre: nombreAmigo,
-            grupo: "Sin grupo",
-            saldo: 0.00
-        };
+        if (!nombreAmigo) {
+            mostrarToast("El campo no puede estar vacío", "error");
+            return;
+        }
 
-        setAmigos([...amigos, nuevoAmigo]);
-        e.target.reset();
-        setModalAmigo(false);
+        setCargando(true);
+        try {
+            const nuevoAmigo = {
+                id: Date.now(),
+                inicial: nombreAmigo.charAt(0).toUpperCase(),
+                nombre: nombreAmigo,
+                grupo: "Sin grupo",
+                saldo: 0.00
+            };
+
+            setAmigos([...amigos, nuevoAmigo]);
+            setHistorial([
+                { id: Date.now(), texto: `Añadiste a ${nombreAmigo} a tus amigos` },
+                ...historial
+            ]);
+            mostrarToast("Invitación enviada con éxito");
+            e.target.reset();
+            setModalAmigo(false);
+        } catch (error) {
+            mostrarToast("Error al añadir amigo", "error");
+        } finally {
+            setCargando(false);
+        }
     };
 
-    const manejarSubmitAmigoGrupo = (e) => {
+    const manejarSubmitAmigoGrupo = async (e) => {
         e.preventDefault();
-        const nombreAmigo = e.target[0].value;
+        const nombreAmigo = e.target[0].value.trim();
 
-        const nuevoAmigo = {
-            id: Date.now(),
-            inicial: nombreAmigo.charAt(0).toUpperCase(),
-            nombre: nombreAmigo,
-            grupo: grupoSeleccionado,
-            saldo: 0.00
-        };
+        if (!nombreAmigo) {
+            mostrarToast("El campo no puede estar vacío", "error");
+            return;
+        }
 
-        setAmigos([...amigos, nuevoAmigo]);
-        e.target.reset();
-        setModalAmigoGrupo(false);
+        setCargando(true);
+        try {
+            const nuevoAmigo = {
+                id: Date.now(),
+                inicial: nombreAmigo.charAt(0).toUpperCase(),
+                nombre: nombreAmigo,
+                grupo: grupoSeleccionado,
+                saldo: 0.00
+            };
+
+            setAmigos([...amigos, nuevoAmigo]);
+            setHistorial([
+                { id: Date.now(), texto: `Agregaste a ${nombreAmigo} al grupo "${grupoSeleccionado}"` },
+                ...historial
+            ]);
+            mostrarToast("Amigo añadido al grupo");
+            e.target.reset();
+            setModalAmigoGrupo(false);
+        } catch (error) {
+            mostrarToast("Error al añadir al grupo", "error");
+        } finally {
+            setCargando(false);
+        }
     };
 
+    // Borrado
     const abrirModalAmigoGrupo = (nombreGrupo) => {
         setGrupoSeleccionado(nombreGrupo);
         setModalAmigoGrupo(true);
     };
 
-    const salirYBorrarGrupo = (id) => {
-        const confirmar = window.confirm("¿Estás seguro de que quieres salir y borrar este grupo de tu vista?");
+    const salirYBorrarGrupo = (id, nombre) => {
+        const confirmar = window.confirm(`¿Estás seguro de que quieres salir y borrar el grupo "${nombre}"?`);
         if (confirmar) {
-            const nuevosGrupos = grupos.filter(grupo => grupo.id !== id);
-            setGrupos(nuevosGrupos);
+            setGrupos(grupos.filter(grupo => grupo.id !== id));
+            setHistorial([
+                { id: Date.now(), texto: `Eliminaste el grupo "${nombre}"` },
+                ...historial
+            ]);
+            mostrarToast("Grupo eliminado");
         }
     };
 
-    const eliminarAmigo = (id) => {
-        const confirmar = window.confirm("¿Quieres eliminar a este amigo de tu lista?");
+    const eliminarAmigo = (id, nombre) => {
+        const confirmar = window.confirm(`¿Quieres eliminar a ${nombre} de tu lista?`);
         if (confirmar) {
-            const nuevosAmigos = amigos.filter(amigo => amigo.id !== id);
-            setAmigos(nuevosAmigos);
+            setAmigos(amigos.filter(amigo => amigo.id !== id));
+            setHistorial([
+                { id: Date.now(), texto: `Eliminaste a ${nombre} de tus amigos` },
+                ...historial
+            ]);
+            mostrarToast("Amigo eliminado");
         }
     };
 
+    const limpiarTodoHistorial = () => {
+        setHistorial([]);
+        mostrarToast("Historial vaciado");
+    };
+
+    const eliminarActividadIndividual = (id) => {
+        setHistorial(historial.filter(act => act.id !== id));
+        mostrarToast("Actividad eliminada");
+    };
+
+    // Estilos
     return (
         <div className="bg-gray-900 min-h-screen pb-10 text-white relative">
             <div className="max-w-5xl mx-auto pt-12 px-6">
-
+                
+                {/* CABECERA */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
                     <div>
                         <h1 className="text-2xl font-bold mb-1">Panel de control</h1>
                         <h2 className="text-sm text-gray-400">
-                            {usuario ? `Hola, ${usuario.name || usuario.user_name} 👋` : "Cargando..."}
+                            {usuario ? `Hola, ${usuario.name || usuario.user_name}` : "Cargando..."}
                         </h2>
                     </div>
-
+                    
                     <div className="flex gap-3">
-                        <button
+                        <button 
                             className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-md transition-colors"
                             onClick={() => setModalGasto(true)}
                         >
                             Añadir un gasto
                         </button>
-                        <button
+                        <button 
                             className="bg-green-500 hover:bg-green-600 text-black font-bold py-2 px-4 rounded-md transition-colors"
                             onClick={() => setModalLiquidar(true)}
                         >
@@ -193,10 +311,11 @@ const Dashboard = () => {
                     </div>
                 </div>
 
+                {/* RESUMEN SUPERIOR */}
                 <div className="mb-10">
-                    <h4 className="text-sm text-gray-400 mb-4">Overview</h4>
+                    <h4 className="text-sm text-gray-400 mb-4">Vista general</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
+                        
                         <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-green-500 border-y border-r border-y-gray-700 border-r-gray-700">
                             <p className="text-gray-400 text-xs mb-2">ME DEBEN <span className="text-green-500">↑</span></p>
                             <h2 className="text-green-500 text-3xl font-bold mb-2">{totalMeDeben.toFixed(2)} €</h2>
@@ -211,19 +330,51 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+                {/* HISTORIAL DE ACTIVIDAD */}
+                {historial.length > 0 && (
+                    <div className="mb-10 bg-gray-800 rounded-2xl p-6 border border-gray-700">
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-sm font-semibold text-gray-400">Actividad reciente</h4>
+                            <button 
+                                onClick={limpiarTodoHistorial}
+                                className="text-xs text-red-400 hover:text-red-300 transition-colors bg-transparent border-none cursor-pointer"
+                            >
+                                Limpiar todo
+                            </button>
+                        </div>
+                        <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                            {historial.map((act) => (
+                                <div key={act.id} className="text-sm flex justify-between items-center bg-gray-900 px-4 py-2 rounded-lg border border-gray-800 gap-4">
+                                    <span className="text-gray-300 flex-1">{act.texto}</span>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xs text-gray-500">{new Date(act.id).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                        <button 
+                                            onClick={() => eliminarActividadIndividual(act.id)}
+                                            className="text-gray-500 hover:text-red-500 font-bold text-xs px-1 transition-colors bg-transparent border-none cursor-pointer"
+                                        >
+                                            X
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
+                {/* GRUPOS Y AMIGOS */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+    
                     <div className="md:col-span-4">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="text-sm font-semibold text-white">Grupos Activos</h4>
-                            <button
-                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-2 rounded-md transition-colors"
+                            <button 
+                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-2 rounded-md transition-colors" 
                                 onClick={() => setModalGrupo(true)}
                             >
                                 + Crear grupo
                             </button>
                         </div>
-
+                        
                         {grupos.length === 0 && (
                             <p className="text-gray-500 text-sm italic p-4 bg-gray-800 rounded-xl border border-gray-700">
                                 Aún no hay grupos creados.
@@ -233,7 +384,7 @@ const Dashboard = () => {
                         {grupos.map((grupo) => (
                             <div key={grupo.id} className="bg-gray-800 rounded-xl p-4 mb-3 border border-gray-700">
                                 <div className="flex justify-between items-center mb-3">
-                                    <span className="text-sm font-bold">🏠 {grupo.nombre}</span>
+                                    <span className="text-sm font-bold">{grupo.nombre}</span>
                                     {grupo.saldo > 0 ? (
                                         <span className="text-green-500 text-xs m-0">Te deben {grupo.saldo} €</span>
                                     ) : grupo.saldo < 0 ? (
@@ -242,16 +393,16 @@ const Dashboard = () => {
                                         <span className="text-gray-400 text-xs m-0">Saldado</span>
                                     )}
                                 </div>
-
+                                
                                 <div className="flex gap-2 justify-end">
-                                    <button
+                                    <button 
                                         onClick={() => abrirModalAmigoGrupo(grupo.nombre)}
                                         className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
                                     >
                                         + Añadir amigo
                                     </button>
-                                    <button
-                                        onClick={() => salirYBorrarGrupo(grupo.id)}
+                                    <button 
+                                        onClick={() => salirYBorrarGrupo(grupo.id, grupo.nombre)}
                                         className="text-xs border border-red-900 text-red-400 hover:bg-red-900 hover:text-white px-2 py-1 rounded transition-colors"
                                     >
                                         Salir / Borrar
@@ -261,11 +412,12 @@ const Dashboard = () => {
                         ))}
                     </div>
 
+                    {/* Lista de Transacciones / Amigos */}
                     <div className="md:col-span-8">
                         <div className="flex justify-between items-center mb-4">
-                            <h4 className="text-sm font-semibold">Quién te debe</h4>
-                            <button
-                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-3 rounded-md transition-colors"
+                            <h4 className="text-sm font-semibold">Transacciones pendientes</h4>
+                            <button 
+                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-3 rounded-md transition-colors" 
                                 onClick={() => setModalAmigo(true)}
                             >
                                 + Añadir amigo
@@ -279,7 +431,7 @@ const Dashboard = () => {
                                 <div className="col-span-3 text-right">BALANCE</div>
                                 <div className="col-span-1 text-right"></div>
                             </div>
-
+                            
                             {amigos.length === 0 && (
                                 <p className="text-gray-500 text-sm text-center italic mt-6">
                                     No hay deudas registradas con amigos.
@@ -299,10 +451,9 @@ const Dashboard = () => {
                                         {amigo.saldo > 0 ? `Te debe ${amigo.saldo} €` : amigo.saldo < 0 ? `Debes ${Math.abs(amigo.saldo)} €` : `0.00 €`}
                                     </div>
                                     <div className="col-span-1 text-right">
-                                        <button
-                                            onClick={() => eliminarAmigo(amigo.id)}
+                                        <button 
+                                            onClick={() => eliminarAmigo(amigo.id, amigo.nombre)}
                                             className="text-gray-500 hover:text-red-500 font-bold px-2 py-1 transition-colors"
-                                            title="Eliminar amigo"
                                         >
                                             X
                                         </button>
@@ -314,6 +465,10 @@ const Dashboard = () => {
                 </div>
             </div>
 
+                
+            {/* Modales */}
+            
+        
             {modalGasto && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
@@ -321,13 +476,15 @@ const Dashboard = () => {
                         <form onSubmit={manejarSubmitGasto}>
                             <label className="block text-xs text-gray-400 mb-1">Descripción</label>
                             <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400" required placeholder="Ej. Cena del viernes" />
-
+                            
                             <label className="block text-xs text-gray-400 mb-1">Cantidad (€)</label>
-                            <input type="number" step="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-yellow-400" required placeholder="0.00" />
-
+                            <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-yellow-400" required placeholder="0.00" />
+                            
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalGasto(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
-                                <button type="submit" className="px-4 py-2 bg-yellow-400 text-black font-bold rounded-md hover:bg-yellow-500 transition-colors">Guardar gasto</button>
+                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-yellow-400 text-black font-bold rounded-md hover:bg-yellow-500 transition-colors disabled:opacity-50">
+                                    {cargando ? "Guardando..." : "Guardar gasto"}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -341,13 +498,15 @@ const Dashboard = () => {
                         <form onSubmit={manejarSubmitLiquidar}>
                             <label className="block text-xs text-gray-400 mb-1">¿A quién le pagas?</label>
                             <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500" required placeholder="Nombre del amigo" />
-
+                            
                             <label className="block text-xs text-gray-400 mb-1">Cantidad a saldar (€)</label>
-                            <input type="number" step="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-green-500" required placeholder="0.00" />
-
+                            <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-green-500" required placeholder="0.00" />
+                            
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalLiquidar(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
-                                <button type="submit" className="px-4 py-2 bg-green-500 text-black font-bold rounded-md hover:bg-green-600 transition-colors">Registrar pago</button>
+                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-green-500 text-black font-bold rounded-md hover:bg-green-600 transition-colors disabled:opacity-50">
+                                    {cargando ? "Registrando..." : "Registrar pago"}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -361,10 +520,12 @@ const Dashboard = () => {
                         <form onSubmit={manejarSubmitGrupo}>
                             <label className="block text-xs text-gray-400 mb-1">Nombre del grupo</label>
                             <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white" required placeholder="Ej. Viaje a Madrid" />
-
+                            
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalGrupo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
-                                <button type="submit" className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors">Crear grupo</button>
+                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
+                                    {cargando ? "Creando..." : "Crear grupo"}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -378,10 +539,12 @@ const Dashboard = () => {
                         <form onSubmit={manejarSubmitAmigo}>
                             <label className="block text-xs text-gray-400 mb-1">Nombre o correo electrónico</label>
                             <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white" required placeholder="correo@ejemplo.com" />
-
+                            
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalAmigo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
-                                <button type="submit" className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors">Enviar invitación</button>
+                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
+                                    {cargando ? "Enviando..." : "Enviar invitación"}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -396,16 +559,24 @@ const Dashboard = () => {
                         <form onSubmit={manejarSubmitAmigoGrupo}>
                             <label className="block text-xs text-gray-400 mb-1">Nombre o correo electrónico</label>
                             <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white" required placeholder="correo@ejemplo.com" />
-
+                            
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalAmigoGrupo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
-                                <button type="submit" className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors">Añadir al grupo</button>
+                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
+                                    {cargando ? "Añadiendo..." : "Añadir al grupo"}
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
 
+            {/* Pequeñas notificaciones */}
+            {toast.mostrar && (
+                <div className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all ${toast.tipo === "error" ? "bg-red-900 border-red-700 text-white" : "bg-green-900 border-green-700 text-white"}`}>
+                    {toast.mensaje}
+                </div>
+            )}
         </div>
     );
 };
