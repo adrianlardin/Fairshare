@@ -32,8 +32,8 @@ const Sidebar = () => {
       <nav className="flex-1">
         <ul className="space-y-2">
           <li>
-            <Link href="/dashboard" className="block p-3 rounded-lg hover:bg-neutral-800 transition-colors">
-              Dashboard
+            <Link href="/Dashboard" className="block p-3 rounded-lg hover:bg-neutral-800 transition-colors">
+              Tus gastos
             </Link>
           </li>
           <li>
@@ -42,36 +42,36 @@ const Sidebar = () => {
                           className={`w-full block p-3 rounded-xl flex justify-between items-center transition-colors 
                                 ${isGroupsOpen ? 'bg-[#008744] text-white font-medium' : 'hover:bg-neutral-800'}`}
                       >
-                          <span>Groups</span>
+                          <span>Grupos</span>
                           <span className={`text-xs transition-transform ${isGroupsOpen ? 'rotate-180' : ''}`}>▼</span>
                       </button>
 
                       {isGroupsOpen && (
                           <div className="pl-6 pt-2 pb-1 text-sm text-gray-500 italic">
-                              No groups yet...
+                              Aun no tienes grupos.
                           </div>
                       )}
           </li>
           <li>
             <Link href="/friends" className="block p-3 rounded-lg hover:bg-neutral-800 transition-colors">
-              Friends
+              Amigos
             </Link>
           </li>
           <li>
             <Link href="/activity" className="block p-3 rounded-lg hover:bg-neutral-800 transition-colors">
-              Activity
+              Actividad
             </Link>
           </li>
           <li>
-            <Link href="/account" className="block p-3 rounded-lg hover:bg-neutral-800 transition-colors">
-              Account
+            <Link href="/user/Dashboard" className="block p-3 rounded-lg hover:bg-neutral-800 transition-colors">
+              Perfil
             </Link>
           </li>
         </ul>
       </nav>
 
       <button className="w-full bg-[#eec24b] text-[#1a1a1a] py-3.5 rounded-xl font-bold text-base hover:bg-[#d8ae3e] transition-colors mt-auto">
-        + Add Expense
+        + Agregar gasto
       </button>
 
     </aside>

@@ -50,7 +50,7 @@ export function Navbar() {
       <div style={styles.navInner}>
         <div style={styles.logo}>
           <LogoIcon />
-          <span style={styles.logoText}>SplitSync</span>
+          <span style={styles.logoText}>FairShare</span>
         </div>
         <ul style={styles.navLinks}>
           {NAV_LINKS.map((l) => (
@@ -60,8 +60,8 @@ export function Navbar() {
           ))}
         </ul>
         <div style={styles.navActions}>
-          <a href="#" style={styles.loginBtn}>Iniciar sesión</a>
-          <a href="#" style={styles.primaryBtn}>Comenzar</a>
+          <a href="/Login" style={styles.loginBtn} >Iniciar sesión</a>
+          <a href="/Register" style={styles.primaryBtn}>Comenzar</a>
         </div>
       </div>
     </nav>

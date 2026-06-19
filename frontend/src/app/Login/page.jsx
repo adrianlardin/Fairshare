@@ -181,7 +181,7 @@ export default function Login() {
           {/* Footer del Login */}
           <div className="text-center text-sm">
             <span className="text-[#8E8E8E]">¿No tienes una cuenta? </span>
-            <a href="#" className="text-[#F3D04C] no-underline font-semibold hover:underline">
+            <a href="/Register" className="text-[#F3D04C] no-underline font-semibold hover:underline">
               Regístrate
             </a>
           </div>

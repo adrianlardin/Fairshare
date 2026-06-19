@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime, timezone
 from typing import Optional, List
 from database import db
+import secrets
 
 
 # usuarios de la app
@@ -25,6 +26,7 @@ class User(db.Model):
     splits: Mapped[List["ExpenseSplit"]] = relationship(back_populates="user")
     settlements_sent: Mapped[List["Settlement"]] = relationship(foreign_keys="Settlement.paid_by", back_populates="payer")
     settlements_received: Mapped[List["Settlement"]] = relationship(foreign_keys="Settlement.paid_to", back_populates="receiver")
+    invitations_sent: Mapped[List["Invitation"]] = relationship(back_populates="sender")
 
     def serialize(self):
         return {
@@ -51,9 +53,10 @@ class Group(db.Model):
 
     # Relaciones
     creator: Mapped["User"] = relationship(back_populates="groups_created")
-    members: Mapped[List["GroupMember"]] = relationship(back_populates="group")
-    expenses: Mapped[List["Expense"]] = relationship(back_populates="group")
-    settlements: Mapped[List["Settlement"]] = relationship(back_populates="group")
+    members: Mapped[List["GroupMember"]] = relationship(back_populates="group", cascade="all, delete-orphan")
+    expenses: Mapped[List["Expense"]] = relationship(back_populates="group", cascade="all, delete-orphan")
+    settlements: Mapped[List["Settlement"]] = relationship(back_populates="group", cascade="all, delete-orphan")
+    invitations: Mapped[List["Invitation"]] = relationship(back_populates="group", cascade="all, delete-orphan")
 
     def serialize(self):
         return {
@@ -105,7 +108,7 @@ class Expense(db.Model):
     # Relaciones
     payer: Mapped["User"] = relationship(back_populates="expenses_paid")
     group: Mapped["Group"] = relationship(back_populates="expenses")
-    splits: Mapped[List["ExpenseSplit"]] = relationship(back_populates="expense")
+    splits: Mapped[List["ExpenseSplit"]] = relationship(back_populates="expense", cascade="all, delete-orphan")
 
     def serialize(self):
         return {
@@ -150,6 +153,7 @@ class Settlement(db.Model):
     paid_by: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     paid_to: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     amount: Mapped[float] = mapped_column(nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="pending")
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
     # Relaciones
@@ -164,6 +168,34 @@ class Settlement(db.Model):
             "paid_by": self.paid_by,
             "paid_to": self.paid_to,
             "amount": self.amount,
+            "status": self.status,
             "created_at": self.created_at.isoformat()
         }
-    
+
+
+# invitaciones para unirse a un grupo
+
+class Invitation(db.Model):
+    __tablename__ = "invitation"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("expense_group.id"), nullable=False)
+    invited_by: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    email: Mapped[str] = mapped_column(String(120), nullable=False)
+    token: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, default=lambda: secrets.token_urlsafe(32))
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+
+    # Relaciones
+    group: Mapped["Group"] = relationship(back_populates="invitations")
+    sender: Mapped["User"] = relationship(back_populates="invitations_sent")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "group_id": self.group_id,
+            "invited_by": self.invited_by,
+            "email": self.email,
+            "status": self.status,
+            "created_at": self.created_at.isoformat()
+        }
