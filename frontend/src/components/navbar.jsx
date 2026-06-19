@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const BORDER = "rgba(255,255,255,0.07)";
 const TEXT = "#e2e8f0";
 const MUTED = "#718096";
@@ -50,7 +52,7 @@ export function Navbar() {
       <div style={styles.navInner}>
         <div style={styles.logo}>
           <LogoIcon />
-          <span style={styles.logoText}>FairShare</span>
+          <Link href="/" style={styles.logoText}>FairShare</Link>
         </div>
         <ul style={styles.navLinks}>
           {NAV_LINKS.map((l) => (
@@ -60,8 +62,8 @@ export function Navbar() {
           ))}
         </ul>
         <div style={styles.navActions}>
-          <a href="/Login" style={styles.loginBtn} >Iniciar sesión</a>
-          <a href="/Register" style={styles.primaryBtn}>Comenzar</a>
+          <a href="/login" style={styles.loginBtn} >Iniciar sesión</a>
+          <a href="/register" style={styles.primaryBtn}>Comenzar</a>
         </div>
       </div>
     </nav>
