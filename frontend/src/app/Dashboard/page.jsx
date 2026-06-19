@@ -1,6 +1,7 @@
 "use client"; 
 
 import React, { useState, useEffect } from "react";
+import { Navbar } from "../../components/navbar";
 
 const Dashboard = () => {
     
@@ -284,7 +285,8 @@ const Dashboard = () => {
     // Estilos
     return (
         <div className="bg-gray-900 min-h-screen pb-10 text-white relative">
-            <div className="max-w-5xl mx-auto pt-12 px-6">
+            <Navbar/>
+            <div className="max-w-5xl mx-auto pt-24 px-6">
                 
                 {/* CABECERA */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
