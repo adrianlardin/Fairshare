@@ -1,14 +1,18 @@
-"use client"; 
+"use client";
 
 import React, { useState, useEffect } from "react";
+import { Navbar } from "../../components/navbar";
+import Link from "next/link";
+import { ModalCrearGrupo } from "../../components/ModalCrearGrupo";
+import Sidebar from "../../components/sidebar";
 
 const Dashboard = () => {
-    
+
     // Variables
     const [usuario, setUsuario] = useState(null);
     const [grupos, setGrupos] = useState([]);
     const [amigos, setAmigos] = useState([]);
-    
+
     const [totalMeDeben, setTotalMeDeben] = useState(0.00);
     const [totalDebo, setTotalDebo] = useState(0.00);
 
@@ -17,14 +21,14 @@ const Dashboard = () => {
     const [modalGrupo, setModalGrupo] = useState(false);
     const [modalAmigo, setModalAmigo] = useState(false);
     const [modalAmigoGrupo, setModalAmigoGrupo] = useState(false);
-    
+
     const [grupoSeleccionado, setGrupoSeleccionado] = useState("");
 
     const [historial, setHistorial] = useState([]);
     const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "success" });
     const [cargando, setCargando] = useState(false);
 
-    
+
     // Funciones 
     const mostrarToast = (mensaje, tipo = "success") => {
         setToast({ mostrar: true, mensaje, tipo });
@@ -70,7 +74,7 @@ const Dashboard = () => {
 
             if (respuesta.ok) {
                 const datos = await respuesta.json();
-                
+
                 if (Array.isArray(datos)) {
                     setGrupos(datos);
                 }
@@ -85,10 +89,10 @@ const Dashboard = () => {
         obtenerDatosDashboard();
     }, []);
 
-   
+
     // Formularios
     const manejarSubmitGasto = async (e) => {
-        e.preventDefault(); 
+        e.preventDefault();
         const descripcion = e.target[0].value.trim();
         const cantidad = parseFloat(e.target[1].value);
 
@@ -105,8 +109,8 @@ const Dashboard = () => {
                 ...historial
             ]);
             mostrarToast("Gasto guardado correctamente");
-            e.target.reset(); 
-            setModalGasto(false); 
+            e.target.reset();
+            setModalGasto(false);
         } catch (error) {
             mostrarToast("Error al guardar el gasto", "error");
         } finally {
@@ -120,7 +124,7 @@ const Dashboard = () => {
         const cantidad = parseFloat(e.target[1].value);
 
         if (!amigo || isNaN(cantidad) || cantidad <= 0) {
-            mostrarToast("Introduce un nombre válido y un monto mayor a 0", "error");
+            mostrarToast("Introduce un usuario válido y un monto mayor a 0", "error");
             return;
         }
 
@@ -175,9 +179,9 @@ const Dashboard = () => {
 
     const manejarSubmitAmigo = async (e) => {
         e.preventDefault();
-        const nombreAmigo = e.target[0].value.trim();
+        const usuarioAmigo = e.target[0].value.trim();
 
-        if (!nombreAmigo) {
+        if (!usuarioAmigo) {
             mostrarToast("El campo no puede estar vacío", "error");
             return;
         }
@@ -186,15 +190,15 @@ const Dashboard = () => {
         try {
             const nuevoAmigo = {
                 id: Date.now(),
-                inicial: nombreAmigo.charAt(0).toUpperCase(),
-                nombre: nombreAmigo,
+                inicial: usuarioAmigo.charAt(0).toUpperCase(),
+                usuario: usuarioAmigo,
                 grupo: "Sin grupo",
                 saldo: 0.00
             };
 
             setAmigos([...amigos, nuevoAmigo]);
             setHistorial([
-                { id: Date.now(), texto: `Añadiste a ${nombreAmigo} a tus amigos` },
+                { id: Date.now(), texto: `Añadiste a ${usuarioAmigo} a tus amigos` },
                 ...historial
             ]);
             mostrarToast("Invitación enviada con éxito");
@@ -209,9 +213,9 @@ const Dashboard = () => {
 
     const manejarSubmitAmigoGrupo = async (e) => {
         e.preventDefault();
-        const nombreAmigo = e.target[0].value.trim();
+        const usuarioAmigo = e.target[0].value.trim();
 
-        if (!nombreAmigo) {
+        if (!usuarioAmigo) {
             mostrarToast("El campo no puede estar vacío", "error");
             return;
         }
@@ -220,15 +224,15 @@ const Dashboard = () => {
         try {
             const nuevoAmigo = {
                 id: Date.now(),
-                inicial: nombreAmigo.charAt(0).toUpperCase(),
-                nombre: nombreAmigo,
+                inicial: usuarioAmigo.charAt(0).toUpperCase(),
+                usuario: usuarioAmigo,
                 grupo: grupoSeleccionado,
                 saldo: 0.00
             };
 
             setAmigos([...amigos, nuevoAmigo]);
             setHistorial([
-                { id: Date.now(), texto: `Agregaste a ${nombreAmigo} al grupo "${grupoSeleccionado}"` },
+                { id: Date.now(), texto: `Agregaste a ${usuarioAmigo} al grupo "${grupoSeleccionado}"` },
                 ...historial
             ]);
             mostrarToast("Amigo añadido al grupo");
@@ -242,29 +246,29 @@ const Dashboard = () => {
     };
 
     // Borrado
-    const abrirModalAmigoGrupo = (nombreGrupo) => {
-        setGrupoSeleccionado(nombreGrupo);
+    const abrirModalAmigoGrupo = (usuarioGrupo) => {
+        setGrupoSeleccionado(usuarioGrupo);
         setModalAmigoGrupo(true);
     };
 
-    const salirYBorrarGrupo = (id, nombre) => {
-        const confirmar = window.confirm(`¿Estás seguro de que quieres salir y borrar el grupo "${nombre}"?`);
+    const salirYBorrarGrupo = (id, usuario) => {
+        const confirmar = window.confirm(`¿Estás seguro de que quieres salir y borrar el grupo "${usuario}"?`);
         if (confirmar) {
             setGrupos(grupos.filter(grupo => grupo.id !== id));
             setHistorial([
-                { id: Date.now(), texto: `Eliminaste el grupo "${nombre}"` },
+                { id: Date.now(), texto: `Eliminaste el grupo "${usuario}"` },
                 ...historial
             ]);
             mostrarToast("Grupo eliminado");
         }
     };
 
-    const eliminarAmigo = (id, nombre) => {
-        const confirmar = window.confirm(`¿Quieres eliminar a ${nombre} de tu lista?`);
+    const eliminarAmigo = (id, usuario) => {
+        const confirmar = window.confirm(`¿Quieres eliminar a ${usuario} de tu lista?`);
         if (confirmar) {
             setAmigos(amigos.filter(amigo => amigo.id !== id));
             setHistorial([
-                { id: Date.now(), texto: `Eliminaste a ${nombre} de tus amigos` },
+                { id: Date.now(), texto: `Eliminaste a ${usuario} de tus amigos` },
                 ...historial
             ]);
             mostrarToast("Amigo eliminado");
@@ -284,25 +288,33 @@ const Dashboard = () => {
     // Estilos
     return (
         <div className="bg-gray-900 min-h-screen pb-10 text-white relative">
-            <div className="max-w-5xl mx-auto pt-12 px-6">
-                
+            <Navbar />
+            <Sidebar />
+            <div className="max-w-5xl mx-auto pt-24 px-6 md:pl-64">
+
                 {/* CABECERA */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
                     <div>
                         <h1 className="text-2xl font-bold mb-1">Panel de control</h1>
                         <h2 className="text-sm text-gray-400">
-                            {usuario ? `Hola, ${usuario.name || usuario.user_name}` : "Cargando..."}
+                            {usuario ? (
+                                <Link href="/user" className="hover:text-yellow-400 transition-colors cursor-pointer" title="Ir a mi perfil">
+                                    Hola, {usuario.name || usuario.user_name}
+                                </Link>
+                            ) : (
+                                "Cargando..."
+                            )}
                         </h2>
                     </div>
-                    
+
                     <div className="flex gap-3">
-                        <button 
+                        <button
                             className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-md transition-colors"
                             onClick={() => setModalGasto(true)}
                         >
                             Añadir un gasto
                         </button>
-                        <button 
+                        <button
                             className="bg-green-500 hover:bg-green-600 text-black font-bold py-2 px-4 rounded-md transition-colors"
                             onClick={() => setModalLiquidar(true)}
                         >
@@ -315,7 +327,7 @@ const Dashboard = () => {
                 <div className="mb-10">
                     <h4 className="text-sm text-gray-400 mb-4">Vista general</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
+
                         <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-green-500 border-y border-r border-y-gray-700 border-r-gray-700">
                             <p className="text-gray-400 text-xs mb-2">ME DEBEN <span className="text-green-500">↑</span></p>
                             <h2 className="text-green-500 text-3xl font-bold mb-2">{totalMeDeben.toFixed(2)} €</h2>
@@ -335,7 +347,7 @@ const Dashboard = () => {
                     <div className="mb-10 bg-gray-800 rounded-2xl p-6 border border-gray-700">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="text-sm font-semibold text-gray-400">Actividad reciente</h4>
-                            <button 
+                            <button
                                 onClick={limpiarTodoHistorial}
                                 className="text-xs text-red-400 hover:text-red-300 transition-colors bg-transparent border-none cursor-pointer"
                             >
@@ -347,8 +359,8 @@ const Dashboard = () => {
                                 <div key={act.id} className="text-sm flex justify-between items-center bg-gray-900 px-4 py-2 rounded-lg border border-gray-800 gap-4">
                                     <span className="text-gray-300 flex-1">{act.texto}</span>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-xs text-gray-500">{new Date(act.id).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                        <button 
+                                        <span className="text-xs text-gray-500">{new Date(act.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        <button
                                             onClick={() => eliminarActividadIndividual(act.id)}
                                             className="text-gray-500 hover:text-red-500 font-bold text-xs px-1 transition-colors bg-transparent border-none cursor-pointer"
                                         >
@@ -363,18 +375,18 @@ const Dashboard = () => {
 
                 {/* GRUPOS Y AMIGOS */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-    
+
                     <div className="md:col-span-4">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="text-sm font-semibold text-white">Grupos Activos</h4>
-                            <button 
-                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-2 rounded-md transition-colors" 
+                            <button
+                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-2 rounded-md transition-colors"
                                 onClick={() => setModalGrupo(true)}
                             >
                                 + Crear grupo
                             </button>
                         </div>
-                        
+
                         {grupos.length === 0 && (
                             <p className="text-gray-500 text-sm italic p-4 bg-gray-800 rounded-xl border border-gray-700">
                                 Aún no hay grupos creados.
@@ -393,15 +405,15 @@ const Dashboard = () => {
                                         <span className="text-gray-400 text-xs m-0">Saldado</span>
                                     )}
                                 </div>
-                                
+
                                 <div className="flex gap-2 justify-end">
-                                    <button 
+                                    <button
                                         onClick={() => abrirModalAmigoGrupo(grupo.nombre)}
                                         className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
                                     >
                                         + Añadir amigo
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={() => salirYBorrarGrupo(grupo.id, grupo.nombre)}
                                         className="text-xs border border-red-900 text-red-400 hover:bg-red-900 hover:text-white px-2 py-1 rounded transition-colors"
                                     >
@@ -416,8 +428,8 @@ const Dashboard = () => {
                     <div className="md:col-span-8">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="text-sm font-semibold">Transacciones pendientes</h4>
-                            <button 
-                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-3 rounded-md transition-colors" 
+                            <button
+                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-3 rounded-md transition-colors"
                                 onClick={() => setModalAmigo(true)}
                             >
                                 + Añadir amigo
@@ -431,7 +443,7 @@ const Dashboard = () => {
                                 <div className="col-span-3 text-right">BALANCE</div>
                                 <div className="col-span-1 text-right"></div>
                             </div>
-                            
+
                             {amigos.length === 0 && (
                                 <p className="text-gray-500 text-sm text-center italic mt-6">
                                     No hay deudas registradas con amigos.
@@ -444,15 +456,15 @@ const Dashboard = () => {
                                         <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
                                             {amigo.inicial}
                                         </div>
-                                        {amigo.nombre}
+                                        {amigo.usuario}
                                     </div>
                                     <div className="col-span-3 text-gray-400 text-center text-xs">{amigo.grupo}</div>
                                     <div className={`col-span-3 text-right font-medium ${amigo.saldo > 0 ? 'text-green-500' : amigo.saldo < 0 ? 'text-yellow-400' : 'text-gray-400'}`}>
                                         {amigo.saldo > 0 ? `Te debe ${amigo.saldo} €` : amigo.saldo < 0 ? `Debes ${Math.abs(amigo.saldo)} €` : `0.00 €`}
                                     </div>
                                     <div className="col-span-1 text-right">
-                                        <button 
-                                            onClick={() => eliminarAmigo(amigo.id, amigo.nombre)}
+                                        <button
+                                            onClick={() => eliminarAmigo(amigo.id, amigo.usuario)}
                                             className="text-gray-500 hover:text-red-500 font-bold px-2 py-1 transition-colors"
                                         >
                                             X
@@ -465,10 +477,10 @@ const Dashboard = () => {
                 </div>
             </div>
 
-                
+
             {/* Modales */}
-            
-        
+
+
             {modalGasto && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
@@ -476,10 +488,10 @@ const Dashboard = () => {
                         <form onSubmit={manejarSubmitGasto}>
                             <label className="block text-xs text-gray-400 mb-1">Descripción</label>
                             <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400" required placeholder="Ej. Cena del viernes" />
-                            
+
                             <label className="block text-xs text-gray-400 mb-1">Cantidad (€)</label>
                             <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-yellow-400" required placeholder="0.00" />
-                            
+
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalGasto(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
                                 <button type="submit" disabled={cargando} className="px-4 py-2 bg-yellow-400 text-black font-bold rounded-md hover:bg-yellow-500 transition-colors disabled:opacity-50">
@@ -497,11 +509,11 @@ const Dashboard = () => {
                         <h3 className="text-xl font-bold mb-4">Liquidar deudas</h3>
                         <form onSubmit={manejarSubmitLiquidar}>
                             <label className="block text-xs text-gray-400 mb-1">¿A quién le pagas?</label>
-                            <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500" required placeholder="Nombre del amigo" />
-                            
+                            <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500" required placeholder="usuario del amigo" />
+
                             <label className="block text-xs text-gray-400 mb-1">Cantidad a saldar (€)</label>
                             <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-green-500" required placeholder="0.00" />
-                            
+
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalLiquidar(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
                                 <button type="submit" disabled={cargando} className="px-4 py-2 bg-green-500 text-black font-bold rounded-md hover:bg-green-600 transition-colors disabled:opacity-50">
@@ -513,33 +525,16 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {modalGrupo && (
-                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
-                    <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-4">Crear nuevo grupo</h3>
-                        <form onSubmit={manejarSubmitGrupo}>
-                            <label className="block text-xs text-gray-400 mb-1">Nombre del grupo</label>
-                            <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white" required placeholder="Ej. Viaje a Madrid" />
-                            
-                            <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => setModalGrupo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
-                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
-                                    {cargando ? "Creando..." : "Crear grupo"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <ModalCrearGrupo estaAbierto={modalGrupo} alCerrar={() => setModalGrupo(false)} />
 
             {modalAmigo && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4">Añadir un amigo</h3>
                         <form onSubmit={manejarSubmitAmigo}>
-                            <label className="block text-xs text-gray-400 mb-1">Nombre o correo electrónico</label>
+                            <label className="block text-xs text-gray-400 mb-1">Usuario o correo electrónico</label>
                             <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white" required placeholder="correo@ejemplo.com" />
-                            
+
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalAmigo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
                                 <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
@@ -557,9 +552,9 @@ const Dashboard = () => {
                         <h3 className="text-xl font-bold mb-2">Añadir amigo a un grupo</h3>
                         <p className="text-gray-400 text-sm mb-4">Grupo seleccionado: <span className="text-white font-bold">{grupoSeleccionado}</span></p>
                         <form onSubmit={manejarSubmitAmigoGrupo}>
-                            <label className="block text-xs text-gray-400 mb-1">Nombre o correo electrónico</label>
+                            <label className="block text-xs text-gray-400 mb-1">Usuario o correo electrónico</label>
                             <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white" required placeholder="correo@ejemplo.com" />
-                            
+
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalAmigoGrupo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
                                 <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
