@@ -89,7 +89,8 @@ class GroupMember(db.Model):
             "group_id": self.group_id,
             "user_id": self.user_id,
             "role": self.role,
-            "joined_at": self.joined_at.isoformat()
+            "joined_at": self.joined_at.isoformat(),
+            "user": self.user.serialize()
         }
 
 
