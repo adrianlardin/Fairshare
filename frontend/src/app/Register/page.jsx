@@ -11,11 +11,47 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    console.log("Datos de registro:", { name, lastname, username, email, password, agreeTerms });
-    // Aquí iría tu lógica de autenticación
+    
+    setIsLoading(true);
+
+    const bodyData = {
+      email: email,
+      password: password,
+      user_name: username,
+      name: name,
+      last_name: lastname,
+    };
+
+    try {
+      const response = await fetch("http://localhost:3000/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bodyData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Registro exitoso en el backend:", data);
+        alert("¡Cuenta creada con éxito!");
+
+        router.push('/user/Dashboard'); 
+      } else {
+        alert(`Error de registro: ${data.message || 'Inténtalo de nuevo'}`);
+      }
+
+    } catch (error) {
+      console.error("Error de conexión:", error);
+      alert("No se pudo establecer comunicación con el servidor.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -141,9 +177,11 @@ const Register = () => {
 
           <button
             type="submit"
-            className="w-full bg-[#eec24b] text-[#121212] py-3.5 rounded-xl font-bold text-sm hover:bg-[#d8ae3e] transition-colors flex items-center justify-center gap-2 mt-2 shadow-md"
+            disabled={isLoading}
+            className={`w-full bg-[#eec24b] text-[#121212] py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 mt-2 shadow-md
+              ${isLoading ? 'opacity-50 cursor-not-allowed bg-neutral-600 text-gray-300' : 'hover:bg-[#d8ae3e]'}`}
           >
-            Registrarse →
+            {isLoading ? "Procesando..." : "Registrarse →"}
           </button>
         </form>
 
