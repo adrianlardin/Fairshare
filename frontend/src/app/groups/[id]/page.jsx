@@ -147,7 +147,8 @@ export default function GroupDetail() {
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
                 groupId={group?.id}
-                groupMembers={group?.members || []}
+                groupMembers={members}
+                onExpenseCreated={fetchExpenses}
             />
         </>
     );
