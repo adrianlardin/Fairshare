@@ -3,6 +3,8 @@
 import { Navbar } from "@/components/navbar"; // <-- Navbar corregido e importado desde tu carpeta de componentes
 import { useState } from "react";
 
+import Link from "next/link";
+
 // ── Icons (inline SVGs para no depender de librerías) ──────────────────────────
 const CheckIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -105,11 +107,8 @@ function Hero() {
           compañeros de piso y viajeros que valoran la precisión y la claridad.
         </p>
         <div className="flex items-center gap-5 flex-wrap">
-          <a href="#" className="bg-[#F5C518] text-[#0b0f14] font-bold text-sm px-5 py-2.5 rounded-lg no-underline inline-block hover:opacity-90 transition-opacity">
+          <a href="/register" className="bg-[#F5C518] text-[#0b0f14] font-bold text-sm px-5 py-2.5 rounded-lg no-underline inline-block hover:opacity-90 transition-opacity">
             Empieza gratis →
-          </a>
-          <a href="#" className="text-[#e2e8f0] no-underline text-sm flex items-center gap-2 hover:text-white transition-colors">
-            ▶ Ver Demo
           </a>
         </div>
       </div>
@@ -289,51 +288,6 @@ function PhoneMockup({ type }) {
   );
 }
 
-function Pricing() {
-  return (
-    <section className="max-w-[1100px] mx-auto px-6 py-20 text-center">
-      <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.8px] mb-3 text-slate-50">Elige tu nivel de sincronización</h2>
-      <p className="text-[#718096] text-sm max-w-[500px] mx-auto mb-12">Precios sencillos para todo el mundo.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-left items-stretch">
-        {PRICING.map((p) => (
-          <div 
-            key={p.tier} 
-            className={`rounded-2xl p-7 flex flex-col gap-3 ${
-              p.highlight 
-                ? "bg-gradient-to-br from-[#131a24] to-[#162130] border border-[#4ADE80]/40 shadow-[0_0_30px_rgba(74,222,128,0.15)]" 
-                : "bg-[#131a24] border border-white/5"
-            }`}
-          >
-            {p.highlight && (
-              <div className="bg-[#4ADE80]/20 text-[#4ADE80] text-[10px] font-bold tracking-[1.5px] px-2.5 py-1 rounded-md self-start">
-                PLAN RECOMENDADO
-              </div>
-            )}
-            <span className="text-[#718096] text-[11px] font-bold tracking-[1.5px]">{p.tier}</span>
-            <div className="flex items-end gap-0.5">
-              <span className="text-4xl sm:text-[40px] font-extrabold text-slate-50 tracking-[-1px] space-y-0 leading-none">{p.label}</span>
-              {p.period && <span className="text-[#718096] text-sm pb-1">{p.period}</span>}
-            </div>
-            <p className="text-[#718096] text-[13px] m-0">{p.sub}</p>
-            <ul className="list-none p-0 m-0 flex flex-col gap-2.5 flex-1 my-4">
-              {p.features.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm text-[#e2e8f0]">
-                  <CheckIcon /> {f}
-                </li>
-              ))}
-            </ul>
-            <button className={`w-full py-3 px-5 rounded-lg font-semibold text-sm cursor-pointer mt-auto transition-opacity hover:opacity-90 ${
-              p.highlight ? "bg-[#F5C518] text-[#0b0f14]" : "bg-transparent text-[#e2e8f0] border border-white/5"
-            }`}>
-              {p.cta}
-            </button>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function FinalCTA() {
   return (
     <section className="bg-[#111720] border-t border-b border-white/5 text-center py-20 px-6">
@@ -342,7 +296,7 @@ function FinalCTA() {
         Únete a los 519,371 usuarios que ya han alcanzado la claridad financiera y
         comparten gastos sin estrés.
       </p>
-      <a href="#" className="bg-[#F5C518] text-[#0b0f14] font-bold text-sm px-5 py-2.5 rounded-lg no-underline inline-block hover:opacity-90 transition-opacity">
+      <a href="/register" className="bg-[#F5C518] text-[#0b0f14] font-bold text-sm px-5 py-2.5 rounded-lg no-underline inline-block hover:opacity-90 transition-opacity">
         Empieza gratis →
       </a>
       <p className="text-[#718096] text-xs mt-3.5">Sin tarjeta de crédito · Cancela cuando quieras</p>
@@ -359,7 +313,7 @@ function Footer() {
             <div className="w-[22px] h-[22px] bg-[#4ADE80]/20 rounded-full flex items-center justify-center">
               <span className="w-2.5 h-[1.5px] bg-[#4ADE80] rounded-sm transform translate-y-[1px]" />
             </div>
-            <span className="font-bold text-lg text-white">SplitSync</span>
+            <Link href="/#top" className="font-bold text-lg text-white">FairShare</Link>
           </div>
           <p className="text-[#718096] text-[13px] mt-2.5 leading-relaxed">
             Claridad financiera precisa para equipos modernos.
@@ -410,7 +364,6 @@ export default function Home() {
       <GroupManagement />
       <ExpenseTracking />
       <PersonalExperience />
-      <Pricing />
       <FinalCTA />
       <Footer />
     </div>
