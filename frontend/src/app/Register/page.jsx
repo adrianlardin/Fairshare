@@ -2,6 +2,7 @@
 
 import { Navbar } from "@/components/navbar";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 // ── Iconos (inline SVGs) ──────────────────────────────────────────────────────
 const UserIcon = () => (
@@ -117,10 +118,11 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const handleRegister = async (e) => {
+const handleRegister = async (e) => {
     e.preventDefault();
-
     try {
       const response = await fetch("http://localhost:5000" + "/register", {
         method: "POST",
@@ -135,8 +137,22 @@ const Register = () => {
           password: password,
         }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Hubo un error al registrar el usuario.");
+        return;
+      }
+
+      console.log("Registro exitoso:", data);
+      alert("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.");
+      
+      router.push('/login'); 
+
     } catch (error) {
       console.error("Error al registrar:", error);
+      alert("No se pudo conectar con el servidor. Verifica que Flask esté encendido.");
     }
   };
 
@@ -284,9 +300,11 @@ const Register = () => {
 
           <button
             type="submit"
-            className="w-full bg-[#eec24b] text-[#121212] py-3.5 rounded-xl font-bold text-sm hover:bg-[#d8ae3e] transition-colors flex items-center justify-center gap-2 mt-2 shadow-md"
+            disabled={isLoading}
+            className={`w-full bg-[#eec24b] text-[#121212] py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 mt-2 shadow-md
+              ${isLoading ? 'opacity-50 cursor-not-allowed bg-neutral-600 text-gray-300' : 'hover:bg-[#d8ae3e]'}`}
           >
-            Registrarse →
+            {isLoading ? "Procesando..." : "Registrarse →"}
           </button>
         </form>
 
