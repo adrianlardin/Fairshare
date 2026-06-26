@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export const ModalCrearGrupo = ({ estaAbierto, alCerrar }) => {
+export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
   const [nombreGrupo, setNombreGrupo] = useState("");
   const [categoria, setCategoria] = useState("Casa");
   const [categoriaPersonalizada, setCategoriaPersonalizada] = useState("");
@@ -13,25 +13,44 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar }) => {
 
   if (!estaAbierto) return null;
 
-  const manejarCrearGrupo = (e) => {
-    e.preventDefault();
-    
-    if (!nombreGrupo.trim()) {
-      alert("Por favor, ingresa un nombre para el grupo.");
-      return;
-    }
+const manejarCrearGrupo = async (e) => {
+  e.preventDefault();
 
-    const categoriaFinal = categoria === "Otro" ? categoriaPersonalizada : categoria;
+  if (!nombreGrupo.trim()) {
+    alert("Por favor, ingresa un nombre para el grupo.");
+    return;
+  }
 
-    console.log({
-      nombre: nombreGrupo,
-      categoria: categoriaFinal,
-      moneda: moneda,
-      miembros: miembros
+  const categoriaFinal = categoria === "Otro" ? categoriaPersonalizada : categoria;
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("http://127.0.0.1:5000/group", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        name: nombreGrupo,
+        category: categoriaFinal,
+      }),
     });
 
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || "Error al crear el grupo");
+    }
+
+    setNombreGrupo("");
+    setCategoria("Casa");
+    onGrupoCreado?.();
     alCerrar();
-  };
+  } catch (error) {
+    alert(error.message);
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100] px-4">

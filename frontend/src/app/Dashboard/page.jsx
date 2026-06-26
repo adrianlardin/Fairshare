@@ -396,7 +396,7 @@ const Dashboard = () => {
                         {grupos.map((grupo) => (
                             <div key={grupo.id} className="bg-gray-800 rounded-xl p-4 mb-3 border border-gray-700">
                                 <div className="flex justify-between items-center mb-3">
-                                    <span className="text-sm font-bold">{grupo.nombre}</span>
+                                    <span className="text-sm font-bold">{grupo.name}</span>
                                     {grupo.saldo > 0 ? (
                                         <span className="text-green-500 text-xs m-0">Te deben {grupo.saldo} €</span>
                                     ) : grupo.saldo < 0 ? (
@@ -408,13 +408,13 @@ const Dashboard = () => {
 
                                 <div className="flex gap-2 justify-end">
                                     <button
-                                        onClick={() => abrirModalAmigoGrupo(grupo.nombre)}
+                                        onClick={() => abrirModalAmigoGrupo(grupo.name)}
                                         className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
                                     >
                                         + Añadir amigo
                                     </button>
                                     <button
-                                        onClick={() => salirYBorrarGrupo(grupo.id, grupo.nombre)}
+                                        onClick={() => salirYBorrarGrupo(grupo.id, grupo.name)}
                                         className="text-xs border border-red-900 text-red-400 hover:bg-red-900 hover:text-white px-2 py-1 rounded transition-colors"
                                     >
                                         Salir / Borrar
@@ -525,7 +525,11 @@ const Dashboard = () => {
                 </div>
             )}
 
-            <ModalCrearGrupo estaAbierto={modalGrupo} alCerrar={() => setModalGrupo(false)} />
+            <ModalCrearGrupo 
+            estaAbierto={modalGrupo}
+            alCerrar={() => setModalGrupo(false)}
+            onGrupoCreado={obtenerDatosDashboard}
+            />
 
             {modalAmigo && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
