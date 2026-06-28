@@ -32,7 +32,7 @@ const Sidebar = () => {
       <nav className="flex-1">
         <ul className="space-y-2">
           <li>
-            <Link href="/Dashboard" className="block p-3 rounded-lg hover:bg-neutral-800 transition-colors">
+            <Link href="/dashboard" className="block p-3 rounded-lg hover:bg-neutral-800 transition-colors">
               Tus gastos
             </Link>
           </li>
@@ -63,7 +63,7 @@ const Sidebar = () => {
             </Link>
           </li>
           <li>
-            <Link href="/user/Dashboard" className="block p-3 rounded-lg hover:bg-neutral-800 transition-colors">
+            <Link href="/user/dashboard" className="block p-3 rounded-lg hover:bg-neutral-800 transition-colors">
               Perfil
             </Link>
           </li>
