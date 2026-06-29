@@ -23,11 +23,12 @@ def register():
     # comprueba que hayan rellenado todos los datos que tenemos obligatorios
     if not email or not password or not user_name or not name or not last_name:
         return jsonify({"error": "Todos los campos son obligatorios"}), 400
+    
 
     # comprueba si ya existe el email en nuestra base de datos
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "El email ya está registrado"}), 400
-
+    print("hola")
     # convierte la contraseña en hash
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 

@@ -13,7 +13,7 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar }) => {
 
   if (!estaAbierto) return null;
 
-  const manejarCrearGrupo = (e) => {
+  const manejarCrearGrupo = async (e) => {
     e.preventDefault();
     
     if (!nombreGrupo.trim()) {
@@ -22,15 +22,33 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar }) => {
     }
 
     const categoriaFinal = categoria === "Otro" ? categoriaPersonalizada : categoria;
+    const token = localStorage.getItem("token");
 
-    console.log({
-      nombre: nombreGrupo,
-      categoria: categoriaFinal,
-      moneda: moneda,
-      miembros: miembros
-    });
+    try {
+      const respuesta = await fetch("http://localhost:5000/group", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: nombreGrupo,
+          category: categoriaFinal,
+          description: "Grupo creado desde el panel de control"
+        })
+      });
 
-    alCerrar();
+      if (respuesta.ok) {
+        window.location.reload(); 
+        alCerrar();
+      } else {
+        const errorData = await respuesta.json();
+        alert(errorData.error || "Hubo un problema al crear el grupo");
+      }
+    } catch (error) {
+      alert("Error de conexión con el servidor");
+      console.error(error);
+    }
   };
 
   return (
