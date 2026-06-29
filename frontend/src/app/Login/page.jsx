@@ -173,7 +173,7 @@ const handleSubmit = async (e) => {
                     Contraseña
                   </label>
                   <a
-                    href="#"
+                    href="/forgot-password"
                     className="text-[#F3D04C] text-[11px] no-underline font-medium tracking-wider hover:underline"
                   >
                     ¿Olvidaste tu contraseña?

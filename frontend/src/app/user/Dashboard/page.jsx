@@ -3,17 +3,33 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+const PRESET_AVATARS = [
+  "https://api.dicebear.com/7.x/bottts/svg?seed=Felix",
+  "https://api.dicebear.com/7.x/bottts/svg?seed=Aneka",
+  "https://api.dicebear.com/7.x/bottts/svg?seed=Jack",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Sofia",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Mateo",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Fairshare1",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Fairshare2",
+  "https://api.dicebear.com/7.x/fun-emoji/svg?seed=Happy",
+  "https://api.dicebear.com/7.x/fun-emoji/svg?seed=Cool"
+];
+
 const AccountSettings = () => {
   const router = useRouter();
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [userName, setUserName] = useState('');
-  const [email, setEmail] = useState(''); 
+  const [email, setEmail] = useState('');
+  const [avatar, setAvatar] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(false);
   const [currency, setCurrency] = useState('USD ($)');
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -33,7 +49,7 @@ const AccountSettings = () => {
         const response = await fetch(`http://localhost:5000/user/${userId}`, {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           }
         });
 
@@ -44,6 +60,7 @@ const AccountSettings = () => {
           setLastName(data.last_name || '');
           setUserName(data.user_name || '');
           setEmail(data.email || '');
+          setAvatar(data.avatar || '');
           if (data.currency) setCurrency(data.currency);
           if (data.email_notifications !== undefined) setEmailNotifications(data.email_notifications);
           if (data.push_notifications !== undefined) setPushNotifications(data.push_notifications);
@@ -78,6 +95,7 @@ const AccountSettings = () => {
           last_name: lastName,
           user_name: userName,
           currency: currency,
+          avatar: avatar,
           email_notifications: emailNotifications,
           push_notifications: pushNotifications
         }),
@@ -143,13 +161,26 @@ const AccountSettings = () => {
           <hr className="border-neutral-800 mb-6" />
 
           <div className="flex flex-col md:flex-row gap-6 items-start">
-            {/* Avatar */}
+            {/* Contenedor del Avatar y Selector */}
             <div className="flex flex-col items-center gap-2 min-w-[100px]">
-              <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-[#eec24b] bg-neutral-800 flex items-center justify-center">
-                <span className="text-2xl text-gray-400">👤</span>
+              <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-[#eec24b] bg-neutral-800 flex items-center justify-center shadow-lg">
+                {avatar ? (
+                  <img
+                    src={avatar}
+                    alt="Avatar de usuario"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl text-gray-400">👤</span>
+                )}
               </div>
-              <button type="button" className="text-[10px] tracking-wider text-[#eec24b] uppercase font-bold hover:underline mt-1">
-                Cambiar avatar
+
+              <button
+                type="button"
+                className="text-[10px] tracking-wider text-[#eec24b] uppercase font-bold hover:underline mt-1"
+                onClick={() => setIsAvatarSelectorOpen(!isAvatarSelectorOpen)}
+              >
+                {isAvatarSelectorOpen ? "Cerrar selección" : "Cambiar avatar"}
               </button>
             </div>
 
@@ -200,6 +231,28 @@ const AccountSettings = () => {
               </div>
             </div>
           </div>
+
+          {isAvatarSelectorOpen && (
+            <div className="mt-6 bg-[#121212] border border-neutral-800 rounded-xl p-4 animate-in fade-in duration-200">
+              <p className="text-xs font-mono text-gray-400 mb-3 uppercase tracking-wider">Selecciona un avatar predeterminado:</p>
+              <div className="grid grid-cols-5 gap-3 sm:grid-cols-10">
+                {PRESET_AVATARS.map((avatarUrl, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => {
+                      setAvatar(avatarUrl);
+                      setIsAvatarSelectorOpen(false); // Cierra la grilla al elegir uno
+                    }}
+                    className={`relative w-12 h-12 rounded-lg overflow-hidden bg-neutral-800 border-2 transition-all p-1 hover:scale-105 ${avatar === avatarUrl ? 'border-[#eec24b] bg-neutral-700 ring-2 ring-[#eec24b]/20' : 'border-transparent border-neutral-700'
+                      }`}
+                  >
+                    <img src={avatarUrl} alt={`Opción ${index + 1}`} className="w-full h-full object-contain" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="bg-[#1a1a1a] border border-neutral-800 rounded-xl p-6">
