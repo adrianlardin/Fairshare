@@ -14,43 +14,50 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
   if (!estaAbierto) return null;
 
 const manejarCrearGrupo = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!nombreGrupo.trim()) {
-    alert("Por favor, ingresa un nombre para el grupo.");
-    return;
-  }
-
-  const categoriaFinal = categoria === "Otro" ? categoriaPersonalizada : categoria;
-
-  try {
-    const token = localStorage.getItem("token");
-
-    const response = await fetch("http://127.0.0.1:5000/group", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        name: nombreGrupo,
-        category: categoriaFinal,
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error || "Error al crear el grupo");
+    if (!nombreGrupo.trim()) {
+      alert("Por favor, ingresa un nombre para el grupo.");
+      return;
     }
 
-    setNombreGrupo("");
-    setCategoria("Casa");
-    onGrupoCreado?.();
-    alCerrar();
-  } catch (error) {
-    alert(error.message);
-  }
-};
+    const categoriaFinal = categoria === "Otro" ? categoriaPersonalizada : categoria;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch("http://localhost:5000/group", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: nombreGrupo,
+          category: categoriaFinal,
+          description: "Grupo creado desde el panel de control"
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Hubo un problema al crear el grupo");
+      }
+
+      setNombreGrupo("");
+      setCategoria("Casa");
+      
+      if (typeof onGrupoCreado === 'function') {
+          onGrupoCreado();
+      }
+      
+      window.location.reload(); 
+      alCerrar();
+      
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100] px-4">

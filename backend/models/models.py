@@ -118,7 +118,8 @@ class Expense(db.Model):
             "amount": self.amount,
             "paid_by": self.paid_by,
             "group_id": self.group_id,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
+            "splits": [split.serialize() for split in self.splits] 
         }
 
 
