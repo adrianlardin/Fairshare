@@ -7,28 +7,31 @@ export default function AddExpenseModal({
   onClose,
   groupId,
   groupMembers = [],
+  onExpenseCreated,
 }) {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [paidBy, setPaidBy] = useState("you");
   const [splitType, setSplitType] = useState("equally");
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
+
+  const totalParticipants = groupMembers.length + 1;
+  const splitAmount = amount ? parseFloat((parseFloat(amount) / totalParticipants).toFixed(2)) : 0;
 
   const handleSubmit = async () => {
     if (!amount || !description) return;
 
+    setLoading(true);
     try {
       const token = localStorage.getItem("token");
-
       const total = parseFloat(amount);
-
-      const participants = groupMembers.map((m) => m.user_id);
-      const splitAmount = total / (participants.length + 1);
+      const perPerson = parseFloat((total / totalParticipants).toFixed(2));
 
       const splits = groupMembers.map((member) => ({
         user_id: member.user_id,
-        amount: splitAmount,
+        amount: perPerson,
       }));
 
       const response = await fetch(`http://127.0.0.1:5000/group/${groupId}/expenses`,
@@ -54,12 +57,19 @@ export default function AddExpenseModal({
       const data = await response.json();
       console.log("Gasto creado:", data);
 
+      // resetea el formulario
       setAmount("");
       setDescription("");
+      setPaidBy("you");
+      setSplitType("equally");
+
+      onExpenseCreated?.();
       onClose();
     } catch (error) {
       console.error(error);
       alert(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -275,9 +285,10 @@ export default function AddExpenseModal({
 
           <button
             onClick={handleSubmit}
+            disabled={loading}
             className="px-5 py-2 rounded-lg bg-[#d4a017] text-black text-sm font-medium hover:bg-[#e6b01e] transition-colors"
           >
-            Guardar gasto
+            {loading ? "Guardando..." : "Guardar gasto"}
           </button>
 
         </div>

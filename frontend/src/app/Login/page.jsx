@@ -2,6 +2,7 @@
 
 import { Navbar } from "@/components/navbar";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 // ── Iconos (inline SVGs basados en la imagen) ──────────────────────────────────
 const MailIcon = () => (
@@ -82,27 +83,40 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch("http://localhost:5000" + "/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      let user = data.user;
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(user));
-      console.log("Login successful");
-    } catch (error) {
-      console.error(error);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await fetch("http://localhost:5000" + "/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      alert(data.message || "Credenciales incorrectas");
+      return; 
     }
-  };
+
+    let user = data.user;
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(user));
+    console.log("Login successful");
+
+    alert("¡Inicio de sesión correcto! Redirigiendo...");
+    router.push('/dashboard');
+
+  } catch (error) {
+    console.error("Error en el proceso de login:", error);
+    alert("Hubo un problema al intentar conectar con el servidor.");
+  }
+};
 
   return (
     <div className="flex flex-col relative">
@@ -159,7 +173,7 @@ export default function Login() {
                     Contraseña
                   </label>
                   <a
-                    href="#"
+                    href="/forgot-password"
                     className="text-[#F3D04C] text-[11px] no-underline font-medium tracking-wider hover:underline"
                   >
                     ¿Olvidaste tu contraseña?

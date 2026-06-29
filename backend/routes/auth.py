@@ -1,4 +1,5 @@
-from flask import Blueprint, request, jsonify
+from email.message import Message
+from flask import Blueprint, app, request, jsonify
 from flask_jwt_extended import create_access_token
 from models.models import User
 from database import db
@@ -71,3 +72,52 @@ def login():
         "token": access_token,
         "user": user.serialize()
     }), 200
+
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    from app import serializer, mail
+    from flask_mail import Message
+
+    data = request.get_json()
+    email = data.get("email")
+    
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"message": "Si el correo está registrado, recibirás un enlace de recuperación."}), 200
+
+    token = serializer.dumps(email, salt="password-reset-salt")
+    reset_url = f"http://localhost:3000/reset-password?token={token}"
+    
+    msg = Message(
+        subject="Recuperación de contraseña - Fairshare",
+        recipients=[email],
+        body=f"Hola, para restablecer tu contraseña haz clic en el siguiente enlace: {reset_url}\nEste enlace expirará en 15 minutos."
+    )
+    
+    mail.send(msg)
+    
+    return jsonify({"message": "Enlace de recuperación enviado con éxito."}), 200
+
+
+@auth_bp.route("/reset-password", methods=["POST"])
+def reset_password():
+
+    from app import mail, serializer
+
+    data = request.get_json()
+    token = data.get("token")
+    new_password = data.get("password")
+    
+    try:
+        email = serializer.loads(token, salt="password-reset-salt", max_age=900)
+    except Exception:
+        return jsonify({"error": "El enlace es inválido o ha expirado."}), 400
+        
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "Usuario no encontrado."}), 404
+        
+    user.password = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    db.session.commit()
+    
+    return jsonify({"message": "Contraseña actualizada correctamente. Ya puedes iniciar sesión."}), 200
