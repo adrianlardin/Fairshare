@@ -210,7 +210,6 @@ def get_expenses(group_id):
 def create_expense(group_id):
     current_user_id = int(get_jwt_identity())
 
-    # comprueba que el usuario pertenece al grupo
     member = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id).first()
     if not member:
         return jsonify({"error": "No tienes acceso a este grupo"}), 403
@@ -233,18 +232,27 @@ def create_expense(group_id):
     db.session.add(new_expense)
     db.session.flush()
 
-    # crea los splits si vienen en la peticion
     if splits:
+        # calcula cuanto queda para el pagador
+        total_splits = sum(s["amount"] for s in splits)
+        payer_amount = round(amount - total_splits, 2)
+
+        # split del pagador
+        db.session.add(ExpenseSplit(
+            expense_id=new_expense.id,
+            user_id=current_user_id,
+            amount=payer_amount
+        ))
+
+        # splits del resto
         for split in splits:
-            new_split = ExpenseSplit(
+            db.session.add(ExpenseSplit(
                 expense_id=new_expense.id,
                 user_id=split["user_id"],
                 amount=split["amount"]
-            )
-            db.session.add(new_split)
+            ))
 
     db.session.commit()
-
     return jsonify(new_expense.serialize()), 201
 
 
