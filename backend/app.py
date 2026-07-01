@@ -1,18 +1,19 @@
 from flask import Flask
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 from database import db
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
-from models.models import User, Group, GroupMember, Expense, ExpenseSplit, Settlement
+from models.models import User, Group, GroupMember, Expense, ExpenseSplit, Settlement, Invitation, Friendship
 from routes.auth import auth_bp
 from routes.user import user_bp
 from routes.group import group_bp
 from routes.invitation import invitation_bp
-from flask import Flask
-from flask_mail import Mail, Message
-from itsdangerous import URLSafeTimedSerializer
+from routes.friendship import friend_bp
+
 
 load_dotenv()
 
@@ -42,6 +43,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(group_bp)
 app.register_blueprint(invitation_bp)
+app.register_blueprint(friend_bp)
 
 @app.route("/")
 def home():

@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models.models import Group, GroupMember, Expense, ExpenseSplit, Settlement, User
+from models.models import Group, GroupMember, Expense, ExpenseSplit, Settlement, User, Friendship
 from database import db
+from sqlalchemy import or_, and_
 
 group_bp = Blueprint("group", __name__)
 
@@ -155,6 +156,18 @@ def add_member(group_id):
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "Usuario no encontrado"}), 404
+
+    # comprueba que sea amigo de quien invita
+    is_friend = Friendship.query.filter(
+        or_(
+            and_(Friendship.user_id == current_user_id, Friendship.friend_id == user_id),
+            and_(Friendship.user_id == user_id, Friendship.friend_id == current_user_id)
+        ),
+        Friendship.status == "accepted"
+    ).first()
+
+    if not is_friend:
+        return jsonify({"error": "Solo puedes añadir amigos directamente. Para invitar a alguien nuevo, usa el sistema de invitaciones."}), 403
 
     # comprueba que el usuario no sea ya miembro
     existing = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
