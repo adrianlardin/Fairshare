@@ -26,7 +26,7 @@ const Dashboard = () => {
     const [modalAmigo, setModalAmigo] = useState(false);
     const [modalAmigoGrupo, setModalAmigoGrupo] = useState(false);
 
-    const [grupoSeleccionado, setGrupoSeleccionado] = useState("");
+    const [grupoSeleccionado, setGrupoSeleccionado] = useState({ id: null, nombre: "" });
 
     const [historial, setHistorial] = useState([]);
     const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "success" });
@@ -64,61 +64,207 @@ const Dashboard = () => {
         }
     };
 
-    const obtenerDatosDashboard = async () => {
+const obtenerDatosDashboard = async () => {
         try {
             const token = localStorage.getItem("token");
-            if (!token) return;
+            const miId = parseInt(localStorage.getItem("user_id")); 
+            
+            if (!token || !miId) return;
 
-            const respuesta = await fetch("http://localhost:5000/groups", {
+            const resGrupos = await fetch("http://localhost:5000/groups", {
                 method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+                headers: { "Authorization": `Bearer ${token}` }
             });
 
-            if (respuesta.ok) {
-                const datos = await respuesta.json();
+            if (resGrupos.ok) {
+                const datosGrupos = await resGrupos.json();
+                
+                let totalMeDebenTemp = 0;
+                let totalDeboTemp = 0;
+                let gruposConSaldos = [];
+                let listaAmigosTemp = {}; 
 
-                if (Array.isArray(datos)) {
-                    setGrupos(datos);
+                if (Array.isArray(datosGrupos)) {
+                    for (let grupo of datosGrupos) {
+                        let saldoDelGrupo = 0; 
+                        let nombresMiembros = {};
+
+                        try {
+                            const resMiembros = await fetch(`http://localhost:5000/group/${grupo.id}/members`, {
+                                headers: { "Authorization": `Bearer ${token}` }
+                            });
+                            if (resMiembros.ok) {
+                                const miembros = await resMiembros.json();
+                                miembros.forEach(m => {
+                                    nombresMiembros[m.user_id] = m.user.name || m.user.user_name;
+                                });
+                            }
+                        } catch (e) {}
+
+                        const registrarAmigo = (amigoId, cantidad) => {
+                            const clave = `${grupo.id}-${amigoId}`; 
+                            if (!listaAmigosTemp[clave]) {
+                                const nombreReal = nombresMiembros[amigoId] || `Usuario #${amigoId}`;
+                                listaAmigosTemp[clave] = {
+                                    id: clave,
+                                    usuario: nombreReal,
+                                    inicial: nombreReal.charAt(0).toUpperCase(),
+                                    grupo: grupo.name,
+                                    saldo: 0
+                                };
+                            }
+                            listaAmigosTemp[clave].saldo += cantidad;
+                        };
+
+                        const resGastos = await fetch(`http://localhost:5000/group/${grupo.id}/expenses`, {
+                            method: "GET",
+                            headers: { "Authorization": `Bearer ${token}` }
+                        });
+
+                        if (resGastos.ok) {
+                            const gastos = await resGastos.json();
+                            gastos.forEach(gasto => {
+                                if (gasto.paid_by === miId) {
+                                    gasto.splits.forEach(split => {
+                                        if (split.user_id !== miId) {
+                                            saldoDelGrupo += split.amount;
+                                            totalMeDebenTemp += split.amount;
+                                            registrarAmigo(split.user_id, split.amount); 
+                                        }
+                                    });
+                                } else {
+                                    gasto.splits.forEach(split => {
+                                        if (split.user_id === miId) {
+                                            saldoDelGrupo -= split.amount;
+                                            totalDeboTemp += split.amount;
+                                            registrarAmigo(gasto.paid_by, -split.amount); 
+                                        }
+                                    });
+                                }
+                            });
+                        }
+
+                        const resPagos = await fetch(`http://localhost:5000/group/${grupo.id}/settlements`, {
+                            method: "GET",
+                            headers: { "Authorization": `Bearer ${token}` }
+                        });
+
+                        if (resPagos.ok) {
+                            const pagos = await resPagos.json();
+                            pagos.forEach(pago => {
+                                if (pago.paid_by === miId) {
+                                    saldoDelGrupo += pago.amount;
+                                    totalDeboTemp -= pago.amount;
+                                    registrarAmigo(pago.paid_to, pago.amount); 
+                                } else if (pago.paid_to === miId) {
+                                    saldoDelGrupo -= pago.amount;
+                                    totalMeDebenTemp -= pago.amount;
+                                    registrarAmigo(pago.paid_by, -pago.amount); 
+                                }
+                            });
+                        }
+
+                        gruposConSaldos.push({
+                            id: grupo.id,
+                            nombre: grupo.name,
+                            categoria: grupo.category,
+                            saldo: saldoDelGrupo
+                        });
+                    }
+
+                    setGrupos(gruposConSaldos);
+                    setTotalMeDeben(Math.max(0, totalMeDebenTemp));
+                    setTotalDebo(Math.max(0, totalDeboTemp));
+                    
+                    const arrayAmigos = Object.values(listaAmigosTemp).filter(amigo => Math.abs(amigo.saldo) > 0.01);
+                    setAmigos(arrayAmigos);
                 }
             }
         } catch (error) {
-            console.log("Error de conexión con los grupos:", error);
+            console.error("Error calculando el dashboard:", error);
         }
     };
 
-    // EL ÚNICO EFFECT: Se dispara al montar el componente Y cuando 'actualizarDatosTrigger' cambia
-    useEffect(() => {
-        obtenerUsuario();
-        obtenerDatosDashboard();
-    }, [actualizarDatosTrigger]);
-
-
     // Formularios
-
-    const manejarSubmitLiquidar = async (e) => {
+    const manejarSubmitGasto = async (e) => {
         e.preventDefault();
-        const amigo = e.target[0].value.trim();
-        const cantidad = parseFloat(e.target[1].value);
+        const grupoId = e.target[0].value;
+        const descripcion = e.target[1].value.trim();
+        const cantidad = parseFloat(e.target[2].value);
 
-        if (!amigo || isNaN(cantidad) || cantidad <= 0) {
-            mostrarToast("Introduce un usuario válido y un monto mayor a 0", "error");
+        if (!grupoId || !descripcion || isNaN(cantidad) || cantidad <= 0) {
+            mostrarToast("Introduce un grupo, una descripción válida y un monto mayor a 0", "error");
             return;
         }
 
         setCargando(true);
         try {
-            setTotalDebo(Math.max(0, totalDebo - cantidad));
-            setHistorial([
-                { id: Date.now(), texto: `Registraste un pago de ${cantidad.toFixed(2)} € a ${amigo}` },
-                ...historial
-            ]);
-            mostrarToast("Pago registrado correctamente");
-            e.target.reset();
-            setModalLiquidar(false);
+            const token = localStorage.getItem("token");
+            const respuesta = await fetch(`http://localhost:5000/group/${grupoId}/expenses`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    description: descripcion,
+                    amount: cantidad
+                })
+            });
+
+            if (respuesta.ok) {
+                mostrarToast("Gasto guardado correctamente");
+                e.target.reset();
+                setModalGasto(false);
+                await obtenerDatosDashboard(); 
+            } else {
+                const errorData = await respuesta.json();
+                mostrarToast(errorData.error || "Error al guardar el gasto", "error");
+            }
         } catch (error) {
-            mostrarToast("Error al registrar el pago", "error");
+            mostrarToast("Error de conexión", "error");
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    const manejarSubmitLiquidar = async (e) => {
+        e.preventDefault();
+        const grupoId = e.target[0].value;
+        const paidTo = parseInt(e.target[1].value.trim()); // Convertimos el ID a número
+        const cantidad = parseFloat(e.target[2].value);
+
+        if (!grupoId || !paidTo || isNaN(cantidad) || cantidad <= 0) {
+            mostrarToast("Introduce un grupo, un ID válido y un monto mayor a 0", "error");
+            return;
+        }
+
+        setCargando(true);
+        try {
+            const token = localStorage.getItem("token");
+            const respuesta = await fetch(`http://localhost:5000/group/${grupoId}/settlements`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    paid_to: paidTo,
+                    amount: cantidad
+                })
+            });
+
+            if (respuesta.ok) {
+                mostrarToast("Pago registrado correctamente");
+                e.target.reset();
+                setModalLiquidar(false);
+                await obtenerDatosDashboard(); // Recargamos para actualizar los saldos
+            } else {
+                const errorData = await respuesta.json();
+                mostrarToast(errorData.error || "Error al registrar el pago", "error");
+            }
+        } catch (error) {
+            mostrarToast("Error de conexión", "error");
         } finally {
             setCargando(false);
         }
@@ -158,33 +304,25 @@ const Dashboard = () => {
 
     const manejarSubmitAmigo = async (e) => {
         e.preventDefault();
-        const usuarioAmigo = e.target[0].value.trim();
+        const amigoId = e.target[0].value.trim();
 
-        if (!usuarioAmigo) {
-            mostrarToast("El campo no puede estar vacío", "error");
+        if (!amigoId) {
+            mostrarToast("Debes ingresar un ID válido", "error");
             return;
         }
 
         setCargando(true);
         try {
-            const nuevoAmigo = {
-                id: Date.now(),
-                inicial: usuarioAmigo.charAt(0).toUpperCase(),
-                usuario: usuarioAmigo,
-                grupo: "Sin grupo",
-                saldo: 0.00
-            };
 
-            setAmigos([...amigos, nuevoAmigo]);
             setHistorial([
-                { id: Date.now(), texto: `Añadiste a ${usuarioAmigo} a tus amigos` },
+                { id: Date.now(), texto: `Enviaste una solicitud de amistad al usuario con ID: ${amigoId}` },
                 ...historial
             ]);
-            mostrarToast("Invitación enviada con éxito");
+            mostrarToast("Solicitud de amistad enviada");
             e.target.reset();
             setModalAmigo(false);
         } catch (error) {
-            mostrarToast("Error al añadir amigo", "error");
+            mostrarToast("Error al enviar solicitud", "error");
         } finally {
             setCargando(false);
         }
@@ -192,53 +330,78 @@ const Dashboard = () => {
 
     const manejarSubmitAmigoGrupo = async (e) => {
         e.preventDefault();
-        const usuarioAmigo = e.target[0].value.trim();
+        const emailInput = e.target[0].value.trim();
 
-        if (!usuarioAmigo) {
-            mostrarToast("El campo no puede estar vacío", "error");
+        if (!emailInput) {
+            mostrarToast("El correo no puede estar vacío", "error");
             return;
         }
 
         setCargando(true);
         try {
-            const nuevoAmigo = {
-                id: Date.now(),
-                inicial: usuarioAmigo.charAt(0).toUpperCase(),
-                usuario: usuarioAmigo,
-                grupo: grupoSeleccionado,
-                saldo: 0.00
-            };
+            const token = localStorage.getItem("token");
+            
+            // Hacemos la petición a la ruta exacta de tu invitation.py
+            const respuesta = await fetch(`http://localhost:5000/group/${grupoSeleccionado.id}/invite`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    email: emailInput
+                })
+            });
 
-            setAmigos([...amigos, nuevoAmigo]);
-            setHistorial([
-                { id: Date.now(), texto: `Agregaste a ${usuarioAmigo} al grupo "${grupoSeleccionado}"` },
-                ...historial
-            ]);
-            mostrarToast("Amigo añadido al grupo");
-            e.target.reset();
-            setModalAmigoGrupo(false);
+            if (respuesta.ok) {
+                mostrarToast("¡Invitación enviada por correo electrónico!");
+                e.target.reset();
+                setModalAmigoGrupo(false);
+            } else {
+                const errorData = await respuesta.json();
+                // Tu backend envía mensajes muy claros (ej. "Ya existe una invitación pendiente")
+                mostrarToast(errorData.error || "Error al enviar la invitación", "error");
+            }
         } catch (error) {
-            mostrarToast("Error al añadir al grupo", "error");
+            mostrarToast("Error de conexión con el servidor", "error");
         } finally {
             setCargando(false);
         }
     };
 
     // Borrado
-    const abrirModalAmigoGrupo = (usuarioGrupo) => {
-        setGrupoSeleccionado(usuarioGrupo);
+    const abrirModalAmigoGrupo = (id, nombre) => {
+        setGrupoSeleccionado({ id, nombre });
         setModalAmigoGrupo(true);
     };
 
-    const salirYBorrarGrupo = (id, usuario) => {
-        const confirmar = window.confirm(`¿Estás seguro de que quieres salir y borrar el grupo "${usuario}"?`);
-        if (confirmar) {
-            setGrupos(grupos.filter(grupo => grupo.id !== id));
-            setHistorial([
-                { id: Date.now(), texto: `Eliminaste el grupo "${usuario}"` },
-                ...historial
-            ]);
-            mostrarToast("Grupo eliminado");
+    const salirYBorrarGrupo = async (id, nombre) => {
+        const confirmar = window.confirm(`¿Estás seguro de que quieres salir y borrar el grupo "${nombre}"?`);
+        if (!confirmar) return;
+
+        try {
+            const token = localStorage.getItem("token");
+
+            const respuesta = await fetch(`http://localhost:5000/group/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (respuesta.ok) {
+                setGrupos(grupos.filter(grupo => grupo.id !== id));
+                setHistorial([
+                    { id: Date.now(), texto: `Eliminaste el grupo "${nombre}"` },
+                    ...historial
+                ]);
+                mostrarToast("Grupo eliminado correctamente");
+            } else {
+                const errorData = await respuesta.json();
+                mostrarToast(errorData.error || "Hubo un problema al eliminar el grupo", "error");
+            }
+        } catch (error) {
+            mostrarToast("Error de conexión con el servidor", "error");
         }
     };
 
@@ -386,7 +549,7 @@ const Dashboard = () => {
 
                                 <div className="flex gap-2 justify-end">
                                     <button
-                                        onClick={() => abrirModalAmigoGrupo(grupo.name)}
+                                        onClick={() => abrirModalAmigoGrupo(grupo.id, grupo.nombre)}
                                         className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
                                     >
                                         + Añadir amigo
@@ -455,13 +618,61 @@ const Dashboard = () => {
                 </div>
             </div>
 
+
+            {/* Modales */}
+
+
+           {modalGasto && (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
+                    <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
+                        <h3 className="text-xl font-bold mb-4">Añadir un gasto</h3>
+                        <form onSubmit={manejarSubmitGasto}>
+                            <label className="block text-xs text-gray-400 mb-1">¿A qué grupo pertenece?</label>
+                            <select className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400 cursor-pointer" required>
+                                <option value="">Selecciona un grupo</option>
+                                {grupos.map((grupo) => (
+                                    <option key={grupo.id} value={grupo.id}>{grupo.name}</option>
+                                ))}
+                            </select>
+
+                            <label className="block text-xs text-gray-400 mb-1">Descripción</label>
+                            <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400" required placeholder="Ej. Cena del viernes" />
+
+                            <label className="block text-xs text-gray-400 mb-1">Cantidad (€)</label>
+                            <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-yellow-400" required placeholder="0.00" />
+
+                            <div className="flex justify-end gap-3">
+                                <button type="button" onClick={() => setModalGasto(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
+                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-yellow-400 text-black font-bold rounded-md hover:bg-yellow-500 transition-colors disabled:opacity-50">
+                                    {cargando ? "Guardando..." : "Guardar gasto"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {modalLiquidar && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4">Liquidar deudas</h3>
                         <form onSubmit={manejarSubmitLiquidar}>
-                            <label className="block text-xs text-gray-400 mb-1">¿A quién le pagas?</label>
-                            <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500" required placeholder="usuario del amigo" />
+                            <label className="block text-xs text-gray-400 mb-1">¿De qué grupo es la deuda?</label>
+                            <select className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500 cursor-pointer" required>
+                                <option value="">Selecciona un grupo</option>
+                                {grupos.map((grupo) => (
+                                    <option key={grupo.id} value={grupo.id}>{grupo.nombre}</option>
+                                ))}
+                            </select>
+
+                            <label className="block text-xs text-gray-400 mb-1">ID del usuario al que le pagas</label>
+                            <input 
+                                type="number" 
+                                min="1" 
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                required 
+                                placeholder="Ej. 3" 
+                            />
 
                             <label className="block text-xs text-gray-400 mb-1">Cantidad a saldar (€)</label>
                             <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-green-500" required placeholder="0.00" />
@@ -478,23 +689,29 @@ const Dashboard = () => {
             )}
 
             <ModalCrearGrupo 
-                estaAbierto={modalGrupo}
-                alCerrar={() => setModalGrupo(false)}
-                onGrupoCreado={obtenerDatosDashboard}
+            estaAbierto={modalGrupo}
+            alCerrar={() => setModalGrupo(false)}
+            onGrupoCreado={obtenerDatosDashboard}
             />
 
             {modalAmigo && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-4">Añadir un amigo</h3>
+                        <h3 className="text-xl font-bold mb-4">Enviar solicitud de amistad</h3>
                         <form onSubmit={manejarSubmitAmigo}>
-                            <label className="block text-xs text-gray-400 mb-1">Usuario o correo electrónico</label>
-                            <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white" required placeholder="correo@ejemplo.com" />
+                            <label className="block text-xs text-gray-400 mb-1">ID del Usuario</label>
+                            <input
+                                type="number"
+                                min="1"
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                required
+                                placeholder="Ej. 5"
+                            />
 
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalAmigo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
                                 <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
-                                    {cargando ? "Enviando..." : "Enviar invitación"}
+                                    {cargando ? "Enviando..." : "Enviar solicitud"}
                                 </button>
                             </div>
                         </form>
@@ -505,16 +722,22 @@ const Dashboard = () => {
             {modalAmigoGrupo && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-2">Añadir amigo a un grupo</h3>
-                        <p className="text-gray-400 text-sm mb-4">Grupo seleccionado: <span className="text-white font-bold">{grupoSeleccionado}</span></p>
+                        <h3 className="text-xl font-bold mb-2">Invitar al grupo</h3>
+                        <p className="text-gray-400 text-sm mb-4">Grupo seleccionado: <span className="text-white font-bold">{grupoSeleccionado.nombre}</span></p>
+
                         <form onSubmit={manejarSubmitAmigoGrupo}>
-                            <label className="block text-xs text-gray-400 mb-1">Usuario o correo electrónico</label>
-                            <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white" required placeholder="correo@ejemplo.com" />
+                            <label className="block text-xs text-gray-400 mb-1">Correo electrónico del usuario</label>
+                            <input
+                                type="email"
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white"
+                                required
+                                placeholder="ejemplo@correo.com"
+                            />
 
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalAmigoGrupo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
                                 <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
-                                    {cargando ? "Añadiendo..." : "Añadir al grupo"}
+                                    {cargando ? "Enviando correo..." : "Enviar invitación"}
                                 </button>
                             </div>
                         </form>
