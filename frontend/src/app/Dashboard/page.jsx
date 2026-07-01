@@ -5,10 +5,14 @@ import { Navbar } from "../../components/navbar";
 import Link from "next/link";
 import { ModalCrearGrupo } from "../../components/ModalCrearGrupo";
 import Sidebar from "../../components/sidebar";
+// IMPORTANTE: Asegúrate de que esta ruta apunte correctamente a donde creaste el ModalContext
+import { useModales } from "../context/ModalContext";
 
 const Dashboard = () => {
+    // Contexto Global para el Modal de Gastos
+    const { setModalGasto, actualizarDatosTrigger } = useModales();
 
-    // Variables
+    // Variables de estado locales
     const [usuario, setUsuario] = useState(null);
     const [grupos, setGrupos] = useState([]);
     const [amigos, setAmigos] = useState([]);
@@ -16,7 +20,7 @@ const Dashboard = () => {
     const [totalMeDeben, setTotalMeDeben] = useState(0.00);
     const [totalDebo, setTotalDebo] = useState(0.00);
 
-    const [modalGasto, setModalGasto] = useState(false);
+    // Los demás modales se quedan locales porque solo se usan en este Dashboard
     const [modalLiquidar, setModalLiquidar] = useState(false);
     const [modalGrupo, setModalGrupo] = useState(false);
     const [modalAmigo, setModalAmigo] = useState(false);
@@ -29,7 +33,7 @@ const Dashboard = () => {
     const [cargando, setCargando] = useState(false);
 
 
-    // Funciones 
+    // Funciones de utilidad
     const mostrarToast = (mensaje, tipo = "success") => {
         setToast({ mostrar: true, mensaje, tipo });
         setTimeout(() => setToast({ mostrar: false, mensaje: "", tipo: "success" }), 3000);
@@ -423,7 +427,6 @@ const obtenerDatosDashboard = async () => {
         mostrarToast("Actividad eliminada");
     };
 
-    // Estilos
     return (
         <div className="bg-gray-900 min-h-screen pb-10 text-white relative">
             <Navbar />

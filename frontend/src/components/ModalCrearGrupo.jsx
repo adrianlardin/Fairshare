@@ -21,7 +21,8 @@ const manejarCrearGrupo = async (e) => {
       return;
     }
 
-    const categoriaFinal = categoria === "Otro" ? categoriaPersonalizada : categoria;
+  try {
+    const token = localStorage.getItem("token");
 
     try {
       const token = localStorage.getItem("token");
