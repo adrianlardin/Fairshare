@@ -22,7 +22,7 @@ def get_groups():
     return jsonify([g.serialize() for g in groups]), 200
 
 
-@group_bp.route("/group", methods=["POST"])
+@group_bp.route("/groups", methods=["POST"])
 @jwt_required()
 def create_group():
     current_user_id = int(get_jwt_identity())
@@ -56,7 +56,7 @@ def create_group():
     return jsonify(new_group.serialize()), 201
 
 
-@group_bp.route("/group/<int:group_id>", methods=["GET"])
+@group_bp.route("/groups/<int:group_id>", methods=["GET"])
 @jwt_required()
 def get_group(group_id):
     current_user_id = int(get_jwt_identity())
@@ -73,7 +73,7 @@ def get_group(group_id):
     return jsonify(group.serialize()), 200
 
 
-@group_bp.route("/group/<int:group_id>", methods=["PUT"])
+@group_bp.route("/groups/<int:group_id>", methods=["PUT"])
 @jwt_required()
 def update_group(group_id):
     current_user_id = int(get_jwt_identity())
@@ -101,7 +101,7 @@ def update_group(group_id):
     return jsonify(group.serialize()), 200
 
 
-@group_bp.route("/group/<int:group_id>", methods=["DELETE"])
+@group_bp.route("/groups/<int:group_id>", methods=["DELETE"])
 @jwt_required()
 def delete_group(group_id):
     current_user_id = int(get_jwt_identity())
@@ -123,7 +123,7 @@ def delete_group(group_id):
 
 #    MIEMBROS 
 
-@group_bp.route("/group/<int:group_id>/members", methods=["GET"])
+@group_bp.route("/groups/<int:group_id>/members", methods=["GET"])
 @jwt_required()
 def get_members(group_id):
     current_user_id = int(get_jwt_identity())
@@ -136,7 +136,7 @@ def get_members(group_id):
     return jsonify([m.serialize() for m in members]), 200
 
 
-@group_bp.route("/group/<int:group_id>/members", methods=["POST"])
+@group_bp.route("/groups/<int:group_id>/members", methods=["POST"])
 @jwt_required()
 def add_member(group_id):
     current_user_id = int(get_jwt_identity())
@@ -181,7 +181,7 @@ def add_member(group_id):
     return jsonify(new_member.serialize()), 201
 
 
-@group_bp.route("/group/<int:group_id>/members/<int:user_id>", methods=["DELETE"])
+@group_bp.route("/groups/<int:group_id>/members/<int:user_id>", methods=["DELETE"])
 @jwt_required()
 def remove_member(group_id, user_id):
     current_user_id = int(get_jwt_identity())
@@ -203,7 +203,7 @@ def remove_member(group_id, user_id):
 
 #    GASTOS 
 
-@group_bp.route("/group/<int:group_id>/expenses", methods=["GET"])
+@group_bp.route("/groups/<int:group_id>/expenses", methods=["GET"])
 @jwt_required()
 def get_expenses(group_id):
     current_user_id = int(get_jwt_identity())
@@ -218,7 +218,7 @@ def get_expenses(group_id):
     return jsonify([e.serialize() for e in expenses]), 200
 
 
-@group_bp.route("/group/<int:group_id>/expenses", methods=["POST"])
+@group_bp.route("/groups/<int:group_id>/expenses", methods=["POST"])
 @jwt_required()
 def create_expense(group_id):
     current_user_id = int(get_jwt_identity())
@@ -290,7 +290,7 @@ def delete_expense(expense_id):
 
 #    PAGOS 
 
-@group_bp.route("/group/<int:group_id>/settlements", methods=["GET"])
+@group_bp.route("/groups/<int:group_id>/settlements", methods=["GET"])
 @jwt_required()
 def get_settlements(group_id):
     current_user_id = int(get_jwt_identity())
@@ -305,7 +305,7 @@ def get_settlements(group_id):
     return jsonify([s.serialize() for s in settlements]), 200
 
 
-@group_bp.route("/group/<int:group_id>/settlements", methods=["POST"])
+@group_bp.route("/groups/<int:group_id>/settlements", methods=["POST"])
 @jwt_required()
 def create_settlement(group_id):
     current_user_id = int(get_jwt_identity())

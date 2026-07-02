@@ -5,22 +5,21 @@ import { Navbar } from "../../components/navbar";
 import Link from "next/link";
 import { ModalCrearGrupo } from "../../components/ModalCrearGrupo";
 import Sidebar from "../../components/sidebar";
-// IMPORTANTE: Asegúrate de que esta ruta apunte correctamente a donde creaste el ModalContext
+import { useRouter } from "next/navigation";
 import { useModales } from "../context/ModalContext";
 
 const Dashboard = () => {
-    // Contexto Global para el Modal de Gastos
-    const { setModalGasto, actualizarDatosTrigger } = useModales();
+    const router = useRouter();
+    const { modalGasto, setModalGasto, actualizarDatosTrigger } = useModales();
 
-    // Variables de estado locales
     const [usuario, setUsuario] = useState(null);
     const [grupos, setGrupos] = useState([]);
     const [amigos, setAmigos] = useState([]);
+    const [amigosReales, setAmigosReales] = useState([]);
 
     const [totalMeDeben, setTotalMeDeben] = useState(0.00);
     const [totalDebo, setTotalDebo] = useState(0.00);
 
-    // Los demás modales se quedan locales porque solo se usan en este Dashboard
     const [modalLiquidar, setModalLiquidar] = useState(false);
     const [modalGrupo, setModalGrupo] = useState(false);
     const [modalAmigo, setModalAmigo] = useState(false);
@@ -32,14 +31,11 @@ const Dashboard = () => {
     const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "success" });
     const [cargando, setCargando] = useState(false);
 
-
-    // Funciones de utilidad
     const mostrarToast = (mensaje, tipo = "success") => {
         setToast({ mostrar: true, mensaje, tipo });
         setTimeout(() => setToast({ mostrar: false, mensaje: "", tipo: "success" }), 3000);
     };
 
-    // Conexión backend
     const obtenerUsuario = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -60,16 +56,48 @@ const Dashboard = () => {
                 setUsuario(datos);
             }
         } catch (error) {
-            console.log("Error al pedir el usuario:", error);
+            console.log(error);
         }
     };
 
-const obtenerDatosDashboard = async () => {
+    const obtenerAmigosReales = async () => {
         try {
             const token = localStorage.getItem("token");
-            const miId = parseInt(localStorage.getItem("user_id")); 
+            const respuesta = await fetch("http://localhost:5000/friends", {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (respuesta.ok) {
+                const datosBrutos = await respuesta.json();
+                const listaAmigos = Array.isArray(datosBrutos) ? datosBrutos : (datosBrutos.friends || datosBrutos.amigos || []);
+                setAmigosReales(listaAmigos);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const obtenerDatosDashboard = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            let miId = null;
+
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+                try {
+                    const parsedUser = JSON.parse(storedUser);
+                    miId = parseInt(parsedUser.id || parsedUser.user_id); 
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+
+            if (!miId || isNaN(miId)) {
+                miId = parseInt(localStorage.getItem("user_id") || localStorage.getItem("id"));
+            }
             
-            if (!token || !miId) return;
+            if (!token || !miId || isNaN(miId)) return;
 
             const resGrupos = await fetch("http://localhost:5000/groups", {
                 method: "GET",
@@ -77,46 +105,47 @@ const obtenerDatosDashboard = async () => {
             });
 
             if (resGrupos.ok) {
-                const datosGrupos = await resGrupos.json();
+                const datosBrutos = await resGrupos.json();
+                const datosGrupos = Array.isArray(datosBrutos) ? datosBrutos : (datosBrutos.groups || []);
                 
                 let totalMeDebenTemp = 0;
                 let totalDeboTemp = 0;
                 let gruposConSaldos = [];
                 let listaAmigosTemp = {}; 
 
-                if (Array.isArray(datosGrupos)) {
-                    for (let grupo of datosGrupos) {
-                        let saldoDelGrupo = 0; 
-                        let nombresMiembros = {};
+                for (let grupo of datosGrupos) {
+                    let saldoDelGrupo = 0; 
+                    let nombresMiembros = {};
 
-                        try {
-                            const resMiembros = await fetch(`http://localhost:5000/group/${grupo.id}/members`, {
-                                headers: { "Authorization": `Bearer ${token}` }
+                    try {
+                        const resMiembros = await fetch(`http://localhost:5000/groups/${grupo.id}/members`, {
+                            headers: { "Authorization": `Bearer ${token}` }
+                        });
+                        if (resMiembros.ok) {
+                            const miembros = await resMiembros.json();
+                            miembros.forEach(m => {
+                                nombresMiembros[m.user_id] = m.user.name || m.user.user_name;
                             });
-                            if (resMiembros.ok) {
-                                const miembros = await resMiembros.json();
-                                miembros.forEach(m => {
-                                    nombresMiembros[m.user_id] = m.user.name || m.user.user_name;
-                                });
-                            }
-                        } catch (e) {}
+                        }
+                    } catch (e) {}
 
-                        const registrarAmigo = (amigoId, cantidad) => {
-                            const clave = `${grupo.id}-${amigoId}`; 
-                            if (!listaAmigosTemp[clave]) {
-                                const nombreReal = nombresMiembros[amigoId] || `Usuario #${amigoId}`;
-                                listaAmigosTemp[clave] = {
-                                    id: clave,
-                                    usuario: nombreReal,
-                                    inicial: nombreReal.charAt(0).toUpperCase(),
-                                    grupo: grupo.name,
-                                    saldo: 0
-                                };
-                            }
-                            listaAmigosTemp[clave].saldo += cantidad;
-                        };
+                    const registrarAmigo = (amigoId, cantidad) => {
+                        const clave = `${grupo.id}-${amigoId}`; 
+                        if (!listaAmigosTemp[clave]) {
+                            const nombreReal = nombresMiembros[amigoId] || `Usuario #${amigoId}`;
+                            listaAmigosTemp[clave] = {
+                                id: clave,
+                                usuario: nombreReal,
+                                inicial: nombreReal.charAt(0).toUpperCase(),
+                                grupo: grupo.name,
+                                saldo: 0
+                            };
+                        }
+                        listaAmigosTemp[clave].saldo += cantidad;
+                    };
 
-                        const resGastos = await fetch(`http://localhost:5000/group/${grupo.id}/expenses`, {
+                    try {
+                        const resGastos = await fetch(`http://localhost:5000/groups/${grupo.id}/expenses`, {
                             method: "GET",
                             headers: { "Authorization": `Bearer ${token}` }
                         });
@@ -143,8 +172,10 @@ const obtenerDatosDashboard = async () => {
                                 }
                             });
                         }
+                    } catch(e) {}
 
-                        const resPagos = await fetch(`http://localhost:5000/group/${grupo.id}/settlements`, {
+                    try {
+                        const resPagos = await fetch(`http://localhost:5000/groups/${grupo.id}/settlements`, {
                             method: "GET",
                             headers: { "Authorization": `Bearer ${token}` }
                         });
@@ -163,29 +194,43 @@ const obtenerDatosDashboard = async () => {
                                 }
                             });
                         }
+                    } catch(e) {}
 
-                        gruposConSaldos.push({
-                            id: grupo.id,
-                            nombre: grupo.name,
-                            categoria: grupo.category,
-                            saldo: saldoDelGrupo
-                        });
-                    }
-
-                    setGrupos(gruposConSaldos);
-                    setTotalMeDeben(Math.max(0, totalMeDebenTemp));
-                    setTotalDebo(Math.max(0, totalDeboTemp));
-                    
-                    const arrayAmigos = Object.values(listaAmigosTemp).filter(amigo => Math.abs(amigo.saldo) > 0.01);
-                    setAmigos(arrayAmigos);
+                    gruposConSaldos.push({
+                        id: grupo.id,
+                        name: grupo.name,
+                        nombre: grupo.name,
+                        categoria: grupo.category,
+                        saldo: saldoDelGrupo
+                    });
                 }
+
+                setGrupos(gruposConSaldos);
+                setTotalMeDeben(Math.max(0, totalMeDebenTemp));
+                setTotalDebo(Math.max(0, totalDeboTemp));
+                
+                const arrayAmigos = Object.values(listaAmigosTemp).filter(amigo => Math.abs(amigo.saldo) > 0.01);
+                setAmigos(arrayAmigos);
             }
         } catch (error) {
-            console.error("Error calculando el dashboard:", error);
+            console.error(error);
         }
     };
 
-    // Formularios
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        
+        if (!token) {
+            router.push("/login");
+            return; 
+        }
+
+        obtenerUsuario();
+        obtenerDatosDashboard();
+        obtenerAmigosReales();
+        
+    }, [router, actualizarDatosTrigger]);
+
     const manejarSubmitGasto = async (e) => {
         e.preventDefault();
         const grupoId = e.target[0].value;
@@ -200,7 +245,7 @@ const obtenerDatosDashboard = async () => {
         setCargando(true);
         try {
             const token = localStorage.getItem("token");
-            const respuesta = await fetch(`http://localhost:5000/group/${grupoId}/expenses`, {
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoId}/expenses`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -215,7 +260,7 @@ const obtenerDatosDashboard = async () => {
             if (respuesta.ok) {
                 mostrarToast("Gasto guardado correctamente");
                 e.target.reset();
-                setModalGasto(false);
+                if (setModalGasto) setModalGasto(false);
                 await obtenerDatosDashboard(); 
             } else {
                 const errorData = await respuesta.json();
@@ -231,7 +276,7 @@ const obtenerDatosDashboard = async () => {
     const manejarSubmitLiquidar = async (e) => {
         e.preventDefault();
         const grupoId = e.target[0].value;
-        const paidTo = parseInt(e.target[1].value.trim()); // Convertimos el ID a número
+        const paidTo = parseInt(e.target[1].value.trim()); 
         const cantidad = parseFloat(e.target[2].value);
 
         if (!grupoId || !paidTo || isNaN(cantidad) || cantidad <= 0) {
@@ -242,7 +287,7 @@ const obtenerDatosDashboard = async () => {
         setCargando(true);
         try {
             const token = localStorage.getItem("token");
-            const respuesta = await fetch(`http://localhost:5000/group/${grupoId}/settlements`, {
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoId}/settlements`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -258,7 +303,7 @@ const obtenerDatosDashboard = async () => {
                 mostrarToast("Pago registrado correctamente");
                 e.target.reset();
                 setModalLiquidar(false);
-                await obtenerDatosDashboard(); // Recargamos para actualizar los saldos
+                await obtenerDatosDashboard(); 
             } else {
                 const errorData = await respuesta.json();
                 mostrarToast(errorData.error || "Error al registrar el pago", "error");
@@ -304,25 +349,40 @@ const obtenerDatosDashboard = async () => {
 
     const manejarSubmitAmigo = async (e) => {
         e.preventDefault();
-        const amigoId = e.target[0].value.trim();
+        const inputAmigo = e.target[0].value.trim();
 
-        if (!amigoId) {
-            mostrarToast("Debes ingresar un ID válido", "error");
+        if (!inputAmigo) {
+            mostrarToast("Debes ingresar un ID o Correo", "error");
             return;
         }
 
         setCargando(true);
         try {
+            const token = localStorage.getItem("token");
+            
+            const esCorreo = inputAmigo.includes("@");
+            const bodyData = esCorreo ? { email: inputAmigo } : { friend_id: parseInt(inputAmigo) };
 
-            setHistorial([
-                { id: Date.now(), texto: `Enviaste una solicitud de amistad al usuario con ID: ${amigoId}` },
-                ...historial
-            ]);
-            mostrarToast("Solicitud de amistad enviada");
-            e.target.reset();
-            setModalAmigo(false);
+            const respuesta = await fetch("http://localhost:5000/friends/request", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(bodyData)
+            });
+
+            if (respuesta.ok) {
+                mostrarToast("Solicitud de amistad procesada con éxito");
+                e.target.reset();
+                setModalAmigo(false);
+                await obtenerAmigosReales();
+            } else {
+                const errorData = await respuesta.json();
+                mostrarToast(errorData.error || "Error al enviar solicitud", "error");
+            }
         } catch (error) {
-            mostrarToast("Error al enviar solicitud", "error");
+            mostrarToast("Error de conexión", "error");
         } finally {
             setCargando(false);
         }
@@ -341,8 +401,7 @@ const obtenerDatosDashboard = async () => {
         try {
             const token = localStorage.getItem("token");
             
-            // Hacemos la petición a la ruta exacta de tu invitation.py
-            const respuesta = await fetch(`http://localhost:5000/group/${grupoSeleccionado.id}/invite`, {
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoSeleccionado.id}/invite`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -359,17 +418,15 @@ const obtenerDatosDashboard = async () => {
                 setModalAmigoGrupo(false);
             } else {
                 const errorData = await respuesta.json();
-                // Tu backend envía mensajes muy claros (ej. "Ya existe una invitación pendiente")
                 mostrarToast(errorData.error || "Error al enviar la invitación", "error");
             }
         } catch (error) {
-            mostrarToast("Error de conexión con el servidor", "error");
+            mostrarToast("Error de conexión", "error");
         } finally {
             setCargando(false);
         }
     };
 
-    // Borrado
     const abrirModalAmigoGrupo = (id, nombre) => {
         setGrupoSeleccionado({ id, nombre });
         setModalAmigoGrupo(true);
@@ -382,7 +439,7 @@ const obtenerDatosDashboard = async () => {
         try {
             const token = localStorage.getItem("token");
 
-            const respuesta = await fetch(`http://localhost:5000/group/${id}`, {
+            const respuesta = await fetch(`http://localhost:5000/groups/${id}`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -401,7 +458,7 @@ const obtenerDatosDashboard = async () => {
                 mostrarToast(errorData.error || "Hubo un problema al eliminar el grupo", "error");
             }
         } catch (error) {
-            mostrarToast("Error de conexión con el servidor", "error");
+            mostrarToast("Error de conexión", "error");
         }
     };
 
@@ -433,25 +490,19 @@ const obtenerDatosDashboard = async () => {
             <Sidebar />
             <div className="max-w-5xl mx-auto pt-24 px-6 md:pl-64">
 
-                {/* CABECERA */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                    {/* El orden de Panel de control y Bienvenido ha sido cambiado aquí */}
                     <div>
-                        <h1 className="text-2xl font-bold mb-1">Panel de control</h1>
-                        <h2 className="text-sm text-gray-400">
-                            {usuario ? (
-                                <Link href="/user" className="hover:text-yellow-400 transition-colors cursor-pointer" title="Ir a mi perfil">
-                                    Hola, {usuario.name || usuario.user_name}
-                                </Link>
-                            ) : (
-                                "Cargando..."
-                            )}
-                        </h2>
+                        <h2 className="text-sm text-gray-400 mb-1">Panel de control</h2>
+                        <h1 className="text-2xl font-bold">
+                            {usuario ? `¡Bienvenido, ${usuario.name || usuario.user_name}!` : "¡Bienvenido!"}
+                        </h1>
                     </div>
 
                     <div className="flex gap-3">
                         <button
                             className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-md transition-colors"
-                            onClick={() => setModalGasto(true)}
+                            onClick={() => { if (setModalGasto) setModalGasto(true); }}
                         >
                             Añadir un gasto
                         </button>
@@ -464,7 +515,6 @@ const obtenerDatosDashboard = async () => {
                     </div>
                 </div>
 
-                {/* RESUMEN SUPERIOR */}
                 <div className="mb-10">
                     <h4 className="text-sm text-gray-400 mb-4">Vista general</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -483,7 +533,6 @@ const obtenerDatosDashboard = async () => {
                     </div>
                 </div>
 
-                {/* HISTORIAL DE ACTIVIDAD */}
                 {historial.length > 0 && (
                     <div className="mb-10 bg-gray-800 rounded-2xl p-6 border border-gray-700">
                         <div className="flex justify-between items-center mb-4">
@@ -514,7 +563,6 @@ const obtenerDatosDashboard = async () => {
                     </div>
                 )}
 
-                {/* GRUPOS Y AMIGOS */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
 
                     <div className="md:col-span-4">
@@ -563,18 +611,41 @@ const obtenerDatosDashboard = async () => {
                                 </div>
                             </div>
                         ))}
-                    </div>
 
-                    {/* Lista de Transacciones / Amigos */}
-                    <div className="md:col-span-8">
-                        <div className="flex justify-between items-center mb-4">
-                            <h4 className="text-sm font-semibold">Transacciones pendientes</h4>
+                        <div className="mt-10 mb-4 flex justify-between items-center">
+                            <h4 className="text-sm font-semibold text-white">Mis Amigos</h4>
                             <button
-                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-3 rounded-md transition-colors"
+                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-2 rounded-md transition-colors"
                                 onClick={() => setModalAmigo(true)}
                             >
                                 + Añadir amigo
                             </button>
+                        </div>
+
+                        {amigosReales.length === 0 && (
+                            <p className="text-gray-500 text-sm italic p-4 bg-gray-800 rounded-xl border border-gray-700">
+                                Aún no has añadido amigos.
+                            </p>
+                        )}
+
+                        <div className="space-y-3">
+                            {amigosReales.map((amistad) => (
+                                <div key={amistad.friendship_id} className="bg-gray-800 rounded-xl p-3 border border-gray-700 flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center font-bold text-xs text-white">
+                                        {(amistad.user.name || amistad.user.user_name || "U").charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-bold text-white">{amistad.user.name || amistad.user.user_name}</span>
+                                        <span className="text-xs text-gray-400">{amistad.user.email}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="md:col-span-8">
+                        <div className="mb-4">
+                            <h4 className="text-sm font-semibold">Transacciones pendientes</h4>
                         </div>
 
                         <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
@@ -618,11 +689,7 @@ const obtenerDatosDashboard = async () => {
                 </div>
             </div>
 
-
-            {/* Modales */}
-
-
-           {modalGasto && (
+            {modalGasto && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4">Añadir un gasto</h3>
@@ -642,7 +709,7 @@ const obtenerDatosDashboard = async () => {
                             <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-yellow-400" required placeholder="0.00" />
 
                             <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => setModalGasto(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
+                                <button type="button" onClick={() => { if (setModalGasto) setModalGasto(false); }} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
                                 <button type="submit" disabled={cargando} className="px-4 py-2 bg-yellow-400 text-black font-bold rounded-md hover:bg-yellow-500 transition-colors disabled:opacity-50">
                                     {cargando ? "Guardando..." : "Guardar gasto"}
                                 </button>
@@ -661,7 +728,7 @@ const obtenerDatosDashboard = async () => {
                             <select className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500 cursor-pointer" required>
                                 <option value="">Selecciona un grupo</option>
                                 {grupos.map((grupo) => (
-                                    <option key={grupo.id} value={grupo.id}>{grupo.nombre}</option>
+                                    <option key={grupo.id} value={grupo.id}>{grupo.name}</option>
                                 ))}
                             </select>
 
@@ -689,9 +756,9 @@ const obtenerDatosDashboard = async () => {
             )}
 
             <ModalCrearGrupo 
-            estaAbierto={modalGrupo}
-            alCerrar={() => setModalGrupo(false)}
-            onGrupoCreado={obtenerDatosDashboard}
+                estaAbierto={modalGrupo}
+                alCerrar={() => setModalGrupo(false)}
+                onGrupoCreado={obtenerDatosDashboard}
             />
 
             {modalAmigo && (
@@ -699,13 +766,12 @@ const obtenerDatosDashboard = async () => {
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4">Enviar solicitud de amistad</h3>
                         <form onSubmit={manejarSubmitAmigo}>
-                            <label className="block text-xs text-gray-400 mb-1">ID del Usuario</label>
+                            <label className="block text-xs text-gray-400 mb-1">ID o Correo del Usuario</label>
                             <input
-                                type="number"
-                                min="1"
-                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                type="text"
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white"
                                 required
-                                placeholder="Ej. 5"
+                                placeholder="Ej. 5 o amigo@correo.com"
                             />
 
                             <div className="flex justify-end gap-3">
@@ -745,7 +811,6 @@ const obtenerDatosDashboard = async () => {
                 </div>
             )}
 
-            {/* Pequeñas notificaciones */}
             {toast.mostrar && (
                 <div className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all ${toast.tipo === "error" ? "bg-red-900 border-red-700 text-white" : "bg-green-900 border-green-700 text-white"}`}>
                     {toast.mensaje}

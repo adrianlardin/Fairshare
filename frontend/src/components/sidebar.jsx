@@ -31,6 +31,12 @@ const Sidebar = () => {
     setIsGroupsOpen(!isGroupsOpen);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
+
   return (
     <>
       <aside className="fixed top-16 left-0 z-40 w-[240px] h-[calc(100vh-64px)] bg-[#1a1a1a] text-[#ae9f8f] flex flex-col p-5 box-border shadow-2xl border-r border-neutral-900">
@@ -111,6 +117,14 @@ const Sidebar = () => {
                 Configuración
               </p>
             </div>
+          </button>
+
+          {/* Botón de Logout añadido */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 p-2 mt-2 rounded-xl text-red-400 hover:bg-red-900/10 hover:text-red-300 transition-all text-xs font-medium"
+          >
+            <span className="ml-1">🚪</span> Cerrar sesión
           </button>
         </div>
 
