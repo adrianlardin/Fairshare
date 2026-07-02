@@ -49,8 +49,7 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
           name: nombreGrupo,
           category: categoriaFinal,
           description: "Grupo creado desde el panel de control"
-          // Nota: Si en el futuro tu backend soporta guardar la moneda, 
-          // puedes añadirla aquí enviando algo como: currency: moneda
+          
         })
       });
 

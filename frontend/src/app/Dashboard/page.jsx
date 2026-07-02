@@ -491,7 +491,6 @@ const Dashboard = () => {
             <div className="max-w-5xl mx-auto pt-24 px-6 md:pl-64">
 
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-                    {/* El orden de Panel de control y Bienvenido ha sido cambiado aquí */}
                     <div>
                         <h2 className="text-sm text-gray-400 mb-1">Panel de control</h2>
                         <h1 className="text-2xl font-bold">
