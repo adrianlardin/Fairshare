@@ -5,11 +5,9 @@ import { Navbar } from "../../components/navbar";
 import Link from "next/link";
 import { ModalCrearGrupo } from "../../components/ModalCrearGrupo";
 import Sidebar from "../../components/sidebar";
-import { useRouter } from "next/navigation";
 import { useModales } from "../context/ModalContext";
 
 const Dashboard = () => {
-    const router = useRouter();
     const { modalGasto, setModalGasto, actualizarDatosTrigger } = useModales();
 
     const [usuario, setUsuario] = useState(null);
@@ -31,54 +29,21 @@ const Dashboard = () => {
     const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "success" });
     const [cargando, setCargando] = useState(false);
 
+    useEffect(() => {
+        obtenerUsuario();
+    }, []);
+
+    useEffect(() => {
+        obtenerDatosDashboard();
+    }, [actualizarDatosTrigger]);
+
+
     const mostrarToast = (mensaje, tipo = "success") => {
         setToast({ mostrar: true, mensaje, tipo });
         setTimeout(() => setToast({ mostrar: false, mensaje: "", tipo: "success" }), 3000);
     };
 
-const obtenerUsuario = async () => {
-    try {
-        const token = localStorage.getItem("token");
-        let userId = null;
-
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            try {
-                const parsedUser = JSON.parse(storedUser);
-                userId = parsedUser.id || parsedUser.user_id;
-                
-                if (parsedUser.name || parsedUser.user_name || parsedUser.username) {
-                    setUsuario(parsedUser);
-                }
-            } catch (e) {
-                console.error("Error leyendo usuario del storage", e);
-            }
-        }
-
-        if (!userId || isNaN(userId)) {
-            userId = parseInt(localStorage.getItem("user_id") || localStorage.getItem("id"));
-        }
-
-        if (!token || !userId || isNaN(userId)) return;
-
-        const respuesta = await fetch(`http://localhost:5000/user/${userId}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            }
-        });
-
-        if (respuesta.ok) {
-            const datos = await respuesta.json();
-            setUsuario(datos);
-        }
-    } catch (error) {
-        console.error("Error al obtener usuario:", error);
-    }
-};
-
-    const obtenerAmigosReales = async () => {
+    const obtenerUsuario = async () => {
         try {
             const token = localStorage.getItem("token");
             const respuesta = await fetch("http://localhost:5000/friends", {
@@ -235,20 +200,6 @@ const obtenerUsuario = async () => {
         }
     };
 
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        
-        if (!token) {
-            router.push("/login");
-            return; 
-        }
-
-        obtenerUsuario();
-        obtenerDatosDashboard();
-        obtenerAmigosReales();
-        
-    }, [router, actualizarDatosTrigger]);
-
     const manejarSubmitGasto = async (e) => {
         e.preventDefault();
         const grupoId = e.target[0].value;
@@ -294,7 +245,7 @@ const obtenerUsuario = async () => {
     const manejarSubmitLiquidar = async (e) => {
         e.preventDefault();
         const grupoId = e.target[0].value;
-        const paidTo = parseInt(e.target[1].value.trim()); 
+        const paidTo = parseInt(e.target[1].value.trim());
         const cantidad = parseFloat(e.target[2].value);
 
         if (!grupoId || !paidTo || isNaN(cantidad) || cantidad <= 0) {
@@ -321,7 +272,7 @@ const obtenerUsuario = async () => {
                 mostrarToast("Pago registrado correctamente");
                 e.target.reset();
                 setModalLiquidar(false);
-                await obtenerDatosDashboard(); 
+                await obtenerDatosDashboard();
             } else {
                 const errorData = await respuesta.json();
                 mostrarToast(errorData.error || "Error al registrar el pago", "error");
@@ -419,7 +370,7 @@ const obtenerUsuario = async () => {
         try {
             const token = localStorage.getItem("token");
             
-            const respuesta = await fetch(`http://localhost:5000/groups/${grupoSeleccionado.id}/invite`, {
+            const respuesta = await fetch(`http://localhost:5000/group/${grupoSeleccionado.id}/invite`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -629,8 +580,9 @@ const obtenerUsuario = async () => {
                             </div>
                         ))}
 
-                        <div className="mt-10 mb-4 flex justify-between items-center">
-                            <h4 className="text-sm font-semibold text-white">Mis Amigos</h4>
+                    <div className="md:col-span-8">
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-sm font-semibold">Transacciones pendientes</h4>
                             <button
                                 className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-2 rounded-md transition-colors"
                                 onClick={() => setModalAmigo(true)}
@@ -706,7 +658,10 @@ const obtenerUsuario = async () => {
                 </div>
             </div>
 
-            {modalGasto && (
+
+
+
+           {modalGasto && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4">Añadir un gasto</h3>

@@ -14,12 +14,8 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
 
   if (!estaAbierto) return null;
 
-  const agregarAmigoALista = () => {
-    if (emailAmigo.trim() && emailAmigo.includes("@") && !amigosAInvitar.includes(emailAmigo.trim())) {
-      setAmigosAInvitar([...amigosAInvitar, emailAmigo.trim()]);
-      setEmailAmigo("");
-    }
-  };
+  const manejarCrearGrupo = async (e) => {
+    e.preventDefault();
 
   const quitarAmigoDeLista = (email) => {
     setAmigosAInvitar(amigosAInvitar.filter(e => e !== email));
@@ -35,8 +31,12 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
         return;
     }
 
-    setCargando(true);
-    const categoriaFinal = categoria === "Otro" ? categoriaPersonalizada : categoria;
+    if (categoria === "Otro" && !categoriaPersonalizada.trim()) {
+      alert("Por favor, ingresa una categoría personalizada.");
+      return;
+    }
+
+    const categoriaFinal = categoria === "Otro" ? categoriaPersonalizada.trim() : categoria;
 
     try {
       const response = await fetch("http://localhost:5000/groups", {
@@ -81,12 +81,12 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
       setNombreGrupo("");
       setCategoria("Casa");
       setCategoriaPersonalizada("");
-      setAmigosAInvitar([]);
-      setEmailAmigo("");
-      
-      if (setActualizarDatosTrigger) setActualizarDatosTrigger(prev => prev + 1);
-      if (onGrupoCreado) onGrupoCreado();
-      
+
+      if (typeof onGrupoCreado === 'function') {
+        onGrupoCreado();
+      }
+
+      window.location.reload();
       alCerrar();
     } catch (error) {
       alert("Error: " + error.message);
