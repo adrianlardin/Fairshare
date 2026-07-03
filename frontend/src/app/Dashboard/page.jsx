@@ -5,14 +5,11 @@ import { Navbar } from "../../components/navbar";
 import Link from "next/link";
 import { ModalCrearGrupo } from "../../components/ModalCrearGrupo";
 import Sidebar from "../../components/sidebar";
-// IMPORTANTE: Asegúrate de que esta ruta apunte correctamente a donde creaste el ModalContext
 import { useModales } from "../context/ModalContext";
 
 const Dashboard = () => {
-    // Contexto Global para el Modal de Gastos
-    const { setModalGasto, actualizarDatosTrigger } = useModales();
+    const { modalGasto, setModalGasto, actualizarDatosTrigger } = useModales();
 
-    // Variables de estado locales
     const [usuario, setUsuario] = useState(null);
     const [grupos, setGrupos] = useState([]);
     const [amigos, setAmigos] = useState([]);
@@ -20,7 +17,6 @@ const Dashboard = () => {
     const [totalMeDeben, setTotalMeDeben] = useState(0.00);
     const [totalDebo, setTotalDebo] = useState(0.00);
 
-    // Los demás modales se quedan locales porque solo se usan en este Dashboard
     const [modalLiquidar, setModalLiquidar] = useState(false);
     const [modalGrupo, setModalGrupo] = useState(false);
     const [modalAmigo, setModalAmigo] = useState(false);
@@ -32,14 +28,20 @@ const Dashboard = () => {
     const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "success" });
     const [cargando, setCargando] = useState(false);
 
+    useEffect(() => {
+        obtenerUsuario();
+    }, []);
 
-    // Funciones de utilidad
+    useEffect(() => {
+        obtenerDatosDashboard();
+    }, [actualizarDatosTrigger]);
+
+
     const mostrarToast = (mensaje, tipo = "success") => {
         setToast({ mostrar: true, mensaje, tipo });
         setTimeout(() => setToast({ mostrar: false, mensaje: "", tipo: "success" }), 3000);
     };
 
-    // Conexión backend
     const obtenerUsuario = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -185,7 +187,6 @@ const obtenerDatosDashboard = async () => {
         }
     };
 
-    // Formularios
     const manejarSubmitGasto = async (e) => {
         e.preventDefault();
         const grupoId = e.target[0].value;
@@ -231,7 +232,7 @@ const obtenerDatosDashboard = async () => {
     const manejarSubmitLiquidar = async (e) => {
         e.preventDefault();
         const grupoId = e.target[0].value;
-        const paidTo = parseInt(e.target[1].value.trim()); // Convertimos el ID a número
+        const paidTo = parseInt(e.target[1].value.trim());
         const cantidad = parseFloat(e.target[2].value);
 
         if (!grupoId || !paidTo || isNaN(cantidad) || cantidad <= 0) {
@@ -258,7 +259,7 @@ const obtenerDatosDashboard = async () => {
                 mostrarToast("Pago registrado correctamente");
                 e.target.reset();
                 setModalLiquidar(false);
-                await obtenerDatosDashboard(); // Recargamos para actualizar los saldos
+                await obtenerDatosDashboard();
             } else {
                 const errorData = await respuesta.json();
                 mostrarToast(errorData.error || "Error al registrar el pago", "error");
@@ -341,7 +342,6 @@ const obtenerDatosDashboard = async () => {
         try {
             const token = localStorage.getItem("token");
             
-            // Hacemos la petición a la ruta exacta de tu invitation.py
             const respuesta = await fetch(`http://localhost:5000/group/${grupoSeleccionado.id}/invite`, {
                 method: "POST",
                 headers: {
@@ -359,7 +359,6 @@ const obtenerDatosDashboard = async () => {
                 setModalAmigoGrupo(false);
             } else {
                 const errorData = await respuesta.json();
-                // Tu backend envía mensajes muy claros (ej. "Ya existe una invitación pendiente")
                 mostrarToast(errorData.error || "Error al enviar la invitación", "error");
             }
         } catch (error) {
@@ -464,7 +463,6 @@ const obtenerDatosDashboard = async () => {
                     </div>
                 </div>
 
-                {/* RESUMEN SUPERIOR */}
                 <div className="mb-10">
                     <h4 className="text-sm text-gray-400 mb-4">Vista general</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -483,7 +481,6 @@ const obtenerDatosDashboard = async () => {
                     </div>
                 </div>
 
-                {/* HISTORIAL DE ACTIVIDAD */}
                 {historial.length > 0 && (
                     <div className="mb-10 bg-gray-800 rounded-2xl p-6 border border-gray-700">
                         <div className="flex justify-between items-center mb-4">
@@ -514,7 +511,6 @@ const obtenerDatosDashboard = async () => {
                     </div>
                 )}
 
-                {/* GRUPOS Y AMIGOS */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
 
                     <div className="md:col-span-4">
@@ -565,7 +561,6 @@ const obtenerDatosDashboard = async () => {
                         ))}
                     </div>
 
-                    {/* Lista de Transacciones / Amigos */}
                     <div className="md:col-span-8">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="text-sm font-semibold">Transacciones pendientes</h4>
@@ -619,7 +614,6 @@ const obtenerDatosDashboard = async () => {
             </div>
 
 
-            {/* Modales */}
 
 
            {modalGasto && (
@@ -745,7 +739,6 @@ const obtenerDatosDashboard = async () => {
                 </div>
             )}
 
-            {/* Pequeñas notificaciones */}
             {toast.mostrar && (
                 <div className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all ${toast.tipo === "error" ? "bg-red-900 border-red-700 text-white" : "bg-green-900 border-green-700 text-white"}`}>
                     {toast.mensaje}

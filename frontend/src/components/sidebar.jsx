@@ -13,6 +13,8 @@ const Sidebar = () => {
   const [verAmigos, setVerAmigos] = useState(false);
   const [username, setUsername] = useState('Usuario');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [grupos, setGrupos] = useState([]);
+  const [cargandoGrupos, setCargandoGrupos] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -26,6 +28,37 @@ const Sidebar = () => {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (isGroupsOpen && grupos.length === 0) {
+      const obtenerGruposSidebar = async () => {
+        setCargandoGrupos(true);
+        try {
+          const token = localStorage.getItem("token");
+          const respuesta = await fetch("http://localhost:5000/groups", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            }
+          });
+
+          if (respuesta.ok) {
+            const datos = await respuesta.json();
+            setGrupos(datos);
+          } else {
+            console.error("Error al consultar la lista de grupos");
+          }
+        } catch (error) {
+          console.error("Error de red al traer grupos del sidebar:", error);
+        } finally {
+          setCargandoGrupos(false);
+        }
+      };
+
+      obtenerGruposSidebar();
+    }
+  }, [isGroupsOpen]);
 
   const toggleGroups = () => {
     setIsGroupsOpen(!isGroupsOpen);
@@ -61,8 +94,29 @@ const Sidebar = () => {
               </button>
 
               {isGroupsOpen && (
-                <div className="pl-4 pt-2 pb-1 text-xs text-gray-500 italic animate-in fade-in slide-in-from-top-1 duration-200">
-                  Aún no tienes grupos.
+                <div className="pl-3 pt-1 pb-1 flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                  {cargandoGrupos ? (
+                    <div className="pl-2 py-1.5 text-xs text-gray-500 font-mono animate-pulse">
+                      Cargando grupos...
+                    </div>
+                  ) : grupos.length === 0 ? (
+                    <div className="pl-2 py-1.5 text-xs text-gray-500 italic">
+                      Aún no tienes grupos.
+                    </div>
+                  ) : (
+                    <div className="max-h-36 overflow-y-auto space-y-0.5 pr-1 border-l border-neutral-800 ml-1.5">
+                      {grupos.map((grupo) => (
+                        <Link
+                          key={grupo.id}
+                          href={`/groups/${grupo.id}`}
+                          className="block pl-3 py-1.5 text-xs text-gray-400 hover:text-[#eec24b] rounded-lg hover:bg-neutral-800/40 transition-colors truncate"
+                        >
+                          <span className="mr-1.5 opacity-60">📁</span>
+                          {grupo.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </li>

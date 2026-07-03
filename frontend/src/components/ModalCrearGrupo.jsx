@@ -13,7 +13,7 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
 
   if (!estaAbierto) return null;
 
-const manejarCrearGrupo = async (e) => {
+  const manejarCrearGrupo = async (e) => {
     e.preventDefault();
 
     if (!nombreGrupo.trim()) {
@@ -21,8 +21,12 @@ const manejarCrearGrupo = async (e) => {
       return;
     }
 
-  try {
-    const token = localStorage.getItem("token");
+    if (categoria === "Otro" && !categoriaPersonalizada.trim()) {
+      alert("Por favor, ingresa una categoría personalizada.");
+      return;
+    }
+
+    const categoriaFinal = categoria === "Otro" ? categoriaPersonalizada.trim() : categoria;
 
     try {
       const token = localStorage.getItem("token");
@@ -47,14 +51,14 @@ const manejarCrearGrupo = async (e) => {
 
       setNombreGrupo("");
       setCategoria("Casa");
-      
+      setCategoriaPersonalizada("");
+
       if (typeof onGrupoCreado === 'function') {
-          onGrupoCreado();
+        onGrupoCreado();
       }
-      
-      window.location.reload(); 
+
+      window.location.reload();
       alCerrar();
-      
     } catch (error) {
       alert(error.message);
     }
