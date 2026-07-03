@@ -36,29 +36,47 @@ const Dashboard = () => {
         setTimeout(() => setToast({ mostrar: false, mensaje: "", tipo: "success" }), 3000);
     };
 
-    const obtenerUsuario = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            const userId = localStorage.getItem("user_id");
+const obtenerUsuario = async () => {
+    try {
+        const token = localStorage.getItem("token");
+        let userId = null;
 
-            if (!token || !userId) return;
-
-            const respuesta = await fetch(`http://localhost:5000/user/${userId}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                userId = parsedUser.id || parsedUser.user_id;
+                
+                if (parsedUser.name || parsedUser.user_name || parsedUser.username) {
+                    setUsuario(parsedUser);
                 }
-            });
-
-            if (respuesta.ok) {
-                const datos = await respuesta.json();
-                setUsuario(datos);
+            } catch (e) {
+                console.error("Error leyendo usuario del storage", e);
             }
-        } catch (error) {
-            console.log(error);
         }
-    };
+
+        if (!userId || isNaN(userId)) {
+            userId = parseInt(localStorage.getItem("user_id") || localStorage.getItem("id"));
+        }
+
+        if (!token || !userId || isNaN(userId)) return;
+
+        const respuesta = await fetch(`http://localhost:5000/user/${userId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (respuesta.ok) {
+            const datos = await respuesta.json();
+            setUsuario(datos);
+        }
+    } catch (error) {
+        console.error("Error al obtener usuario:", error);
+    }
+};
 
     const obtenerAmigosReales = async () => {
         try {

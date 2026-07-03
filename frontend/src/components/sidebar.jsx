@@ -94,8 +94,12 @@ const Sidebar = () => {
         </nav>
 
         <div className="mt-auto pt-4 border-t border-neutral-800/60">
-          <button
-            onClick={() => router.push('/user/dashboard')}
+          {/* ================================================================================= */}
+          {/* PARTE MODIFICADA: Cambié el elemento <button> por este componente <Link>       */}
+          {/* y configuré el href="/user/Dashboard" para corregir el error 404 que habia comentado en el grupo.*/}
+          {/* ================================================================================= */}
+          <Link
+            href="/user/Dashboard"
             className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-neutral-800/40 transition-all group text-left"
           >
             <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-neutral-700 bg-neutral-800 flex items-center justify-center group-hover:border-[#eec24b] transition-colors shrink-0">
@@ -117,9 +121,9 @@ const Sidebar = () => {
                 Configuración
               </p>
             </div>
-          </button>
+          </Link>
 
-          {/* Botón de Logout añadido */}
+         {/* Tambien agregué un botón de cerrar sesión directamente el aquí, para que se aun poco más rápido, pero sientete libre de quitarlo o modificarlo*/}
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 p-2 mt-2 rounded-xl text-red-400 hover:bg-red-900/10 hover:text-red-300 transition-all text-xs font-medium"
