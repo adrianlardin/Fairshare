@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { IconUser, IconCheck } from "@/components/icons";
 
 const PRESET_AVATARS = [
   "https://api.dicebear.com/7.x/bottts/svg?seed=Felix",
@@ -29,7 +30,7 @@ const AccountSettings = () => {
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(false);
   const [currency, setCurrency] = useState('USD ($)');
-
+  const [userId, setUserId] = useState('');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -38,7 +39,7 @@ const AccountSettings = () => {
 
       if (!token || !storedUser) {
         alert("Sesión expirada. Por favor, inicia sesión.");
-        router.push('/Login');
+        router.push('/login');
         return;
       }
 
@@ -62,10 +63,17 @@ const AccountSettings = () => {
           setEmail(data.email || '');
           setAvatar(data.avatar || '');
           if (data.currency) setCurrency(data.currency);
+          setUserId(data.id || userObj.id);
           if (data.email_notifications !== undefined) setEmailNotifications(data.email_notifications);
           if (data.push_notifications !== undefined) setPushNotifications(data.push_notifications);
         } else {
-          console.error("Error al obtener perfil:", data.error);
+          const errMsg = data.error || data.msg || "Error desconocido";
+          console.error("Error al obtener perfil:", errMsg);
+          if (response.status === 401) {
+            alert("Sesion expirada. Por favor, inicia sesion nuevamente.");
+            localStorage.clear();
+            router.push('/login');
+          }
         }
       } catch (error) {
         console.error("Error de conexión:", error);
@@ -107,7 +115,8 @@ const AccountSettings = () => {
         localStorage.setItem("user", JSON.stringify(data));
         setIsSaveModalOpen(true);
       } else {
-        alert(data.error || "Error al actualizar la configuración.");
+        const errMsg = data.error || data.msg || "Error al actualizar la configuracion.";
+        alert(errMsg);
       }
     } catch (error) {
       console.error("Error al conectar con el servidor:", error);
@@ -138,7 +147,8 @@ const AccountSettings = () => {
         setIsDeleteModalOpen(false);
         router.push('/register');
       } else {
-        alert(data.error || "No se pudo eliminar la cuenta.");
+        const errMsg = data.error || data.msg || "No se pudo eliminar la cuenta.";
+        alert(errMsg);
       }
     } catch (error) {
       console.error("Error al eliminar cuenta:", error);
@@ -171,7 +181,7 @@ const AccountSettings = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-2xl text-gray-400">👤</span>
+                  <span className="text-2xl text-gray-400"><IconUser size={24} /></span>
                 )}
               </div>
 
@@ -228,6 +238,30 @@ const AccountSettings = () => {
                   placeholder="Dirección de correo electrónico"
                   className="w-full bg-[#1a1a1a] border border-neutral-800 rounded-lg p-3 text-gray-500 cursor-not-allowed outline-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-mono tracking-wider text-gray-400 mb-1 uppercase">Tu ID de usuario</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={userId}
+                    disabled
+                    placeholder="ID"
+                    className="w-full bg-[#1a1a1a] border border-neutral-800 rounded-lg p-3 text-[#eec24b] font-mono font-bold text-lg cursor-default outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { navigator.clipboard.writeText(userId) }}
+                    className="shrink-0 bg-neutral-800 hover:bg-neutral-700 text-gray-300 px-3 py-3 rounded-lg text-xs font-mono transition-colors border border-neutral-700"
+                    title="Copiar ID"
+                  >
+                    Copiar
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1">
+                  Comparte este ID para que tus amigos te envien solicitudes de amistad o te agreguen a grupos.
+                </p>
               </div>
             </div>
           </div>
@@ -363,7 +397,7 @@ const AccountSettings = () => {
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsSaveModalOpen(false)} />
               <div className="relative w-full max-w-sm bg-[#1a1a1a] border border-neutral-800 rounded-2xl p-6 shadow-2xl z-10 text-center">
-                <div className="w-14 h-14 bg-[#008744]/20 border border-[#008744] text-[#008744] rounded-full flex items-center justify-center text-2xl mx-auto mb-4">✓</div>
+                <div className="w-14 h-14 bg-[#008744]/20 border border-[#008744] text-[#008744] rounded-full flex items-center justify-center mx-auto mb-4"><IconCheck size={24} /></div>
                 <h3 className="text-xl font-bold text-white mb-2">¡Cambios guardados!</h3>
                 <button
                   type="button"

@@ -29,7 +29,7 @@ export default function ResetPassword() {
 
       if (response.ok) {
         alert("¡Contraseña restablecida con éxito!");
-        router.push('/Login');
+        router.push('/login');
       } else {
         setMessage(data.error || "Ocurrió un error.");
       }

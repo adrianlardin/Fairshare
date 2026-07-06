@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Navbar } from "../../components/navbar";
 import Link from "next/link";
-import { ModalCrearGrupo } from "../../components/ModalCrearGrupo";
-import Sidebar from "../../components/sidebar";
+import { useRouter } from "next/navigation";
+import { ModalCrearGrupo } from "@/components/ModalCrearGrupo";
+import { IconArrowUp, IconArrowDown } from "@/components/icons";
 import { useModales } from "../context/ModalContext";
 
 const Dashboard = () => {
     const { modalGasto, setModalGasto, actualizarDatosTrigger } = useModales();
+    const router = useRouter();
 
     const [usuario, setUsuario] = useState(null);
     const [grupos, setGrupos] = useState([]);
@@ -43,11 +44,21 @@ const Dashboard = () => {
     };
 
     const obtenerUsuario = async () => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            try {
+                const cached = JSON.parse(storedUser);
+                setUsuario(cached);
+            } catch (e) {}
+        }
+
         try {
             const token = localStorage.getItem("token");
-            const userId = localStorage.getItem("user_id");
+            if (!token || !storedUser) return;
 
-            if (!token || !userId) return;
+            const userObj = JSON.parse(storedUser);
+            const userId = userObj.id;
+            if (!userId) return;
 
             const respuesta = await fetch(`http://localhost:5000/user/${userId}`, {
                 method: "GET",
@@ -60,6 +71,10 @@ const Dashboard = () => {
             if (respuesta.ok) {
                 const datos = await respuesta.json();
                 setUsuario(datos);
+                localStorage.setItem("user", JSON.stringify(datos));
+            } else if (respuesta.status === 401) {
+                localStorage.clear();
+                router.push("/login");
             }
         } catch (error) {
             console.log("Error al pedir el usuario:", error);
@@ -69,14 +84,23 @@ const Dashboard = () => {
 const obtenerDatosDashboard = async () => {
         try {
             const token = localStorage.getItem("token");
-            const miId = parseInt(localStorage.getItem("user_id")); 
-            
-            if (!token || !miId) return;
+            const storedUser = localStorage.getItem("user");
+            if (!token || !storedUser) return;
+
+            const userObj = JSON.parse(storedUser);
+            const miId = userObj.id;
+            if (!miId) return;
 
             const resGrupos = await fetch("http://localhost:5000/groups", {
                 method: "GET",
                 headers: { "Authorization": `Bearer ${token}` }
             });
+
+            if (resGrupos.status === 401) {
+                localStorage.clear();
+                router.push("/login");
+                return;
+            }
 
             if (resGrupos.ok) {
                 const datosGrupos = await resGrupos.json();
@@ -194,7 +218,7 @@ const obtenerDatosDashboard = async () => {
         const cantidad = parseFloat(e.target[2].value);
 
         if (!grupoId || !descripcion || isNaN(cantidad) || cantidad <= 0) {
-            mostrarToast("Introduce un grupo, una descripción válida y un monto mayor a 0", "error");
+            mostrarToast("Introduce un grupo, una descripcion valida y un monto mayor a 0", "error");
             return;
         }
 
@@ -223,7 +247,7 @@ const obtenerDatosDashboard = async () => {
                 mostrarToast(errorData.error || "Error al guardar el gasto", "error");
             }
         } catch (error) {
-            mostrarToast("Error de conexión", "error");
+            mostrarToast("Error de conexion", "error");
         } finally {
             setCargando(false);
         }
@@ -236,7 +260,7 @@ const obtenerDatosDashboard = async () => {
         const cantidad = parseFloat(e.target[2].value);
 
         if (!grupoId || !paidTo || isNaN(cantidad) || cantidad <= 0) {
-            mostrarToast("Introduce un grupo, un ID válido y un monto mayor a 0", "error");
+            mostrarToast("Introduce un grupo, un ID valido y un monto mayor a 0", "error");
             return;
         }
 
@@ -265,7 +289,7 @@ const obtenerDatosDashboard = async () => {
                 mostrarToast(errorData.error || "Error al registrar el pago", "error");
             }
         } catch (error) {
-            mostrarToast("Error de conexión", "error");
+            mostrarToast("Error de conexion", "error");
         } finally {
             setCargando(false);
         }
@@ -276,7 +300,7 @@ const obtenerDatosDashboard = async () => {
         const nombreNuevoGrupo = e.target[0].value.trim();
 
         if (!nombreNuevoGrupo) {
-            mostrarToast("El nombre del grupo no puede estar vacío", "error");
+            mostrarToast("El nombre del grupo no puede estar vacio", "error");
             return;
         }
 
@@ -293,7 +317,7 @@ const obtenerDatosDashboard = async () => {
                 { id: Date.now(), texto: `Creaste el grupo "${nombreNuevoGrupo}"` },
                 ...historial
             ]);
-            mostrarToast("Grupo creado con éxito");
+            mostrarToast("Grupo creado con exito");
             e.target.reset();
             setModalGrupo(false);
         } catch (error) {
@@ -303,38 +327,52 @@ const obtenerDatosDashboard = async () => {
         }
     };
 
-    const manejarSubmitAmigo = async (e) => {
-        e.preventDefault();
-        const amigoId = e.target[0].value.trim();
+  const manejarSubmitAmigo = async (e) => {
+    e.preventDefault();
+    const amigoId = e.target[0].value.trim();
 
-        if (!amigoId) {
-            mostrarToast("Debes ingresar un ID válido", "error");
-            return;
-        }
+    if (!amigoId) {
+      mostrarToast("Debes ingresar un ID valido", "error");
+      return;
+    }
 
-        setCargando(true);
-        try {
+    setCargando(true);
+    try {
+      const token = localStorage.getItem("token");
+      const respuesta = await fetch("http://localhost:5000/friends/request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ friend_id: parseInt(amigoId) })
+      });
 
-            setHistorial([
-                { id: Date.now(), texto: `Enviaste una solicitud de amistad al usuario con ID: ${amigoId}` },
-                ...historial
-            ]);
-            mostrarToast("Solicitud de amistad enviada");
-            e.target.reset();
-            setModalAmigo(false);
-        } catch (error) {
-            mostrarToast("Error al enviar solicitud", "error");
-        } finally {
-            setCargando(false);
-        }
-    };
+      if (respuesta.ok) {
+        setHistorial([
+          { id: Date.now(), texto: `Enviaste una solicitud de amistad al usuario con ID: ${amigoId}` },
+          ...historial
+        ]);
+        mostrarToast("Solicitud de amistad enviada");
+        e.target.reset();
+        setModalAmigo(false);
+      } else {
+        const errorData = await respuesta.json();
+        mostrarToast(errorData.error || "Error al enviar solicitud", "error");
+      }
+    } catch (error) {
+      mostrarToast("Error de conexion", "error");
+    } finally {
+      setCargando(false);
+    }
+  };
 
     const manejarSubmitAmigoGrupo = async (e) => {
         e.preventDefault();
         const emailInput = e.target[0].value.trim();
 
         if (!emailInput) {
-            mostrarToast("El correo no puede estar vacío", "error");
+            mostrarToast("El correo no puede estar vacio", "error");
             return;
         }
 
@@ -354,28 +392,27 @@ const obtenerDatosDashboard = async () => {
             });
 
             if (respuesta.ok) {
-                mostrarToast("¡Invitación enviada por correo electrónico!");
+                mostrarToast("Invitacion enviada por correo electronico!");
                 e.target.reset();
                 setModalAmigoGrupo(false);
             } else {
                 const errorData = await respuesta.json();
-                mostrarToast(errorData.error || "Error al enviar la invitación", "error");
+                mostrarToast(errorData.error || "Error al enviar la invitacion", "error");
             }
         } catch (error) {
-            mostrarToast("Error de conexión con el servidor", "error");
+            mostrarToast("Error de conexion con el servidor", "error");
         } finally {
             setCargando(false);
         }
     };
 
-    // Borrado
     const abrirModalAmigoGrupo = (id, nombre) => {
         setGrupoSeleccionado({ id, nombre });
         setModalAmigoGrupo(true);
     };
 
     const salirYBorrarGrupo = async (id, nombre) => {
-        const confirmar = window.confirm(`¿Estás seguro de que quieres salir y borrar el grupo "${nombre}"?`);
+        const confirmar = window.confirm(`Estas seguro de que quieres salir y borrar el grupo "${nombre}"?`);
         if (!confirmar) return;
 
         try {
@@ -400,12 +437,12 @@ const obtenerDatosDashboard = async () => {
                 mostrarToast(errorData.error || "Hubo un problema al eliminar el grupo", "error");
             }
         } catch (error) {
-            mostrarToast("Error de conexión con el servidor", "error");
+            mostrarToast("Error de conexion con el servidor", "error");
         }
     };
 
     const eliminarAmigo = (id, usuario) => {
-        const confirmar = window.confirm(`¿Quieres eliminar a ${usuario} de tu lista?`);
+        const confirmar = window.confirm(`Quieres eliminar a ${usuario} de tu lista?`);
         if (confirmar) {
             setAmigos(amigos.filter(amigo => amigo.id !== id));
             setHistorial([
@@ -427,201 +464,193 @@ const obtenerDatosDashboard = async () => {
     };
 
     return (
-        <div className="bg-gray-900 min-h-screen pb-10 text-white relative">
-            <Navbar />
-            <Sidebar />
-            <div className="max-w-5xl mx-auto pt-24 px-6 md:pl-64">
+        <div className="max-w-5xl mx-auto pb-10">
 
-                {/* CABECERA */}
-                <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold mb-1">Panel de control</h1>
-                        <h2 className="text-sm text-gray-400">
-                            {usuario ? (
-                                <Link href="/user" className="hover:text-yellow-400 transition-colors cursor-pointer" title="Ir a mi perfil">
-                                    Hola, {usuario.name || usuario.user_name}
-                                </Link>
-                            ) : (
-                                "Cargando..."
-                            )}
-                        </h2>
-                    </div>
-
-                    <div className="flex gap-3">
-                        <button
-                            className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-md transition-colors"
-                            onClick={() => setModalGasto(true)}
-                        >
-                            Añadir un gasto
-                        </button>
-                        <button
-                            className="bg-green-500 hover:bg-green-600 text-black font-bold py-2 px-4 rounded-md transition-colors"
-                            onClick={() => setModalLiquidar(true)}
-                        >
-                            Liquidar deudas
-                        </button>
-                    </div>
-                </div>
-
-                <div className="mb-10">
-                    <h4 className="text-sm text-gray-400 mb-4">Vista general</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                        <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-green-500 border-y border-r border-y-gray-700 border-r-gray-700">
-                            <p className="text-gray-400 text-xs mb-2">ME DEBEN <span className="text-green-500">↑</span></p>
-                            <h2 className="text-green-500 text-3xl font-bold mb-2">{totalMeDeben.toFixed(2)} €</h2>
-                            <p className="text-gray-400 text-xs">Saldos temporales</p>
-                        </div>
-
-                        <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-yellow-400 border-y border-r border-y-gray-700 border-r-gray-700">
-                            <p className="text-gray-400 text-xs mb-2">DEBO <span className="text-yellow-400">↓</span></p>
-                            <h2 className="text-yellow-400 text-3xl font-bold mb-2">{totalDebo.toFixed(2)} €</h2>
-                            <p className="text-gray-400 text-xs">Saldos temporales</p>
-                        </div>
-                    </div>
-                </div>
-
-                {historial.length > 0 && (
-                    <div className="mb-10 bg-gray-800 rounded-2xl p-6 border border-gray-700">
-                        <div className="flex justify-between items-center mb-4">
-                            <h4 className="text-sm font-semibold text-gray-400">Actividad reciente</h4>
-                            <button
-                                onClick={limpiarTodoHistorial}
-                                className="text-xs text-red-400 hover:text-red-300 transition-colors bg-transparent border-none cursor-pointer"
-                            >
-                                Limpiar todo
-                            </button>
-                        </div>
-                        <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                            {historial.map((act) => (
-                                <div key={act.id} className="text-sm flex justify-between items-center bg-gray-900 px-4 py-2 rounded-lg border border-gray-800 gap-4">
-                                    <span className="text-gray-300 flex-1">{act.texto}</span>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xs text-gray-500">{new Date(act.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                        <button
-                                            onClick={() => eliminarActividadIndividual(act.id)}
-                                            className="text-gray-500 hover:text-red-500 font-bold text-xs px-1 transition-colors bg-transparent border-none cursor-pointer"
-                                        >
-                                            X
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-
-                    <div className="md:col-span-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h4 className="text-sm font-semibold text-white">Grupos Activos</h4>
-                            <button
-                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-2 rounded-md transition-colors"
-                                onClick={() => setModalGrupo(true)}
-                            >
-                                + Crear grupo
-                            </button>
-                        </div>
-
-                        {grupos.length === 0 && (
-                            <p className="text-gray-500 text-sm italic p-4 bg-gray-800 rounded-xl border border-gray-700">
-                                Aún no hay grupos creados.
-                            </p>
+            <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold mb-1">Panel de control</h1>
+                    <h2 className="text-sm text-gray-400">
+                        {usuario ? (
+                            <Link href="/dashboard/profile" className="hover:text-yellow-400 transition-colors cursor-pointer" title="Ir a mi perfil">
+                                Hola, {usuario.name || usuario.user_name}
+                            </Link>
+                        ) : (
+                            "Cargando..."
                         )}
+                    </h2>
+                </div>
 
-                        {grupos.map((grupo) => (
-                            <div key={grupo.id} className="bg-gray-800 rounded-xl p-4 mb-3 border border-gray-700">
-                                <div className="flex justify-between items-center mb-3">
-                                    <span className="text-sm font-bold">{grupo.name}</span>
-                                    {grupo.saldo > 0 ? (
-                                        <span className="text-green-500 text-xs m-0">Te deben {grupo.saldo} €</span>
-                                    ) : grupo.saldo < 0 ? (
-                                        <span className="text-yellow-400 text-xs m-0">Debes {Math.abs(grupo.saldo)} €</span>
-                                    ) : (
-                                        <span className="text-gray-400 text-xs m-0">Saldado</span>
-                                    )}
-                                </div>
+                <div className="flex gap-3">
+                    <button
+                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-md transition-colors"
+                        onClick={() => setModalGasto(true)}
+                    >
+                        Anadir un gasto
+                    </button>
+                    <button
+                        className="bg-green-500 hover:bg-green-600 text-black font-bold py-2 px-4 rounded-md transition-colors"
+                        onClick={() => setModalLiquidar(true)}
+                    >
+                        Liquidar deudas
+                    </button>
+                </div>
+            </div>
 
-                                <div className="flex gap-2 justify-end">
+            <div className="mb-10">
+                <h4 className="text-sm text-gray-400 mb-4">Vista general</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-green-500 border-y border-r border-y-gray-700 border-r-gray-700">
+                        <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">ME DEBEN <span className="text-green-500"><IconArrowUp size={14} /></span></p>
+                        <h2 className="text-green-500 text-3xl font-bold mb-2">{totalMeDeben.toFixed(2)} EUR</h2>
+                        <p className="text-gray-400 text-xs">Saldos temporales</p>
+                    </div>
+
+                    <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-yellow-400 border-y border-r border-y-gray-700 border-r-gray-700">
+                        <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">DEBO <span className="text-yellow-400"><IconArrowDown size={14} /></span></p>
+                        <h2 className="text-yellow-400 text-3xl font-bold mb-2">{totalDebo.toFixed(2)} EUR</h2>
+                        <p className="text-gray-400 text-xs">Saldos temporales</p>
+                    </div>
+                </div>
+            </div>
+
+            {historial.length > 0 && (
+                <div className="mb-10 bg-gray-800 rounded-2xl p-6 border border-gray-700">
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-sm font-semibold text-gray-400">Actividad reciente</h4>
+                        <button
+                            onClick={limpiarTodoHistorial}
+                            className="text-xs text-red-400 hover:text-red-300 transition-colors bg-transparent border-none cursor-pointer"
+                        >
+                            Limpiar todo
+                        </button>
+                    </div>
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                        {historial.map((act) => (
+                            <div key={act.id} className="text-sm flex justify-between items-center bg-gray-900 px-4 py-2 rounded-lg border border-gray-800 gap-4">
+                                <span className="text-gray-300 flex-1">{act.texto}</span>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs text-gray-500">{new Date(act.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     <button
-                                        onClick={() => abrirModalAmigoGrupo(grupo.id, grupo.nombre)}
-                                        className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
+                                        onClick={() => eliminarActividadIndividual(act.id)}
+                                        className="text-gray-500 hover:text-red-500 font-bold text-xs px-1 transition-colors bg-transparent border-none cursor-pointer"
                                     >
-                                        + Añadir amigo
-                                    </button>
-                                    <button
-                                        onClick={() => salirYBorrarGrupo(grupo.id, grupo.name)}
-                                        className="text-xs border border-red-900 text-red-400 hover:bg-red-900 hover:text-white px-2 py-1 rounded transition-colors"
-                                    >
-                                        Salir / Borrar
+                                        X
                                     </button>
                                 </div>
                             </div>
                         ))}
                     </div>
+                </div>
+            )}
 
-                    <div className="md:col-span-8">
-                        <div className="flex justify-between items-center mb-4">
-                            <h4 className="text-sm font-semibold">Transacciones pendientes</h4>
-                            <button
-                                className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-3 rounded-md transition-colors"
-                                onClick={() => setModalAmigo(true)}
-                            >
-                                + Añadir amigo
-                            </button>
-                        </div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
 
-                        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
-                            <div className="grid grid-cols-12 text-xs text-gray-400 mb-4 border-b border-gray-700 pb-2">
-                                <div className="col-span-5">AMIGO</div>
-                                <div className="col-span-3 text-center">GRUPO</div>
-                                <div className="col-span-3 text-right">BALANCE</div>
-                                <div className="col-span-1 text-right"></div>
+                <div className="md:col-span-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-sm font-semibold text-white">Grupos Activos</h4>
+                        <button
+                            className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-2 rounded-md transition-colors"
+                            onClick={() => setModalGrupo(true)}
+                        >
+                            + Crear grupo
+                        </button>
+                    </div>
+
+                    {grupos.length === 0 && (
+                        <p className="text-gray-500 text-sm italic p-4 bg-gray-800 rounded-xl border border-gray-700">
+                            Aun no hay grupos creados.
+                        </p>
+                    )}
+
+                    {grupos.map((grupo) => (
+                        <div key={grupo.id} className="bg-gray-800 rounded-xl p-4 mb-3 border border-gray-700">
+                            <div className="flex justify-between items-center mb-3">
+                                <span className="text-sm font-bold">{grupo.name}</span>
+                                {grupo.saldo > 0 ? (
+                                    <span className="text-green-500 text-xs m-0">Te deben {grupo.saldo} EUR</span>
+                                ) : grupo.saldo < 0 ? (
+                                    <span className="text-yellow-400 text-xs m-0">Debes {Math.abs(grupo.saldo)} EUR</span>
+                                ) : (
+                                    <span className="text-gray-400 text-xs m-0">Saldado</span>
+                                )}
                             </div>
 
-                            {amigos.length === 0 && (
-                                <p className="text-gray-500 text-sm text-center italic mt-6">
-                                    No hay deudas registradas con amigos.
-                                </p>
-                            )}
-
-                            {amigos.map((amigo) => (
-                                <div key={amigo.id} className="grid grid-cols-12 items-center text-sm mb-4 last:mb-0">
-                                    <div className="col-span-5 flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
-                                            {amigo.inicial}
-                                        </div>
-                                        {amigo.usuario}
-                                    </div>
-                                    <div className="col-span-3 text-gray-400 text-center text-xs">{amigo.grupo}</div>
-                                    <div className={`col-span-3 text-right font-medium ${amigo.saldo > 0 ? 'text-green-500' : amigo.saldo < 0 ? 'text-yellow-400' : 'text-gray-400'}`}>
-                                        {amigo.saldo > 0 ? `Te debe ${amigo.saldo} €` : amigo.saldo < 0 ? `Debes ${Math.abs(amigo.saldo)} €` : `0.00 €`}
-                                    </div>
-                                    <div className="col-span-1 text-right">
-                                        <button
-                                            onClick={() => eliminarAmigo(amigo.id, amigo.usuario)}
-                                            className="text-gray-500 hover:text-red-500 font-bold px-2 py-1 transition-colors"
-                                        >
-                                            X
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                            <div className="flex gap-2 justify-end">
+                                <button
+                                    onClick={() => abrirModalAmigoGrupo(grupo.id, grupo.nombre)}
+                                    className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
+                                >
+                                    + Anadir amigo
+                                </button>
+                                <button
+                                    onClick={() => salirYBorrarGrupo(grupo.id, grupo.name)}
+                                    className="text-xs border border-red-900 text-red-400 hover:bg-red-900 hover:text-white px-2 py-1 rounded transition-colors"
+                                >
+                                    Salir / Borrar
+                                </button>
+                            </div>
                         </div>
+                    ))}
+                </div>
+
+                <div className="md:col-span-8">
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-sm font-semibold">Transacciones pendientes</h4>
+                        <button
+                            className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-3 rounded-md transition-colors"
+                            onClick={() => setModalAmigo(true)}
+                        >
+                            + Anadir amigo
+                        </button>
+                    </div>
+
+                    <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
+                        <div className="grid grid-cols-12 text-xs text-gray-400 mb-4 border-b border-gray-700 pb-2">
+                            <div className="col-span-5">AMIGO</div>
+                            <div className="col-span-3 text-center">GRUPO</div>
+                            <div className="col-span-3 text-right">BALANCE</div>
+                            <div className="col-span-1 text-right"></div>
+                        </div>
+
+                        {amigos.length === 0 && (
+                            <p className="text-gray-500 text-sm text-center italic mt-6">
+                                No hay deudas registradas con amigos.
+                            </p>
+                        )}
+
+                        {amigos.map((amigo) => (
+                            <div key={amigo.id} className="grid grid-cols-12 items-center text-sm mb-4 last:mb-0">
+                                <div className="col-span-5 flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
+                                        {amigo.inicial}
+                                    </div>
+                                    {amigo.usuario}
+                                </div>
+                                <div className="col-span-3 text-gray-400 text-center text-xs">{amigo.grupo}</div>
+                                <div className={`col-span-3 text-right font-medium ${amigo.saldo > 0 ? 'text-green-500' : amigo.saldo < 0 ? 'text-yellow-400' : 'text-gray-400'}`}>
+                                    {amigo.saldo > 0 ? `Te debe ${amigo.saldo} EUR` : amigo.saldo < 0 ? `Debes ${Math.abs(amigo.saldo)} EUR` : `0.00 EUR`}
+                                </div>
+                                <div className="col-span-1 text-right">
+                                    <button
+                                        onClick={() => eliminarAmigo(amigo.id, amigo.usuario)}
+                                        className="text-gray-500 hover:text-red-500 font-bold px-2 py-1 transition-colors"
+                                    >
+                                        X
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
 
-
-
-
-           {modalGasto && (
+            {modalGasto && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-4">Añadir un gasto</h3>
+                        <h3 className="text-xl font-bold mb-4">Anadir un gasto</h3>
                         <form onSubmit={manejarSubmitGasto}>
-                            <label className="block text-xs text-gray-400 mb-1">¿A qué grupo pertenece?</label>
+                            <label className="block text-xs text-gray-400 mb-1">A que grupo pertenece?</label>
                             <select className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400 cursor-pointer" required>
                                 <option value="">Selecciona un grupo</option>
                                 {grupos.map((grupo) => (
@@ -629,10 +658,10 @@ const obtenerDatosDashboard = async () => {
                                 ))}
                             </select>
 
-                            <label className="block text-xs text-gray-400 mb-1">Descripción</label>
+                            <label className="block text-xs text-gray-400 mb-1">Descripcion</label>
                             <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400" required placeholder="Ej. Cena del viernes" />
 
-                            <label className="block text-xs text-gray-400 mb-1">Cantidad (€)</label>
+                            <label className="block text-xs text-gray-400 mb-1">Cantidad (EUR)</label>
                             <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-yellow-400" required placeholder="0.00" />
 
                             <div className="flex justify-end gap-3">
@@ -651,7 +680,7 @@ const obtenerDatosDashboard = async () => {
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4">Liquidar deudas</h3>
                         <form onSubmit={manejarSubmitLiquidar}>
-                            <label className="block text-xs text-gray-400 mb-1">¿De qué grupo es la deuda?</label>
+                            <label className="block text-xs text-gray-400 mb-1">De que grupo es la deuda?</label>
                             <select className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500 cursor-pointer" required>
                                 <option value="">Selecciona un grupo</option>
                                 {grupos.map((grupo) => (
@@ -668,7 +697,7 @@ const obtenerDatosDashboard = async () => {
                                 placeholder="Ej. 3" 
                             />
 
-                            <label className="block text-xs text-gray-400 mb-1">Cantidad a saldar (€)</label>
+                            <label className="block text-xs text-gray-400 mb-1">Cantidad a saldar (EUR)</label>
                             <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-green-500" required placeholder="0.00" />
 
                             <div className="flex justify-end gap-3">
@@ -720,7 +749,7 @@ const obtenerDatosDashboard = async () => {
                         <p className="text-gray-400 text-sm mb-4">Grupo seleccionado: <span className="text-white font-bold">{grupoSeleccionado.nombre}</span></p>
 
                         <form onSubmit={manejarSubmitAmigoGrupo}>
-                            <label className="block text-xs text-gray-400 mb-1">Correo electrónico del usuario</label>
+                            <label className="block text-xs text-gray-400 mb-1">Correo electronico del usuario</label>
                             <input
                                 type="email"
                                 className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white"
@@ -731,7 +760,7 @@ const obtenerDatosDashboard = async () => {
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalAmigoGrupo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
                                 <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
-                                    {cargando ? "Enviando correo..." : "Enviar invitación"}
+                                    {cargando ? "Enviando correo..." : "Enviar invitacion"}
                                 </button>
                             </div>
                         </form>

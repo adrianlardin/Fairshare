@@ -1,8 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "../components/sidebar";
 import { ModalProvider } from "./context/ModalContext";
-import { GlobalModales } from "../components/GlobalModales"; // <-- 1. Importamos el nuevo componente
+import { GlobalModales } from "../components/GlobalModales";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

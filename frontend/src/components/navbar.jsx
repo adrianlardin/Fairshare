@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 const BORDER = "rgba(255,255,255,0.07)";
 const TEXT = "#e2e8f0";
 const MUTED = "#718096";
-const NAV_LINKS = ["Características", "Cómo funciona", "Precios"];
+const NAV_LINKS = ["Caracteristicas", "Como funciona", "Precios"];
 
 const LogoIcon = () => (
   <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -44,9 +47,31 @@ const styles = {
   navLink: { color: MUTED, textDecoration: "none", fontSize: 14, transition: "color .2s" },
   navActions: { display: "flex", alignItems: "center", gap: 12, marginLeft: "auto" },
   loginBtn: { color: MUTED, textDecoration: "none", fontSize: 14, padding: "6px 12px" },
+  dashboardBtn: { color: "#4ADE80", textDecoration: "none", fontSize: 14, padding: "6px 12px", fontWeight: 600 },
+  userBtn: { color: TEXT, textDecoration: "none", fontSize: 14, padding: "6px 12px", display: "flex", alignItems: "center", gap: 6 },
+  avatar: { width: 24, height: 24, borderRadius: "50%", objectFit: "cover", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 },
 }
 
 export function Navbar() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+    if (token && storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setUserName(user.name || user.user_name || "");
+        setLoggedIn(true);
+      } catch (e) {
+        setLoggedIn(false);
+      }
+    } else {
+      setLoggedIn(false);
+    }
+  }, []);
+
   return (
     <nav style={styles.nav}>
       <div style={styles.navInner}>
@@ -62,8 +87,24 @@ export function Navbar() {
           ))}
         </ul>
         <div style={styles.navActions}>
-          <a href="/login" style={styles.loginBtn} >Iniciar sesión</a>
-          <a href="/register" style={styles.primaryBtn}>Comenzar</a>
+          {loggedIn ? (
+            <>
+              <Link href="/dashboard" style={styles.dashboardBtn}>Dashboard</Link>
+              <Link href="/dashboard/profile" style={styles.userBtn}>
+                <span style={styles.avatar}>
+                  {userName ? userName.charAt(0).toUpperCase() : "U"}
+                </span>
+                <span>{userName || "Usuario"}</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              <a href="/login" style={styles.loginBtn}>Iniciar sesion</a>
+              <a href="/register" className="bg-[#F5C518] text-[#0b0f14] font-bold text-sm px-5 py-2 rounded-lg no-underline inline-block hover:opacity-90" style={{ backgroundColor: "#F5C518", color: "#0b0f14", fontWeight: 700, fontSize: 13, padding: "6px 14px", borderRadius: 8, textDecoration: "none" }}>
+                Comenzar
+              </a>
+            </>
+          )}
         </div>
       </div>
     </nav>
