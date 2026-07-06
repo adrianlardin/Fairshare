@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { IconSettings, IconX } from "./icons";
 
 export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActualizar, alEliminar }) {
     const [nuevoNombre, setNuevoNombre] = useState("");
@@ -82,9 +83,9 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
 
                 <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
                     <h3 className="text-lg font-bold text-gray-100 flex items-center gap-2">
-                        ⚙️ Ajustes de "{grupoActual.name}"
+                        <IconSettings size={18} /> Ajustes de "{grupoActual.name}"
                     </h3>
-                    <button onClick={alCerrar} className="text-gray-500 hover:text-white text-sm font-mono">✕</button>
+                    <button onClick={alCerrar} className="text-gray-500 hover:text-white transition-colors"><IconX size={18} /></button>
                 </div>
 
                 {error && (

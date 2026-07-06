@@ -14,15 +14,15 @@ export const ModalProvider = ({ children }) => {
     const [modalLiquidar, setModalLiquidar] = useState(false);
 
     const [actualizarDatosTrigger, setActualizarDatosTrigger] = useState(0);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const refrescarDatos = () => setActualizarDatosTrigger(prev => prev + 1);
 
     return (
         <ModalContext.Provider value={{ 
             modalGasto, setModalGasto,
-            // Añadido aquí también para poder consumirlo desde otros componentes
-            modalLiquidar, setModalLiquidar,
-            actualizarDatosTrigger, refrescarDatos 
+            actualizarDatosTrigger, refrescarDatos,
+            sidebarCollapsed, setSidebarCollapsed
         }}>
             {children}
         </ModalContext.Provider>
