@@ -52,19 +52,34 @@ export const ModalListaAmigos = ({ estaAbierto, alCerrar }) => {
                     {cargando ? (
                         <p className="text-center text-sm text-gray-400 py-4">Cargando amigos...</p>
                     ) : amigos.length === 0 ? (
-                        <p className="text-center text-sm text-gray-500 italic py-6">Aun no has anadido amigos.</p>
+                        <p className="text-center text-sm text-gray-500 italic py-6">Aún no has añadido amigos.</p>
                     ) : (
-                        amigos.map((amigo) => (
-                            <div key={amigo.id} className="flex items-center gap-3 bg-gray-900/50 p-3 rounded-xl border border-gray-800">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 text-black flex items-center justify-center font-bold text-sm">
-                                    {(amigo.name || amigo.user_name || "U").charAt(0).toUpperCase()}
+                        amigos.map((item) => {
+                            const amigoObj = item.user || {};
+                            
+                            const nombre = amigoObj.name || amigoObj.username || "Usuario";
+                            const email = amigoObj.email || "Sin email";
+
+                            return (
+                                <div 
+                                    key={item.friendship_id} 
+                                    className="flex items-center gap-3 bg-gray-900/50 p-3 rounded-xl border border-gray-800 animate-in fade-in duration-150"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 text-black flex items-center justify-center font-bold text-sm shrink-0">
+                                        {nombre.charAt(0).toUpperCase()}
+                                    </div>
+                                    
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold truncate text-gray-200">
+                                            {nombre}
+                                        </p>
+                                        <p className="text-xs text-gray-500 truncate">
+                                            {email}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold truncate text-gray-200">{amigo.name || amigo.user_name}</p>
-                                    <p className="text-xs text-gray-500 truncate">{amigo.email || "@username"}</p>
-                                </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
 
