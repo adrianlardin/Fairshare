@@ -1,11 +1,9 @@
 "use client";
 
-import { Navbar } from "@/components/navbar"; // <-- Navbar corregido e importado desde tu carpeta de componentes
+import { Navbar } from "@/components/navbar";
 import { useState } from "react";
-
 import Link from "next/link";
 
-// ── Icons (inline SVGs para no depender de librerías) ──────────────────────────
 const CheckIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
     <circle cx="8" cy="8" r="8" fill="#4ADE80" fillOpacity="0.15" />
@@ -18,9 +16,6 @@ const StarIcon = () => (
     <path d="M7 1l1.545 4.236H13l-3.59 2.609L10.727 13 7 10.09 3.273 13l1.318-5.155L1 5.236h4.455z" />
   </svg>
 );
-
-// ── Datos ───────────────────────────────────────────────────────────────────────
-const TRUSTED_BY = ["PayNow", "Vanguard", "SkillBound", "InsightX", "Fortify"];
 
 const FEATURES_CARDS = [
   {
@@ -89,11 +84,10 @@ const PRICING = [
 ];
 
 const FOOTER_COLS = {
-  Producto: ["Características", "Cómo funciona", "Precios"],
+  Producto: ["Características", "Cómo funciona"],
   Legal: ["Política de Privacidad", "Términos de Servicio", "Contacto"],
 };
 
-// ── Sub-components ──────────────────────────────────────────────────────────────
 function Hero() {
   return (
     <section className="max-w-[1100px] mx-auto px-6 pt-28 pb-16 flex flex-col md:flex-row items-center gap-12">
@@ -106,14 +100,8 @@ function Hero() {
           La aplicación de gastos compartidos de alto rendimiento diseñada para equipos modernos,
           compañeros de piso y viajeros que valoran la precisión y la claridad.
         </p>
-        <div className="flex items-center gap-5 flex-wrap">
-          <a href="/register" className="bg-[#F5C518] text-[#0b0f14] font-bold text-sm px-5 py-2.5 rounded-lg no-underline inline-block hover:opacity-90 transition-opacity">
-            Empieza gratis →
-          </a>
-        </div>
       </div>
 
-      {/* Dashboard mockup */}
       <div className="flex-1 flex justify-center w-full">
         <div className="bg-gradient-to-br from-[#131a24] to-[#0f1923] border border-white/5 rounded-2xl p-5 w-full max-w-[440px] shadow-[0_40px_80px_rgba(0,0,0,0.6)]">
           <div className="bg-[#0b0f14] rounded-lg p-4 min-h-[220px]">
@@ -122,7 +110,6 @@ function Hero() {
               <span className="w-2.5 h-2.5 rounded-full bg-[#F5C518] inline-block" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#4ADE80] inline-block" />
             </div>
-            {/* Fake chart bars */}
             <div className="flex items-end gap-1 h-[100px] mb-4">
               {[40, 65, 50, 80, 55, 90, 70, 85, 60, 75, 95, 50].map((h, i) => (
                 <div
@@ -135,7 +122,6 @@ function Hero() {
                 />
               ))}
             </div>
-            {/* Fake stat bubbles */}
             <div className="flex gap-3">
               {["$1,240", "$380", "$860"].map((v, i) => (
                 <div key={i} className="bg-[#131a24] border border-white/5 rounded-lg p-2.5 flex-1 flex flex-col gap-0.5">
@@ -153,22 +139,9 @@ function Hero() {
   );
 }
 
-function TrustedBy() {
-  return (
-    <div className="text-center px-6 py-10 border-t border-white/5">
-      <p className="text-[#718096] text-[11px] tracking-[1.5px] mb-6">CON LA CONFIANZA DE STARTUPS Y EMPRESAS EN CRECIMIENTO EN TODO EL MUNDO</p>
-      <div className="flex justify-center items-center gap-9 flex-wrap">
-        {TRUSTED_BY.map((name) => (
-          <span key={name} className="text-[#4a5568] font-bold text-sm tracking-[0.5px]">{name}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function FeaturesSection() {
   return (
-    <section className="max-w-[1100px] mx-auto px-6 py-20 text-center">
+    <section id="caracteristicas" className="max-w-[1100px] mx-auto px-6 py-20 text-center">
       <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.8px] mb-3 text-slate-50">Precisión en cada transacción</h2>
       <p className="text-[#718096] text-sm max-w-[500px] mx-auto mb-12">
         Tres pilares que definen nuestro compromiso con tu claridad financiera.
@@ -188,7 +161,7 @@ function FeaturesSection() {
 
 function GroupManagement() {
   return (
-    <section className="max-w-[1100px] mx-auto px-6 py-20 flex flex-col md:flex-row items-center gap-16 flex-wrap">
+    <section id="como-funciona" className="max-w-[1100px] mx-auto px-6 py-20 flex flex-col md:flex-row items-center gap-16 flex-wrap">
       <div className="flex-1 min-w-[280px]">
         <span className="text-[#4ADE80] text-[11px] font-bold tracking-[2px]">GESTIÓN DE GRUPOS</span>
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.6px] mt-2.5 mb-4 text-slate-50">
@@ -293,20 +266,16 @@ function FinalCTA() {
     <section className="bg-[#111720] border-t border-b border-white/5 text-center py-20 px-6">
       <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.8px] mb-3 text-slate-50">¿Listo para simplificar tu vida compartida?</h2>
       <p className="text-[#718096] text-sm max-w-[500px] mx-auto mb-7">
-        Únete a los 519,371 usuarios que ya han alcanzado la claridad financiera y
+        Únete a nosotros y alcanza la claridad financiera y
         comparten gastos sin estrés.
       </p>
-      <a href="/register" className="bg-[#F5C518] text-[#0b0f14] font-bold text-sm px-5 py-2.5 rounded-lg no-underline inline-block hover:opacity-90 transition-opacity">
-        Empieza gratis →
-      </a>
-      <p className="text-[#718096] text-xs mt-3.5">Sin tarjeta de crédito · Cancela cuando quieras</p>
     </section>
   );
 }
 
 function Footer() {
   return (
-    <footer className="bg-[#080c10] px-6 pt-16 pb-6 border-t border-white/5">
+    <footer id="contacto" className="bg-[#080c10] px-6 pt-16 pb-6 border-t border-white/5">
       <div className="max-w-[1100px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 pb-10 border-b border-white/5">
         <div>
           <div className="flex items-center gap-2">
@@ -353,13 +322,11 @@ function Footer() {
   );
 }
 
-// ── Page ────────────────────────────────────────────────────────────────────────
 export default function Home() {
   return (
-    <div className="bg-[#171717] text-[#e2e8f0] font-sans min-h-screen leading-relaxed">
-      <Navbar /> {/* <-- Renderiza limpiamente el componente global importado arriba */}
+    <div id="top" className="bg-[#171717] text-[#e2e8f0] font-sans min-h-screen leading-relaxed scroll-smooth">
+      <Navbar /> 
       <Hero />
-      <TrustedBy />
       <FeaturesSection />
       <GroupManagement />
       <ExpenseTracking />

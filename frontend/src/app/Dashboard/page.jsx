@@ -14,6 +14,7 @@ const Dashboard = () => {
     const [usuario, setUsuario] = useState(null);
     const [grupos, setGrupos] = useState([]);
     const [amigos, setAmigos] = useState([]);
+    const [amigosReales, setAmigosReales] = useState([]);
 
     const [totalMeDeben, setTotalMeDeben] = useState(0.00);
     const [totalDebo, setTotalDebo] = useState(0.00);
@@ -62,10 +63,7 @@ const Dashboard = () => {
 
             const respuesta = await fetch(`http://localhost:5000/user/${userId}`, {
                 method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                }
+                headers: { "Authorization": `Bearer ${token}` }
             });
 
             if (respuesta.ok) {
@@ -77,11 +75,11 @@ const Dashboard = () => {
                 router.push("/login");
             }
         } catch (error) {
-            console.log("Error al pedir el usuario:", error);
+            console.error(error);
         }
     };
 
-const obtenerDatosDashboard = async () => {
+    const obtenerDatosDashboard = async () => {
         try {
             const token = localStorage.getItem("token");
             const storedUser = localStorage.getItem("user");
@@ -103,46 +101,47 @@ const obtenerDatosDashboard = async () => {
             }
 
             if (resGrupos.ok) {
-                const datosGrupos = await resGrupos.json();
+                const datosBrutos = await resGrupos.json();
+                const datosGrupos = Array.isArray(datosBrutos) ? datosBrutos : (datosBrutos.groups || []);
                 
                 let totalMeDebenTemp = 0;
                 let totalDeboTemp = 0;
                 let gruposConSaldos = [];
                 let listaAmigosTemp = {}; 
 
-                if (Array.isArray(datosGrupos)) {
-                    for (let grupo of datosGrupos) {
-                        let saldoDelGrupo = 0; 
-                        let nombresMiembros = {};
+                for (let grupo of datosGrupos) {
+                    let saldoDelGrupo = 0; 
+                    let nombresMiembros = {};
 
-                        try {
-                            const resMiembros = await fetch(`http://localhost:5000/group/${grupo.id}/members`, {
-                                headers: { "Authorization": `Bearer ${token}` }
+                    try {
+                        const resMiembros = await fetch(`http://localhost:5000/groups/${grupo.id}/members`, {
+                            headers: { "Authorization": `Bearer ${token}` }
+                        });
+                        if (resMiembros.ok) {
+                            const miembros = await resMiembros.json();
+                            miembros.forEach(m => {
+                                nombresMiembros[m.user_id] = m.user.name || m.user.user_name;
                             });
-                            if (resMiembros.ok) {
-                                const miembros = await resMiembros.json();
-                                miembros.forEach(m => {
-                                    nombresMiembros[m.user_id] = m.user.name || m.user.user_name;
-                                });
-                            }
-                        } catch (e) {}
+                        }
+                    } catch (e) {}
 
-                        const registrarAmigo = (amigoId, cantidad) => {
-                            const clave = `${grupo.id}-${amigoId}`; 
-                            if (!listaAmigosTemp[clave]) {
-                                const nombreReal = nombresMiembros[amigoId] || `Usuario #${amigoId}`;
-                                listaAmigosTemp[clave] = {
-                                    id: clave,
-                                    usuario: nombreReal,
-                                    inicial: nombreReal.charAt(0).toUpperCase(),
-                                    grupo: grupo.name,
-                                    saldo: 0
-                                };
-                            }
-                            listaAmigosTemp[clave].saldo += cantidad;
-                        };
+                    const registrarAmigo = (amigoId, cantidad) => {
+                        const clave = `${grupo.id}-${amigoId}`; 
+                        if (!listaAmigosTemp[clave]) {
+                            const nombreReal = nombresMiembros[amigoId] || `Usuario #${amigoId}`;
+                            listaAmigosTemp[clave] = {
+                                id: clave,
+                                usuario: nombreReal,
+                                inicial: nombreReal.charAt(0).toUpperCase(),
+                                grupo: grupo.name,
+                                saldo: 0
+                            };
+                        }
+                        listaAmigosTemp[clave].saldo += cantidad;
+                    };
 
-                        const resGastos = await fetch(`http://localhost:5000/group/${grupo.id}/expenses`, {
+                    try {
+                        const resGastos = await fetch(`http://localhost:5000/groups/${grupo.id}/expenses`, {
                             method: "GET",
                             headers: { "Authorization": `Bearer ${token}` }
                         });
@@ -169,8 +168,10 @@ const obtenerDatosDashboard = async () => {
                                 }
                             });
                         }
+                    } catch(e) {}
 
-                        const resPagos = await fetch(`http://localhost:5000/group/${grupo.id}/settlements`, {
+                    try {
+                        const resPagos = await fetch(`http://localhost:5000/groups/${grupo.id}/settlements`, {
                             method: "GET",
                             headers: { "Authorization": `Bearer ${token}` }
                         });
@@ -189,25 +190,26 @@ const obtenerDatosDashboard = async () => {
                                 }
                             });
                         }
+                    } catch(e) {}
 
-                        gruposConSaldos.push({
-                            id: grupo.id,
-                            nombre: grupo.name,
-                            categoria: grupo.category,
-                            saldo: saldoDelGrupo
-                        });
-                    }
-
-                    setGrupos(gruposConSaldos);
-                    setTotalMeDeben(Math.max(0, totalMeDebenTemp));
-                    setTotalDebo(Math.max(0, totalDeboTemp));
-                    
-                    const arrayAmigos = Object.values(listaAmigosTemp).filter(amigo => Math.abs(amigo.saldo) > 0.01);
-                    setAmigos(arrayAmigos);
+                    gruposConSaldos.push({
+                        id: grupo.id,
+                        name: grupo.name,
+                        nombre: grupo.name,
+                        categoria: grupo.category,
+                        saldo: saldoDelGrupo
+                    });
                 }
+
+                setGrupos(gruposConSaldos);
+                setTotalMeDeben(Math.max(0, totalMeDebenTemp));
+                setTotalDebo(Math.max(0, totalDeboTemp));
+                
+                const arrayAmigos = Object.values(listaAmigosTemp).filter(amigo => Math.abs(amigo.saldo) > 0.01);
+                setAmigos(arrayAmigos);
             }
         } catch (error) {
-            console.error("Error calculando el dashboard:", error);
+            console.error(error);
         }
     };
 
@@ -225,7 +227,7 @@ const obtenerDatosDashboard = async () => {
         setCargando(true);
         try {
             const token = localStorage.getItem("token");
-            const respuesta = await fetch(`http://localhost:5000/group/${grupoId}/expenses`, {
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoId}/expenses`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -240,7 +242,7 @@ const obtenerDatosDashboard = async () => {
             if (respuesta.ok) {
                 mostrarToast("Gasto guardado correctamente");
                 e.target.reset();
-                setModalGasto(false);
+                if (setModalGasto) setModalGasto(false);
                 await obtenerDatosDashboard(); 
             } else {
                 const errorData = await respuesta.json();
@@ -267,7 +269,7 @@ const obtenerDatosDashboard = async () => {
         setCargando(true);
         try {
             const token = localStorage.getItem("token");
-            const respuesta = await fetch(`http://localhost:5000/group/${grupoId}/settlements`, {
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoId}/settlements`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -418,7 +420,7 @@ const obtenerDatosDashboard = async () => {
         try {
             const token = localStorage.getItem("token");
 
-            const respuesta = await fetch(`http://localhost:5000/group/${id}`, {
+            const respuesta = await fetch(`http://localhost:5000/groups/${id}`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -665,7 +667,7 @@ const obtenerDatosDashboard = async () => {
                             <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-yellow-400" required placeholder="0.00" />
 
                             <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => setModalGasto(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
+                                <button type="button" onClick={() => { if (setModalGasto) setModalGasto(false); }} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
                                 <button type="submit" disabled={cargando} className="px-4 py-2 bg-yellow-400 text-black font-bold rounded-md hover:bg-yellow-500 transition-colors disabled:opacity-50">
                                     {cargando ? "Guardando..." : "Guardar gasto"}
                                 </button>
@@ -684,7 +686,7 @@ const obtenerDatosDashboard = async () => {
                             <select className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500 cursor-pointer" required>
                                 <option value="">Selecciona un grupo</option>
                                 {grupos.map((grupo) => (
-                                    <option key={grupo.id} value={grupo.id}>{grupo.nombre}</option>
+                                    <option key={grupo.id} value={grupo.id}>{grupo.name}</option>
                                 ))}
                             </select>
 
@@ -712,9 +714,9 @@ const obtenerDatosDashboard = async () => {
             )}
 
             <ModalCrearGrupo 
-            estaAbierto={modalGrupo}
-            alCerrar={() => setModalGrupo(false)}
-            onGrupoCreado={obtenerDatosDashboard}
+                estaAbierto={modalGrupo}
+                alCerrar={() => setModalGrupo(false)}
+                onGrupoCreado={obtenerDatosDashboard}
             />
 
             {modalAmigo && (
@@ -722,13 +724,12 @@ const obtenerDatosDashboard = async () => {
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4">Enviar solicitud de amistad</h3>
                         <form onSubmit={manejarSubmitAmigo}>
-                            <label className="block text-xs text-gray-400 mb-1">ID del Usuario</label>
+                            <label className="block text-xs text-gray-400 mb-1">ID o Correo del Usuario</label>
                             <input
-                                type="number"
-                                min="1"
-                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                type="text"
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white"
                                 required
-                                placeholder="Ej. 5"
+                                placeholder="Ej. 5 o amigo@correo.com"
                             />
 
                             <div className="flex justify-end gap-3">
