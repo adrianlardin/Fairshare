@@ -324,7 +324,7 @@ function Footer() {
 
 export default function Home() {
   return (
-    <div id="top" className="bg-[#171717] text-[#e2e8f0] font-sans min-h-screen leading-relaxed">
+    <div id="top" className="bg-[#171717] text-[#e2e8f0] font-sans min-h-screen leading-relaxed scroll-smooth">
       <Navbar /> 
       <Hero />
       <FeaturesSection />
