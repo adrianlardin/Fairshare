@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 const BORDER = "rgba(255,255,255,0.07)";
 const TEXT = "#e2e8f0";
 const MUTED = "#718096";
-const NAV_LINKS = ["Caracteristicas", "Como funciona", "Precios"];
+const NAV_LINKS = ["Caracteristicas", "Cómo funciona", "Contacto"];
 
 const LogoIcon = () => (
   <svg width="22" height="22" viewBox="0 0 22 22" fill="none">

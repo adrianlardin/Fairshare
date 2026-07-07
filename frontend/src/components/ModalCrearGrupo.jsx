@@ -231,3 +231,4 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
     </div>
   );
 };
+}
