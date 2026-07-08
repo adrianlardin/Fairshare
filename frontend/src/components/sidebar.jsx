@@ -233,13 +233,6 @@ const Sidebar = () => {
                   )}
                 </div>
               </li>
-
-              <li>
-                <Link href="/activity" className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-neutral-800/60 hover:text-[#f3dfc1] transition-colors text-sm">
-                  <IconActivity size={18} />
-                  <span>Actividad</span>
-                </Link>
-              </li>
             </ul>
           )}
         </nav>

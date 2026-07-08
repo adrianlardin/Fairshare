@@ -33,7 +33,7 @@ def update_user(user_id):
         return jsonify({"error": "Usuario no encontrado"}), 404
 
     data = request.get_json()
-
+    print("--- DATOS RECIBIDOS DESDE EL FRONTEND ---", data)
     # actualiza solo los campos que vengan en la peticion
     if "user_name" in data:
         user.user_name = data["user_name"]
@@ -45,10 +45,17 @@ def update_user(user_id):
         user.avatar = data["avatar"]
     if "password" in data:
         user.password = bcrypt.hashpw(data["password"].encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    if "currency" in data:
+        user.currency = data["currency"]
+    if "email_notifications" in data:
+        user.email_notifications = data["email_notifications"]
+    if "push_notifications" in data:
+        user.push_notifications = data["push_notifications"]
 
     # guarda los cambios en la base de datos
     db.session.commit()
-
+    datos_actualizados = user.serialize()
+    print("--- DATOS DEVUELTOS POR SERIALIZE ---", datos_actualizados)
     return jsonify(user.serialize()), 200
 
 

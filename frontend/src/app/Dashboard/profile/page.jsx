@@ -19,18 +19,23 @@ const PRESET_AVATARS = [
 
 const AccountSettings = () => {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [userName, setUserName] = useState('');
-  const [email, setEmail] = useState('');
-  const [avatar, setAvatar] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
-  const [emailNotifications, setEmailNotifications] = useState(false);
-  const [pushNotifications, setPushNotifications] = useState(false);
-  const [currency, setCurrency] = useState('USD ($)');
-  const [userId, setUserId] = useState('');
+  // Intentamos obtener el usuario del localStorage antes de renderizar
+  const tuUsuarioLocal = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+  const usuarioInicial = tuUsuarioLocal ? JSON.parse(tuUsuarioLocal) : {};
+
+  // Ahora tus estados iniciales tendrán los datos reales de la sesión actual
+  const [name, setName] = useState(usuarioInicial.name || '');
+  const [lastName, setLastName] = useState(usuarioInicial.last_name || '');
+  const [userName, setUserName] = useState(usuarioInicial.user_name || '');
+  const [email, setEmail] = useState(usuarioInicial.email || '');
+  const [avatar, setAvatar] = useState(usuarioInicial.avatar || '');
+  const [currency, setCurrency] = useState(usuarioInicial.currency || 'USD ($)');
+  const [emailNotifications, setEmailNotifications] = useState(usuarioInicial.email_notifications ?? false);
+  const [pushNotifications, setPushNotifications] = useState(usuarioInicial.push_notifications ?? false);
+  const [userId, setUserId] = useState(usuarioInicial.id || '');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -112,7 +117,18 @@ const AccountSettings = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // 1. Guardamos el JSON fresco en el almacenamiento local
         localStorage.setItem("user", JSON.stringify(data));
+
+        // 2. 🌟 FORZAMOS a los estados a tomar los valores recién devueltos por Flask
+        setName(data.name || '');
+        setLastName(data.last_name || '');
+        setUserName(data.user_name || '');
+        setCurrency(data.currency || 'USD ($)');
+        setAvatar(data.avatar || '');
+        setEmailNotifications(!!data.email_notifications); // El !! asegura que sea un booleano estricto
+        setPushNotifications(!!data.push_notifications);
+
         setIsSaveModalOpen(true);
       } else {
         const errMsg = data.error || data.msg || "Error al actualizar la configuracion.";

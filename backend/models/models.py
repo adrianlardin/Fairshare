@@ -18,6 +18,9 @@ class User(db.Model):
     name: Mapped[str] = mapped_column(String(36), nullable=False)
     last_name: Mapped[str] = mapped_column(String(36), nullable=False)
     avatar: Mapped[Optional[str]] = mapped_column(String(255))
+    currency = db.Column(db.String(20), default="USD ($)", nullable=True)
+    email_notifications = db.Column(db.Boolean, default=False, nullable=True)
+    push_notifications = db.Column(db.Boolean, default=False, nullable=True)
 
     # Relaciones
     groups_created: Mapped[List["Group"]] = relationship(back_populates="creator")
@@ -37,7 +40,10 @@ class User(db.Model):
             "user_name": self.user_name,
             "name": self.name,
             "last_name": self.last_name,
-            "avatar": self.avatar
+            "avatar": self.avatar,
+            "currency": self.currency,
+            "email_notifications": self.email_notifications,
+            "push_notifications": self.push_notifications
         }
 
 
