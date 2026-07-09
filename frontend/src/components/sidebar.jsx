@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useModales } from "../app/context/ModalContext";
 import { ModalListaAmigos } from "./ModalListaAmigos";
 import { ModalBandejaAmistad } from "./ModalBandejaAmistad";
-import { IconUser, IconFolder, IconPlus, IconChevronDown, IconChevronLeft, IconChevronRight, IconMoney, IconUsers, IconFriends, IconInbox, IconActivity } from "./icons";
+import { IconUser, IconFolder, IconPlus, IconChevronDown, IconChevronLeft, IconChevronRight, IconMoney, IconUsers, IconFriends, IconInbox, IconActivity, IconX } from "./icons";
 
 const Sidebar = () => {
   const router = useRouter();
@@ -19,6 +19,8 @@ const Sidebar = () => {
   const [grupos, setGrupos] = useState([]);
   const [cargandoGrupos, setCargandoGrupos] = useState(false);
   const [pendientesCount, setPendientesCount] = useState(0);
+  const [tieneGrupos, setTieneGrupos] = useState(false);
+  const [gruposCargados, setGruposCargados] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -31,6 +33,28 @@ const Sidebar = () => {
         console.error("Error al parsear el usuario desde localStorage:", error);
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const verificarGrupos = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const respuesta = await fetch("http://localhost:5000/groups", {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (respuesta.ok) {
+          const datos = await respuesta.json();
+          setTieneGrupos(datos.length > 0);
+        }
+      } catch (error) {
+        console.error("Error al verificar grupos:", error);
+      } finally {
+        setGruposCargados(true);
+      }
+    };
+    verificarGrupos();
   }, []);
 
   useEffect(() => {
@@ -92,6 +116,11 @@ const Sidebar = () => {
     setIsGroupsOpen(!isGroupsOpen);
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push('/login');
+  };
+
   const sidebarWidth = sidebarCollapsed ? "w-[60px]" : "w-[240px]";
 
   return (
@@ -106,23 +135,42 @@ const Sidebar = () => {
           {sidebarCollapsed ? <IconChevronRight size={12} /> : <IconChevronLeft size={12} />}
         </button>
 
-        {!sidebarCollapsed && (
-          <button
-            className="w-full bg-[#eec24b] text-[#1a1a1a] py-3 rounded-xl font-bold text-sm hover:bg-[#d8ae3e] transition-colors mb-6 shadow-md shadow-[#eec24b]/10 flex items-center justify-center gap-2"
-            onClick={() => setModalGasto(true)}
-          >
-            <IconPlus size={16} /> Agregar gasto
-          </button>
+        {!sidebarCollapsed && gruposCargados && (
+          tieneGrupos ? (
+            <button
+              className="w-full bg-[#eec24b] text-[#1a1a1a] py-3 rounded-xl font-bold text-sm hover:bg-[#d8ae3e] transition-colors mb-6 shadow-md shadow-[#eec24b]/10 flex items-center justify-center gap-2"
+              onClick={() => setModalGasto(true)}
+            >
+              <IconPlus size={16} /> Agregar gasto
+            </button>
+          ) : (
+            <Link
+              href="/dashboard/groups"
+              className="w-full bg-neutral-800 text-[#ae9f8f] py-3 rounded-xl font-bold text-sm hover:bg-neutral-700 transition-colors mb-6 flex items-center justify-center gap-2 border border-neutral-700"
+            >
+              <IconUsers size={16} /> Unete a un grupo
+            </Link>
+          )
         )}
 
-        {sidebarCollapsed && (
-          <button
-            className="w-full bg-[#eec24b] text-[#1a1a1a] py-2 rounded-lg font-bold hover:bg-[#d8ae3e] transition-colors mb-4 shadow-md shadow-[#eec24b]/10 flex items-center justify-center"
-            onClick={() => setModalGasto(true)}
-            title="Agregar gasto"
-          >
-            <IconPlus size={16} />
-          </button>
+        {sidebarCollapsed && gruposCargados && (
+          tieneGrupos ? (
+            <button
+              className="w-full bg-[#eec24b] text-[#1a1a1a] py-2 rounded-lg font-bold hover:bg-[#d8ae3e] transition-colors mb-4 shadow-md shadow-[#eec24b]/10 flex items-center justify-center"
+              onClick={() => setModalGasto(true)}
+              title="Agregar gasto"
+            >
+              <IconPlus size={16} />
+            </button>
+          ) : (
+            <Link
+              href="/dashboard/groups"
+              className="w-full bg-neutral-800 text-[#ae9f8f] py-2 rounded-lg font-bold hover:bg-neutral-700 transition-colors mb-4 flex items-center justify-center border border-neutral-700"
+              title="Unete a un grupo"
+            >
+              <IconUsers size={16} />
+            </Link>
+          )
         )}
 
         <nav className="flex-1 overflow-y-auto pr-1 space-y-1">
@@ -239,47 +287,65 @@ const Sidebar = () => {
 
         <div className="mt-auto pt-4 border-t border-neutral-800/60">
           {sidebarCollapsed ? (
-            <button
-              onClick={() => router.push('/dashboard/profile')}
-              className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-neutral-800/40 transition-all group"
-              title={username}
-            >
-              <div className="w-10 h-10 rounded-xl overflow-hidden border border-neutral-700 bg-neutral-800 flex items-center justify-center group-hover:border-[#eec24b] transition-colors shrink-0">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="Avatar de usuario"
-                    className="w-full h-full object-cover" />
-                ) : (
-                  <IconUser size={18} />
-                )}
-              </div>
-            </button>
+            <>
+              <button
+                onClick={() => router.push('/dashboard/profile')}
+                className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-neutral-800/40 transition-all group"
+                title={username}
+              >
+                <div className="w-10 h-10 rounded-xl overflow-hidden border border-neutral-700 bg-neutral-800 flex items-center justify-center group-hover:border-[#eec24b] transition-colors shrink-0">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="Avatar de usuario"
+                      className="w-full h-full object-cover" />
+                  ) : (
+                    <IconUser size={18} />
+                  )}
+                </div>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-red-500/20 transition-all group mt-1"
+                title="Cerrar sesión"
+              >
+                <IconX size={18} className="text-red-400 group-hover:text-red-300" />
+              </button>
+            </>
           ) : (
-            <button
-              onClick={() => router.push('/dashboard/profile')}
-              className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-neutral-800/40 transition-all group text-left"
-            >
-              <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-neutral-700 bg-neutral-800 flex items-center justify-center group-hover:border-[#eec24b] transition-colors shrink-0">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="Avatar de usuario"
-                    className="w-full h-full object-cover" />
-                ) : (
-                  <IconUser size={18} />
-                )}
-              </div>
+            <>
+              <button
+                onClick={() => router.push('/dashboard/profile')}
+                className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-neutral-800/40 transition-all group text-left"
+              >
+                <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-neutral-700 bg-neutral-800 flex items-center justify-center group-hover:border-[#eec24b] transition-colors shrink-0">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="Avatar de usuario"
+                      className="w-full h-full object-cover" />
+                  ) : (
+                    <IconUser size={18} />
+                  )}
+                </div>
 
-              <div className="overflow-hidden">
-                <h3 className="text-[#f3dfc1] font-medium text-xs truncate group-hover:text-[#eec24b] transition-colors">
-                  {username}
-                </h3>
-                <p className="text-[10px] text-gray-500 font-mono tracking-wider uppercase mt-0.5">
-                  Configuracion
-                </p>
-              </div>
-            </button>
+                <div className="overflow-hidden">
+                  <h3 className="text-[#f3dfc1] font-medium text-xs truncate group-hover:text-[#eec24b] transition-colors">
+                    {username}
+                  </h3>
+                  <p className="text-[10px] text-gray-500 font-mono tracking-wider uppercase mt-0.5">
+                    Configuracion
+                  </p>
+                </div>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-red-500/20 transition-all group text-left mt-1"
+              >
+                <IconX size={18} className="text-red-400 group-hover:text-red-300" />
+                <span className="text-red-400 text-xs group-hover:text-red-300 transition-colors">Cerrar sesión</span>
+              </button>
+            </>
           )}
         </div>
 
