@@ -11,7 +11,7 @@ const UserIcon = () => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#718096"
+    stroke="#64748B"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -27,7 +27,7 @@ const MailIcon = () => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#718096"
+    stroke="#64748B"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -43,7 +43,7 @@ const LockIcon = () => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#718096"
+    stroke="#64748B"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -59,7 +59,7 @@ const EyeIcon = () => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#718096"
+    stroke="#64748B"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -75,7 +75,7 @@ const EyeOffIcon = () => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#718096"
+    stroke="#64748B"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -157,7 +157,7 @@ const handleRegister = async (e) => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#121212] flex flex-col items-center justify-center p-4 font-sans text-white">
+    <div className="w-full min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-4 font-sans text-white">
       <Navbar />
 
       <div className="mb-6">
@@ -171,7 +171,7 @@ const handleRegister = async (e) => {
         Regístrate para empezar a gestionar tus gastos compartidos.
       </p>
 
-      <div className="w-full max-w-md bg-[#1a1a1a] border-t-2 border-[#eec24b] rounded-2xl p-8 shadow-2xl">
+      <div className="w-full max-w-md bg-[#1e293b] border-t-2 border-[#3B82F6] rounded-2xl p-8 shadow-2xl">
         <form onSubmit={handleRegister} className="space-y-5">
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-2">
@@ -186,7 +186,7 @@ const handleRegister = async (e) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Tu nombre"
-                className="w-full bg-[#262626] border border-neutral-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#eec24b] transition-colors"
+                className="w-full bg-[#334155] border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#3B82F6] transition-colors"
                 required
               />
             </div>
@@ -205,7 +205,7 @@ const handleRegister = async (e) => {
                 value={lastname}
                 onChange={(e) => setLastname(e.target.value)}
                 placeholder="Tu apellido"
-                className="w-full bg-[#262626] border border-neutral-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#eec24b] transition-colors"
+                className="w-full bg-[#334155] border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#3B82F6] transition-colors"
                 required
               />
             </div>
@@ -224,7 +224,7 @@ const handleRegister = async (e) => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Tu nombre de usuario"
-                className="w-full bg-[#262626] border border-neutral-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#eec24b] transition-colors"
+                className="w-full bg-[#334155] border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#3B82F6] transition-colors"
                 required
               />
             </div>
@@ -243,7 +243,7 @@ const handleRegister = async (e) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@ejemplo.com"
-                className="w-full bg-[#262626] border border-neutral-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#eec24b] transition-colors"
+                className="w-full bg-[#334155] border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#3B82F6] transition-colors"
                 required
               />
             </div>
@@ -262,7 +262,7 @@ const handleRegister = async (e) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-[#262626] border border-neutral-800 rounded-xl py-3 pl-10 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#eec24b] transition-colors"
+                className="w-full bg-[#334155] border border-slate-700 rounded-xl py-3 pl-10 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#3B82F6] transition-colors"
                 required
               />
               <button
@@ -281,7 +281,7 @@ const handleRegister = async (e) => {
               id="terms"
               checked={agreeTerms}
               onChange={(e) => setAgreeTerms(e.target.checked)}
-              className="w-4 h-4 rounded bg-[#262626] border-neutral-800 text-[#008744] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+              className="w-4 h-4 rounded bg-[#334155] border-slate-700 text-[#22C55E] focus:ring-0 focus:ring-offset-0 cursor-pointer"
               required
             />
             <label
@@ -289,11 +289,11 @@ const handleRegister = async (e) => {
               className="text-xs text-gray-400 cursor-pointer select-none"
             >
               Acepto los{" "}
-              <span className="text-[#eec24b] hover:underline">
+              <span className="text-[#3B82F6] hover:underline">
                 Términos de servicio
               </span>{" "}
               y la{" "}
-              <span className="text-[#eec24b] hover:underline">Privacidad</span>
+              <span className="text-[#3B82F6] hover:underline">Privacidad</span>
               .
             </label>
           </div>
@@ -301,26 +301,26 @@ const handleRegister = async (e) => {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-[#eec24b] text-[#121212] py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 mt-2 shadow-md
-              ${isLoading ? 'opacity-50 cursor-not-allowed bg-neutral-600 text-gray-300' : 'hover:bg-[#d8ae3e]'}`}
+            className={`w-full bg-[#3B82F6] text-[#0f172a] py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 mt-2 shadow-md
+              ${isLoading ? 'opacity-50 cursor-not-allowed bg-slate-500 text-gray-300' : 'hover:bg-[#2563EB]'}`}
           >
             {isLoading ? "Procesando..." : "Registrarse →"}
           </button>
         </form>
 
         <div className="relative flex py-5 items-center">
-          <div className="flex-grow border-t border-neutral-800"></div>
+          <div className="flex-grow border-t border-slate-700"></div>
           <span className="flex-shrink mx-4 text-[10px] tracking-wider text-gray-500 font-mono font-medium uppercase">
             o continuar con
           </span>
-          <div className="flex-grow border-t border-neutral-800"></div>
+          <div className="flex-grow border-t border-slate-700"></div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <button className="flex items-center justify-center gap-2 bg-transparent border border-neutral-800 hover:bg-neutral-800/40 py-2.5 rounded-xl text-xs font-semibold transition-colors">
+          <button className="flex items-center justify-center gap-2 bg-transparent border border-slate-700 hover:bg-slate-700/40 py-2.5 rounded-xl text-xs font-semibold transition-colors">
             <GoogleIcon /> Google
           </button>
-          <button className="flex items-center justify-center gap-2 bg-transparent border border-neutral-800 hover:bg-neutral-800/40 py-2.5 rounded-xl text-xs font-semibold transition-colors">
+          <button className="flex items-center justify-center gap-2 bg-transparent border border-slate-700 hover:bg-slate-700/40 py-2.5 rounded-xl text-xs font-semibold transition-colors">
             <AppleIcon /> Apple
           </button>
         </div>
@@ -330,7 +330,7 @@ const handleRegister = async (e) => {
         ¿Ya tienes una cuenta?{" "}
         <a
           href="/login"
-          className="text-[#eec24b] font-bold hover:underline ml-1"
+          className="text-[#3B82F6] font-bold hover:underline ml-1"
         >
           Inicia sesión
         </a>

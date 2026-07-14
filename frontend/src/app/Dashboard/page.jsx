@@ -431,7 +431,7 @@ const Dashboard = () => {
                     <h1 className="text-2xl font-bold mb-1">Panel de control</h1>
                     <h2 className="text-sm text-gray-400">
                         {usuario ? (
-                            <Link href="/dashboard/profile" className="hover:text-yellow-400 transition-colors cursor-pointer" title="Ir a mi perfil">
+                            <Link href="/dashboard/profile" className="hover:text-blue-400 transition-colors cursor-pointer" title="Ir a mi perfil">
                                 Hola, {usuario.name || usuario.user_name}
                             </Link>
                         ) : (
@@ -442,7 +442,7 @@ const Dashboard = () => {
 
                 <div className="flex gap-3">
                     <button
-                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded-md transition-colors"
+                        className="bg-blue-500 hover:bg-blue-600 text-black font-bold py-2 px-4 rounded-md transition-colors"
                         onClick={() => setModalGasto(true)}
                     >
                         Anadir un gasto
@@ -466,9 +466,9 @@ const Dashboard = () => {
                         <p className="text-gray-400 text-xs">Saldos temporales</p>
                     </div>
 
-                    <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-yellow-400 border-y border-r border-y-gray-700 border-r-gray-700">
-                        <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">DEBO <span className="text-yellow-400"><IconArrowDown size={14} /></span></p>
-                        <h2 className="text-yellow-400 text-3xl font-bold mb-2">{totalDebo.toFixed(2)} EUR</h2>
+                    <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-blue-500 border-y border-r border-y-gray-700 border-r-gray-700">
+                        <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">DEBO <span className="text-blue-400"><IconArrowDown size={14} /></span></p>
+                        <h2 className="text-blue-400 text-3xl font-bold mb-2">{totalDebo.toFixed(2)} EUR</h2>
                         <p className="text-gray-400 text-xs">Saldos temporales</p>
                     </div>
                 </div>
@@ -530,7 +530,7 @@ const Dashboard = () => {
                                 {grupo.saldo > 0 ? (
                                     <span className="text-green-500 text-xs m-0">Te deben {grupo.saldo} EUR</span>
                                 ) : grupo.saldo < 0 ? (
-                                    <span className="text-yellow-400 text-xs m-0">Debes {Math.abs(grupo.saldo)} EUR</span>
+                                    <span className="text-blue-400 text-xs m-0">Debes {Math.abs(grupo.saldo)} EUR</span>
                                 ) : (
                                     <span className="text-gray-400 text-xs m-0">Saldado</span>
                                 )}
@@ -588,7 +588,7 @@ const Dashboard = () => {
                                     {amigo.usuario}
                                 </div>
                                 <div className="col-span-3 text-gray-400 text-center text-xs">{amigo.grupo}</div>
-                                <div className={`col-span-3 text-right font-medium ${amigo.saldo > 0 ? 'text-green-500' : amigo.saldo < 0 ? 'text-yellow-400' : 'text-gray-400'}`}>
+                                <div className={`col-span-3 text-right font-medium ${amigo.saldo > 0 ? 'text-green-500' : amigo.saldo < 0 ? 'text-blue-400' : 'text-gray-400'}`}>
                                     {amigo.saldo > 0 ? `Te debe ${amigo.saldo} EUR` : amigo.saldo < 0 ? `Debes ${Math.abs(amigo.saldo)} EUR` : `0.00 EUR`}
                                 </div>
                                 <div className="col-span-1 text-right">

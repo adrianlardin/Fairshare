@@ -80,7 +80,7 @@ export const GlobalModales = () => {
                 <form onSubmit={manejarSubmitGasto}>
                     <label className="block text-xs text-gray-400 mb-1">A que grupo pertenece?</label>
                     <select
-                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400 cursor-pointer"
+                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-blue-500 cursor-pointer"
                         required
                     >
                         <option value="">Selecciona un grupo</option>
@@ -92,7 +92,7 @@ export const GlobalModales = () => {
                     <label className="block text-xs text-gray-400 mb-1">Descripcion</label>
                     <input
                         type="text"
-                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400"
+                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-blue-500"
                         required
                         placeholder="Ej. Cena del viernes"
                     />
@@ -102,7 +102,7 @@ export const GlobalModales = () => {
                         type="number"
                         step="0.01"
                         min="0.01"
-                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-yellow-400"
+                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-blue-500"
                         required
                         placeholder="0.00"
                     />
@@ -118,7 +118,7 @@ export const GlobalModales = () => {
                         <button
                             type="submit"
                             disabled={cargando}
-                            className="px-4 py-2 bg-yellow-400 text-black font-bold rounded-md hover:bg-yellow-500 transition-colors disabled:opacity-50"
+                            className="px-4 py-2 bg-blue-500 text-black font-bold rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
                         >
                             {cargando ? "Guardando..." : "Guardar gasto"}
                         </button>

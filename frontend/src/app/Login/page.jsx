@@ -11,7 +11,7 @@ const MailIcon = () => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#718096"
+    stroke="#64748B"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -27,7 +27,7 @@ const LockIcon = () => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#718096"
+    stroke="#64748B"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -43,7 +43,7 @@ const EyeOffIcon = () => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#718096"
+    stroke="#64748B"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -121,12 +121,12 @@ const handleSubmit = async (e) => {
   return (
     <div className="flex flex-col relative">
       {/* Contenedor de la página con posicionamiento fixed */}
-      <div className="bg-[#111111] fixed top-0 left-0 w-screen h-screen flex flex-col items-center justify-center overflow-y-auto p-6 z-20 font-sans antialiased">
+      <div className="bg-[#0f172a] fixed top-0 left-0 w-screen h-screen flex flex-col items-center justify-center overflow-y-auto p-6 z-20 font-sans antialiased">
         {/* Tu Navbar integrado */}
         <Navbar />
 
         {/* Fondo decorativo con gradientes radiales */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(243,208,76,0.03)_0%,transparent_50%),radial-gradient(circle_at_20%_80%,rgba(74,222,128,0.02)_0%,transparent_50%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.03)_0%,transparent_50%),radial-gradient(circle_at_20%_80%,rgba(74,222,128,0.02)_0%,transparent_50%)] pointer-events-none" />
 
         {/* Estructura del Login */}
         <div className="w-full max-w-[440px] flex flex-col gap-6 z-10">
@@ -138,17 +138,17 @@ const handleSubmit = async (e) => {
             <h1 className="text-[#E2E8F0] text-[28px] font-semibold m-0 mb-2 tracking-tight">
               Te damos la bienvenida
             </h1>
-            <p className="text-[#8E8E8E] text-sm m-0">
+            <p className="text-[#94A3B8] text-sm m-0">
               Inicia sesión para gestionar tus gastos compartidos.
             </p>
           </div>
 
           {/* Tarjeta de Login */}
-          <div className="bg-[#222222] rounded-xl border-t-2 border-t-[#F3D04C] border-x border-b border-white/8 p-8 shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+          <div className="bg-[#1e293b] rounded-xl border-t-2 border-t-[#3B82F6] border-x border-b border-white/8 p-8 shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               {/* Input Email */}
               <div className="flex flex-col gap-2">
-                <label className="text-[#8E8E8E] text-xs font-medium tracking-wider">
+                <label className="text-[#94A3B8] text-xs font-medium tracking-wider">
                   Correo electrónico
                 </label>
                 <div className="relative flex items-center">
@@ -160,7 +160,7 @@ const handleSubmit = async (e) => {
                     placeholder="tu@ejemplo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#333333] border border-white/8 rounded-md py-3 pl-[38px] pr-3 text-[#E2E8F0] text-sm outline-none transition-colors duration-200 focus:border-[#F3D04C]/50"
+                    className="w-full bg-[#334155] border border-white/8 rounded-md py-3 pl-[38px] pr-3 text-[#E2E8F0] text-sm outline-none transition-colors duration-200 focus:border-[#3B82F6]/50"
                     required
                   />
                 </div>
@@ -169,12 +169,12 @@ const handleSubmit = async (e) => {
               {/* Input Password */}
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center w-full">
-                  <label className="text-[#8E8E8E] text-xs font-medium tracking-wider">
+                  <label className="text-[#94A3B8] text-xs font-medium tracking-wider">
                     Contraseña
                   </label>
                   <a
                     href="/forgot-password"
-                    className="text-[#F3D04C] text-[11px] no-underline font-medium tracking-wider hover:underline"
+                    className="text-[#3B82F6] text-[11px] no-underline font-medium tracking-wider hover:underline"
                   >
                     ¿Olvidaste tu contraseña?
                   </a>
@@ -188,7 +188,7 @@ const handleSubmit = async (e) => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#333333] border border-white/8 rounded-md py-3 pl-[38px] pr-[38px] text-[#E2E8F0] text-sm outline-none transition-colors duration-200 focus:border-[#F3D04C]/50"
+                    className="w-full bg-[#334155] border border-white/8 rounded-md py-3 pl-[38px] pr-[38px] text-[#E2E8F0] text-sm outline-none transition-colors duration-200 focus:border-[#3B82F6]/50"
                     required
                   />
                   <span className="absolute right-3 flex items-center">
@@ -204,11 +204,11 @@ const handleSubmit = async (e) => {
                   id="remember"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="accent-[#F3D04C] cursor-pointer w-[15px] h-[15px]"
+                  className="accent-[#3B82F6] cursor-pointer w-[15px] h-[15px]"
                 />
                 <label
                   htmlFor="remember"
-                  className="text-[#8E8E8E] text-xs cursor-pointer select-none tracking-wider"
+                  className="text-[#94A3B8] text-xs cursor-pointer select-none tracking-wider"
                 >
                   Recordarme por 30 días
                 </label>
@@ -217,7 +217,7 @@ const handleSubmit = async (e) => {
               {/* Botón Principal de Sign In */}
               <button
                 type="submit"
-                className="bg-[#F3D04C] text-[#111111] border-none rounded-md py-3.5 text-span font-semibold cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-90"
+                className="bg-[#3B82F6] text-[#0f172a] border-none rounded-md py-3.5 text-span font-semibold cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-90"
               >
                 Iniciar sesión <span>→</span>
               </button>
@@ -225,7 +225,7 @@ const handleSubmit = async (e) => {
               {/* Separador */}
               <div className="flex items-center gap-3 my-2">
                 <div className="flex-1 h-[1px] bg-white/8" />
-                <span className="text-[#8E8E8E] text-[10px] font-semibold tracking-widest">
+                <span className="text-[#94A3B8] text-[10px] font-semibold tracking-widest">
                   O CONTINUAR CON
                 </span>
                 <div className="flex-1 h-[1px] bg-white/8" />
@@ -253,10 +253,10 @@ const handleSubmit = async (e) => {
 
           {/* Footer del Login */}
           <div className="text-center text-sm">
-            <span className="text-[#8E8E8E]">¿No tienes una cuenta? </span>
+            <span className="text-[#94A3B8]">¿No tienes una cuenta? </span>
             <a
               href="/register"
-              className="text-[#F3D04C] no-underline font-semibold hover:underline"
+              className="text-[#3B82F6] no-underline font-semibold hover:underline"
             >
               Regístrate
             </a>

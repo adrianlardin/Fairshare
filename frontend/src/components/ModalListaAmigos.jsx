@@ -65,7 +65,7 @@ export const ModalListaAmigos = ({ estaAbierto, alCerrar }) => {
                                     key={item.friendship_id} 
                                     className="flex items-center gap-3 bg-gray-900/50 p-3 rounded-xl border border-gray-800 animate-in fade-in duration-150"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 text-black flex items-center justify-center font-bold text-sm shrink-0">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 text-black flex items-center justify-center font-bold text-sm shrink-0">
                                         {nombre.charAt(0).toUpperCase()}
                                     </div>
                                     

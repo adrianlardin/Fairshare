@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="m-0 p-0 text-white bg-gray-900">
+      <body className="m-0 p-0 text-white bg-slate-900">
           <ModalProvider>
             {/* 2. El modal se renderiza aquí de fondo esperando que el contexto se active */}
             <GlobalModales /> 

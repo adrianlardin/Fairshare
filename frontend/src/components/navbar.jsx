@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 
 const BORDER = "rgba(255,255,255,0.07)";
 const TEXT = "#e2e8f0";
-const MUTED = "#718096";
+const MUTED = "#64748B";
 
 const NAV_LINKS = [
   { nombre: "Características", ruta: "/#caracteristicas" },
@@ -54,7 +54,7 @@ const styles = {
   loginBtn: { color: MUTED, textDecoration: "none", fontSize: 14, padding: "6px 12px" },
   dashboardBtn: { color: "#4ADE80", textDecoration: "none", fontSize: 14, padding: "6px 12px", fontWeight: 600 },
   userBtn: { color: TEXT, textDecoration: "none", fontSize: 14, padding: "6px 12px", display: "flex", alignItems: "center", gap: 6 },
-  avatar: { width: 24, height: 24, borderRadius: "50%", objectFit: "cover", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 },
+  avatar: { width: 24, height: 24, borderRadius: "50%", objectFit: "cover", background: "#334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 },
 }
 
 export function Navbar() {
@@ -107,7 +107,7 @@ export function Navbar() {
           ) : (
             <>
               <Link href="/login" style={styles.loginBtn}>Iniciar sesión</Link>
-              <Link href="/register" className="bg-[#F5C518] text-[#0b0f14] font-bold text-sm px-5 py-2 rounded-lg no-underline inline-block hover:opacity-90" style={{ backgroundColor: "#F5C518", color: "#0b0f14", fontWeight: 700, fontSize: 13, padding: "6px 14px", borderRadius: 8, textDecoration: "none" }}>
+              <Link href="/register" className="bg-[#3B82F6] text-[#0b0f14] font-bold text-sm px-5 py-2 rounded-lg no-underline inline-block hover:opacity-90" style={{ backgroundColor: "#3B82F6", color: "#0b0f14", fontWeight: 700, fontSize: 13, padding: "6px 14px", borderRadius: 8, textDecoration: "none" }}>
                 Comenzar
               </Link>
             </>

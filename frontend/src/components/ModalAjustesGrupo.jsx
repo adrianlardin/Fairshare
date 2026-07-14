@@ -79,9 +79,9 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-[#1a1a1a] border border-neutral-800 rounded-2xl w-full max-w-md p-6 text-white shadow-2xl space-y-6">
+            <div className="bg-[#1e293b] border border-slate-700 rounded-2xl w-full max-w-md p-6 text-white shadow-2xl space-y-6">
 
-                <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
+                <div className="flex justify-between items-center border-b border-slate-700 pb-3">
                     <h3 className="text-lg font-bold text-gray-100 flex items-center gap-2">
                         <IconSettings size={18} /> Ajustes de "{grupoActual.name}"
                     </h3>
@@ -102,20 +102,20 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
                             value={nuevoNombre}
                             onChange={(e) => setNuevoNombre(e.target.value)}
                             disabled={cargando}
-                            className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-400 transition-colors"
+                            className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
                             placeholder="Nuevo nombre del grupo"
                         />
                         <button
                             type="submit"
                             disabled={cargando}
-                            className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors disabled:opacity-50"
+                            className="bg-blue-500 hover:bg-blue-600 text-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors disabled:opacity-50"
                         >
                             {cargando ? "Guardando..." : "Guardar"}
                         </button>
                     </div>
                 </form>
 
-                <hr className="border-neutral-800" />
+                <hr className="border-slate-700" />
 
                 <div className="space-y-3 bg-red-950/20 border border-red-900/30 p-4 rounded-xl">
                     <div>

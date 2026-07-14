@@ -12,7 +12,7 @@ const CheckIcon = () => (
 );
 
 const StarIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="#F5C518">
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="#3B82F6">
     <path d="M7 1l1.545 4.236H13l-3.59 2.609L10.727 13 7 10.09 3.273 13l1.318-5.155L1 5.236h4.455z" />
   </svg>
 );
@@ -96,7 +96,7 @@ function Hero() {
           Finanzas, <span className="text-[#4ADE80]">sincronizadas.</span>
           <br />Amistades, a salvo.
         </h1>
-        <p className="text-[#718096] text-base max-w-[460px] mb-8">
+        <p className="text-[#64748B] text-base max-w-[460px] mb-8">
           La aplicación de gastos compartidos de alto rendimiento diseñada para equipos modernos,
           compañeros de piso y viajeros que valoran la precisión y la claridad.
         </p>
@@ -107,7 +107,7 @@ function Hero() {
           <div className="bg-[#0b0f14] rounded-lg p-4 min-h-[220px]">
             <div className="flex gap-1.5 mb-4">
               <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] inline-block" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#F5C518] inline-block" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6] inline-block" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#4ADE80] inline-block" />
             </div>
             <div className="flex items-end gap-1 h-[100px] mb-4">
@@ -126,7 +126,7 @@ function Hero() {
               {["$1,240", "$380", "$860"].map((v, i) => (
                 <div key={i} className="bg-[#131a24] border border-white/5 rounded-lg p-2.5 flex-1 flex flex-col gap-0.5">
                   <span className="text-[#4ADE80] font-bold text-[15px]">{v}</span>
-                  <span className="text-[#718096] text-[11px]">
+                  <span className="text-[#64748B] text-[11px]">
                     {["Total", "Saldado", "Pendiente"][i]}
                   </span>
                 </div>
@@ -143,7 +143,7 @@ function FeaturesSection() {
   return (
     <section id="caracteristicas" className="max-w-[1100px] mx-auto px-6 py-20 text-center">
       <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.8px] mb-3 text-slate-50">Precisión en cada transacción</h2>
-      <p className="text-[#718096] text-sm max-w-[500px] mx-auto mb-12">
+      <p className="text-[#64748B] text-sm max-w-[500px] mx-auto mb-12">
         Tres pilares que definen nuestro compromiso con tu claridad financiera.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-left">
@@ -151,7 +151,7 @@ function FeaturesSection() {
           <div key={f.title} className="bg-[#131a24] border border-white/5 rounded-xl p-6">
             <div className="text-2xl mb-3.5">{f.icon}</div>
             <h3 className="font-bold text-base mb-2 text-slate-50">{f.title}</h3>
-            <p className="text-[#718096] text-sm leading-relaxed">{f.desc}</p>
+            <p className="text-[#64748B] text-sm leading-relaxed">{f.desc}</p>
           </div>
         ))}
       </div>
@@ -167,7 +167,7 @@ function GroupManagement() {
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.6px] mt-2.5 mb-4 text-slate-50">
           Coordínate sin esfuerzo<br />con cualquier grupo
         </h2>
-        <p className="text-[#718096] text-sm mb-6 leading-relaxed">
+        <p className="text-[#64748B] text-sm mb-6 leading-relaxed">
           Ya sea el alquiler familiar, los gastos con compañeros de piso o una escapada de fin de
           semana con amigos. Gestiona múltiples círculos con libros de contabilidad específicos y reglas de división personalizadas.
         </p>
@@ -197,7 +197,7 @@ function ExpenseTracking() {
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.6px] mt-2.5 mb-4 text-slate-50">
           Registra cada detalle en<br />segundos
         </h2>
-        <p className="text-[#718096] text-sm mb-6 leading-relaxed">
+        <p className="text-[#64748B] text-sm mb-6 leading-relaxed">
           El registro manual es cosa del pasado. Escanea recibos, importa transacciones bancarias
           y realiza el seguimiento de facturas recurrentes con precisión milimétrica.
         </p>
@@ -221,7 +221,7 @@ function PersonalExperience() {
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.6px] mt-2.5 mb-4 text-slate-50">
           Tus finanzas,<br />tus reglas
         </h2>
-        <p className="text-[#718096] text-sm mb-6 leading-relaxed">
+        <p className="text-[#64748B] text-sm mb-6 leading-relaxed">
           Personaliza tu panel de control, configura alertas de presupuesto y gestiona tus preferencias
           de seguridad. SplitSync se adapta a tu estilo de vida financiero único.
         </p>
@@ -240,7 +240,7 @@ function PersonalExperience() {
 }
 
 function PhoneMockup({ type }) {
-  const colors = { group: "#4ADE80", expense: "#F5C518", personal: "#818CF8" };
+  const colors = { group: "#4ADE80", expense: "#3B82F6", personal: "#818CF8" };
   const accent = colors[type] || "#4ADE80";
   return (
     <div 
@@ -265,7 +265,7 @@ function FinalCTA() {
   return (
     <section className="bg-[#111720] border-t border-b border-white/5 text-center py-20 px-6">
       <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.8px] mb-3 text-slate-50">¿Listo para simplificar tu vida compartida?</h2>
-      <p className="text-[#718096] text-sm max-w-[500px] mx-auto mb-7">
+      <p className="text-[#64748B] text-sm max-w-[500px] mx-auto mb-7">
         Únete a nosotros y alcanza la claridad financiera y
         comparten gastos sin estrés.
       </p>
@@ -284,7 +284,7 @@ function Footer() {
             </div>
             <Link href="/#top" className="font-bold text-lg text-white">FairShare</Link>
           </div>
-          <p className="text-[#718096] text-[13px] mt-2.5 leading-relaxed">
+          <p className="text-[#64748B] text-[13px] mt-2.5 leading-relaxed">
             Claridad financiera precisa para equipos modernos.
           </p>
         </div>
@@ -294,7 +294,7 @@ function Footer() {
             <ul className="list-none p-0 m-0">
               {links.map((l) => (
                 <li key={l} className="mb-2">
-                  <a href="#" className="text-[#718096] no-underline text-[13px] hover:text-white transition-colors">{l}</a>
+                  <a href="#" className="text-[#64748B] no-underline text-[13px] hover:text-white transition-colors">{l}</a>
                 </li>
               ))}
             </ul>
@@ -302,20 +302,20 @@ function Footer() {
         ))}
         <div>
           <p className="text-[#e2e8f0] font-bold text-xs tracking-[1.2px] mb-4 mt-0">BOLETÍN INFORMATIVO</p>
-          <p className="text-[#718096] text-[13px] leading-relaxed">Recibe los últimos consejos sobre gestión de gastos.</p>
+          <p className="text-[#64748B] text-[13px] leading-relaxed">Recibe los últimos consejos sobre gestión de gastos.</p>
           <div className="flex gap-2 mt-3">
             <input
               type="email"
               placeholder="Tu correo electrónico"
               className="bg-[#131a24] border border-white/5 rounded-lg py-2.5 px-3 text-[#e2e8f0] text-[13px] flex-1 outline-none focus:border-white/20 transition-colors"
             />
-            <button className="bg-[#F5C518] text-[#0b0f14] font-bold border-none rounded-lg py-2.5 px-3.5 cursor-pointer text-[15px] hover:opacity-90 transition-opacity">
+            <button className="bg-[#3B82F6] text-[#0b0f14] font-bold border-none rounded-lg py-2.5 px-3.5 cursor-pointer text-[15px] hover:opacity-90 transition-opacity">
               →
             </button>
           </div>
         </div>
       </div>
-      <div className="max-w-[1100px] mx-auto mt-6 text-[#718096] text-xs text-center">
+      <div className="max-w-[1100px] mx-auto mt-6 text-[#64748B] text-xs text-center">
         <span>© 2026 SplitSync. Claridad financiera precisa para equipos modernos. Todos los derechos reservados.</span>
       </div>
     </footer>
@@ -324,7 +324,7 @@ function Footer() {
 
 export default function Home() {
   return (
-    <div id="top" className="bg-[#171717] text-[#e2e8f0] font-sans min-h-screen leading-relaxed scroll-smooth">
+    <div id="top" className="bg-[#0f172a] text-[#e2e8f0] font-sans min-h-screen leading-relaxed scroll-smooth">
       <Navbar /> 
       <Hero />
       <FeaturesSection />

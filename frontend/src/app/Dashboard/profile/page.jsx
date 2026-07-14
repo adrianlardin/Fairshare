@@ -182,14 +182,14 @@ const AccountSettings = () => {
 
       <form onSubmit={handleSaveChanges} className="space-y-6">
 
-        <section className="bg-[#1a1a1a] border border-neutral-800 rounded-xl p-6">
+        <section className="bg-[#1e293b] border border-slate-700 rounded-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Perfil</h2>
-          <hr className="border-neutral-800 mb-6" />
+          <hr className="border-slate-700 mb-6" />
 
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Contenedor del Avatar y Selector */}
             <div className="flex flex-col items-center gap-2 min-w-[100px]">
-              <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-[#eec24b] bg-neutral-800 flex items-center justify-center shadow-lg">
+              <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-[#3B82F6] bg-slate-700 flex items-center justify-center shadow-lg">
                 {avatar ? (
                   <img
                     src={avatar}
@@ -203,7 +203,7 @@ const AccountSettings = () => {
 
               <button
                 type="button"
-                className="text-[10px] tracking-wider text-[#eec24b] uppercase font-bold hover:underline mt-1"
+                className="text-[10px] tracking-wider text-[#3B82F6] uppercase font-bold hover:underline mt-1"
                 onClick={() => setIsAvatarSelectorOpen(!isAvatarSelectorOpen)}
               >
                 {isAvatarSelectorOpen ? "Cerrar selección" : "Cambiar avatar"}
@@ -219,7 +219,7 @@ const AccountSettings = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Tu nombre"
-                    className="w-full bg-[#121212] border border-neutral-800 rounded-lg p-3 text-white focus:outline-none focus:border-[#eec24b] transition-colors"
+                    className="w-full bg-[#0f172a] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-[#3B82F6] transition-colors"
                   />
                 </div>
                 <div>
@@ -229,7 +229,7 @@ const AccountSettings = () => {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Tu apellido"
-                    className="w-full bg-[#121212] border border-neutral-800 rounded-lg p-3 text-white focus:outline-none focus:border-[#eec24b] transition-colors"
+                    className="w-full bg-[#0f172a] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-[#3B82F6] transition-colors"
                   />
                 </div>
               </div>
@@ -241,7 +241,7 @@ const AccountSettings = () => {
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   placeholder="Username"
-                  className="w-full bg-[#121212] border border-neutral-800 rounded-lg p-3 text-white focus:outline-none focus:border-[#eec24b] transition-colors"
+                  className="w-full bg-[#0f172a] border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-[#3B82F6] transition-colors"
                 />
               </div>
 
@@ -252,7 +252,7 @@ const AccountSettings = () => {
                   value={email}
                   disabled
                   placeholder="Dirección de correo electrónico"
-                  className="w-full bg-[#1a1a1a] border border-neutral-800 rounded-lg p-3 text-gray-500 cursor-not-allowed outline-none"
+                  className="w-full bg-[#1e293b] border border-slate-700 rounded-lg p-3 text-gray-500 cursor-not-allowed outline-none"
                 />
               </div>
 
@@ -264,12 +264,12 @@ const AccountSettings = () => {
                     value={userId}
                     disabled
                     placeholder="ID"
-                    className="w-full bg-[#1a1a1a] border border-neutral-800 rounded-lg p-3 text-[#eec24b] font-mono font-bold text-lg cursor-default outline-none"
+                    className="w-full bg-[#1e293b] border border-slate-700 rounded-lg p-3 text-[#3B82F6] font-mono font-bold text-lg cursor-default outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => { navigator.clipboard.writeText(userId) }}
-                    className="shrink-0 bg-neutral-800 hover:bg-neutral-700 text-gray-300 px-3 py-3 rounded-lg text-xs font-mono transition-colors border border-neutral-700"
+                    className="shrink-0 bg-slate-700 hover:bg-slate-600 text-gray-300 px-3 py-3 rounded-lg text-xs font-mono transition-colors border border-slate-600"
                     title="Copiar ID"
                   >
                     Copiar
@@ -283,7 +283,7 @@ const AccountSettings = () => {
           </div>
 
           {isAvatarSelectorOpen && (
-            <div className="mt-6 bg-[#121212] border border-neutral-800 rounded-xl p-4 animate-in fade-in duration-200">
+            <div className="mt-6 bg-[#0f172a] border border-slate-700 rounded-xl p-4 animate-in fade-in duration-200">
               <p className="text-xs font-mono text-gray-400 mb-3 uppercase tracking-wider">Selecciona un avatar predeterminado:</p>
               <div className="grid grid-cols-5 gap-3 sm:grid-cols-10">
                 {PRESET_AVATARS.map((avatarUrl, index) => (
@@ -294,7 +294,7 @@ const AccountSettings = () => {
                       setAvatar(avatarUrl);
                       setIsAvatarSelectorOpen(false); // Cierra la grilla al elegir uno
                     }}
-                    className={`relative w-12 h-12 rounded-lg overflow-hidden bg-neutral-800 border-2 transition-all p-1 hover:scale-105 ${avatar === avatarUrl ? 'border-[#eec24b] bg-neutral-700 ring-2 ring-[#eec24b]/20' : 'border-transparent border-neutral-700'
+                    className={`relative w-12 h-12 rounded-lg overflow-hidden bg-slate-700 border-2 transition-all p-1 hover:scale-105 ${avatar === avatarUrl ? 'border-[#3B82F6] bg-slate-600 ring-2 ring-[#3B82F6]/20' : 'border-transparent border-slate-600'
                       }`}
                   >
                     <img src={avatarUrl} alt={`Opción ${index + 1}`} className="w-full h-full object-contain" />
@@ -305,9 +305,9 @@ const AccountSettings = () => {
           )}
         </section>
 
-        <section className="bg-[#1a1a1a] border border-neutral-800 rounded-xl p-6">
+        <section className="bg-[#1e293b] border border-slate-700 rounded-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Preferencias</h2>
-          <hr className="border-neutral-800 mb-6" />
+          <hr className="border-slate-700 mb-6" />
 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -318,7 +318,7 @@ const AccountSettings = () => {
               <button
                 type="button"
                 onClick={() => setEmailNotifications(!emailNotifications)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${emailNotifications ? 'bg-blue-600' : 'bg-neutral-700'}`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${emailNotifications ? 'bg-blue-600' : 'bg-slate-600'}`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emailNotifications ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
@@ -332,7 +332,7 @@ const AccountSettings = () => {
               <button
                 type="button"
                 onClick={() => setPushNotifications(!pushNotifications)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${pushNotifications ? 'bg-blue-600' : 'bg-neutral-700'}`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${pushNotifications ? 'bg-blue-600' : 'bg-slate-600'}`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${pushNotifications ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
@@ -344,7 +344,7 @@ const AccountSettings = () => {
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full md:w-64 bg-[#121212] border border-neutral-800 rounded-lg p-3 text-white appearance-none focus:outline-none focus:border-[#eec24b] transition-colors cursor-pointer"
+                  className="w-full md:w-64 bg-[#0f172a] border border-slate-700 rounded-lg p-3 text-white appearance-none focus:outline-none focus:border-[#3B82F6] transition-colors cursor-pointer"
                 >
                   <option value="ARS ($)">ARS ($)</option>
                   <option value="USD ($)">USD ($)</option>
@@ -375,13 +375,13 @@ const AccountSettings = () => {
             {isDeleteModalOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsDeleteModalOpen(false)} />
-                <div className="relative w-full max-w-md bg-[#1a1a1a] border border-red-950/60 rounded-2xl p-6 shadow-2xl z-10">
+                <div className="relative w-full max-w-md bg-[#1e293b] border border-red-950/60 rounded-2xl p-6 shadow-2xl z-10">
                   <h3 className="text-xl font-bold text-white mb-2">¿Estás absolutamente seguro?</h3>
                   <p className="text-sm text-gray-400 mb-6">Esta acción es permanente e irreversible.</p>
                   <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
                     <button
                       type="button"
-                      className="w-full sm:w-auto px-5 py-2.5 bg-[#262626] border border-neutral-800 text-gray-300 rounded-xl text-sm font-semibold hover:bg-neutral-800"
+                      className="w-full sm:w-auto px-5 py-2.5 bg-[#334155] border border-slate-700 text-gray-300 rounded-xl text-sm font-semibold hover:bg-slate-700"
                       onClick={() => setIsDeleteModalOpen(false)}
                     >
                       Cancelar
@@ -404,7 +404,7 @@ const AccountSettings = () => {
         <div className="flex justify-end pt-2">
           <button
             type="submit"
-            className="bg-[#eec24b] text-[#121212] px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#d8ae3e] transition-colors shadow-md"
+            className="bg-[#3B82F6] text-[#0f172a] px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#2563EB] transition-colors shadow-md"
           >
             Guardar cambios
           </button>
@@ -412,12 +412,12 @@ const AccountSettings = () => {
           {isSaveModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsSaveModalOpen(false)} />
-              <div className="relative w-full max-w-sm bg-[#1a1a1a] border border-neutral-800 rounded-2xl p-6 shadow-2xl z-10 text-center">
-                <div className="w-14 h-14 bg-[#008744]/20 border border-[#008744] text-[#008744] rounded-full flex items-center justify-center mx-auto mb-4"><IconCheck size={24} /></div>
+              <div className="relative w-full max-w-sm bg-[#1e293b] border border-slate-700 rounded-2xl p-6 shadow-2xl z-10 text-center">
+                <div className="w-14 h-14 bg-[#22C55E]/20 border border-[#22C55E] text-[#22C55E] rounded-full flex items-center justify-center mx-auto mb-4"><IconCheck size={24} /></div>
                 <h3 className="text-xl font-bold text-white mb-2">¡Cambios guardados!</h3>
                 <button
                   type="button"
-                  className="w-full bg-[#008744] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#007139]"
+                  className="w-full bg-[#22C55E] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#16A34A]"
                   onClick={() => setIsSaveModalOpen(false)}
                 >
                   Entendido

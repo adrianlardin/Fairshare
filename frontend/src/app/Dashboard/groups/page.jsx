@@ -100,7 +100,7 @@ export default function GroupsPage() {
                     </button>
                     <button
                         onClick={() => setModalCrearGrupo(true)}
-                        className="bg-[#eec24b] text-[#1a1a1a] font-bold text-sm py-2 px-4 rounded-md hover:bg-[#d8ae3e] transition-colors flex items-center gap-2"
+                        className="bg-[#3B82F6] text-[#1e293b] font-bold text-sm py-2 px-4 rounded-md hover:bg-[#2563EB] transition-colors flex items-center gap-2"
                     >
                         <IconPlus size={16} />
                         Crear grupo
@@ -128,7 +128,7 @@ export default function GroupsPage() {
                         </button>
                         <button
                             onClick={() => setModalCrearGrupo(true)}
-                            className="bg-[#eec24b] text-[#1a1a1a] font-bold text-sm py-2 px-4 rounded-md hover:bg-[#d8ae3e] transition-colors"
+                            className="bg-[#3B82F6] text-[#1e293b] font-bold text-sm py-2 px-4 rounded-md hover:bg-[#2563EB] transition-colors"
                         >
                             Crear grupo
                         </button>
@@ -138,14 +138,14 @@ export default function GroupsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {grupos.map((grupo) => (
                         <Link href={`/dashboard/groups/${grupo.id}`} key={grupo.id} className="block group">
-                            <div className="bg-gray-800/80 rounded-2xl p-5 border border-gray-700/60 border-l-4 border-l-yellow-400 hover:border-gray-600 transition-all hover:scale-[1.01] h-full flex flex-col justify-between">
+                            <div className="bg-gray-800/80 rounded-2xl p-5 border border-gray-700/60 border-l-4 border-l-blue-500 hover:border-gray-600 transition-all hover:scale-[1.01] h-full flex flex-col justify-between">
                                 <div>
                                     <div className="flex justify-between items-center mb-4">
                                         <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-700 text-gray-400">
                                             <IconoCategoria category={grupo.category} />
                                         </div>
                                     </div>
-                                    <h3 className="text-lg font-bold text-gray-100 mb-1 group-hover:text-yellow-400 transition-colors">
+                                    <h3 className="text-lg font-bold text-gray-100 mb-1 group-hover:text-blue-400 transition-colors">
                                         {grupo.name}
                                     </h3>
                                     <p className="text-xs text-gray-500 line-clamp-2">{grupo.description || "Sin descripcion"}</p>
@@ -153,7 +153,7 @@ export default function GroupsPage() {
 
                                 <div className="flex justify-between items-baseline mt-6 border-t border-gray-700/40 pt-3">
                                     <span className="text-[10px] font-bold tracking-wider text-gray-400">VER DETALLES</span>
-                                    <span className="text-gray-400 group-hover:text-yellow-400">
+                                    <span className="text-gray-400 group-hover:text-blue-400">
                                         <IconArrowRight size={16} />
                                     </span>
                                 </div>
@@ -183,7 +183,7 @@ export default function GroupsPage() {
                                 value={tokenInvitacion}
                                 onChange={(e) => setTokenInvitacion(e.target.value)}
                                 placeholder="Pega aqui el codigo de invitacion"
-                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400"
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-blue-500"
                                 required
                             />
 
@@ -204,7 +204,7 @@ export default function GroupsPage() {
                                 <button
                                     type="submit"
                                     disabled={uniendose}
-                                    className="px-4 py-2 bg-[#eec24b] text-[#1a1a1a] font-bold rounded-md hover:bg-[#d8ae3e] transition-colors disabled:opacity-50"
+                                    className="px-4 py-2 bg-[#3B82F6] text-[#1e293b] font-bold rounded-md hover:bg-[#2563EB] transition-colors disabled:opacity-50"
                                 >
                                     {uniendose ? "Uniendose..." : "Unirse"}
                                 </button>

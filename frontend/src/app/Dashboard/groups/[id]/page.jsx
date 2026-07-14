@@ -74,7 +74,7 @@ export default function GroupDetailPage() {
                     >
                         <IconSettings size={16} /> Ajustes
                     </button>
-                    <button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2">
+                    <button className="bg-blue-500 hover:bg-blue-600 text-black font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2">
                         <IconPlus size={16} /> Anadir Gasto
                     </button>
                 </div>
@@ -85,7 +85,7 @@ export default function GroupDetailPage() {
                 <div className="md:col-span-7 space-y-4">
                     <div className="flex justify-between items-center mb-2">
                         <h2 className="text-lg font-bold text-gray-200">Actividad Reciente</h2>
-                        <button className="text-xs text-yellow-400/80 hover:text-yellow-400 font-mono flex items-center gap-1">
+                        <button className="text-xs text-blue-400/80 hover:text-blue-400 font-mono flex items-center gap-1">
                             <IconFilter size={12} /> Filtrar
                         </button>
                     </div>
@@ -134,14 +134,14 @@ export default function GroupDetailPage() {
                                         </div>
                                         <span className="font-medium text-gray-300">User ID: {miembro.user_id}</span>
                                     </div>
-                                    <span className="text-xs font-mono bg-gray-950 px-2 py-1 rounded text-yellow-400 capitalize">
+                                    <span className="text-xs font-mono bg-gray-950 px-2 py-1 rounded text-blue-400 capitalize">
                                         {miembro.role}
                                     </span>
                                 </div>
                             ))}
                         </div>
 
-                        <button className="w-full py-2.5 bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors mt-2">
+                        <button className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-black font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors mt-2">
                             <IconDollar size={16} /> Liquidar
                         </button>
                     </div>
