@@ -339,22 +339,7 @@ const AccountSettings = () => {
             </div>
 
             <div className="pt-2">
-              <label className="block text-[11px] font-mono tracking-wider text-gray-400 mb-1 uppercase">Moneda Predeterminada</label>
-              <div className="relative">
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full md:w-64 bg-[#0f172a] border border-slate-700 rounded-lg p-3 text-white appearance-none focus:outline-none focus:border-[#3B82F6] transition-colors cursor-pointer"
-                >
-                  <option value="ARS ($)">ARS ($)</option>
-                  <option value="USD ($)">USD ($)</option>
-                  <option value="EUR (€)">EUR (€)</option>
-                  <option value="GBP (£)">GBP (£)</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 left-52 md:left-56 flex items-center px-2 text-gray-400">
-                  <span className="text-xs">▼</span>
-                </div>
-              </div>
+              
             </div>
           </div>
         </section>

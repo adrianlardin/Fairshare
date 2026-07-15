@@ -13,16 +13,13 @@ const Dashboard = () => {
 
     const [usuario, setUsuario] = useState(null);
     const [grupos, setGrupos] = useState([]);
-    const [amigos, setAmigos] = useState([]);
-    const [amigosReales, setAmigosReales] = useState([]);
 
     const [totalMeDeben, setTotalMeDeben] = useState(0.00);
     const [totalDebo, setTotalDebo] = useState(0.00);
 
     const [modalLiquidar, setModalLiquidar] = useState(false);
     const [modalGrupo, setModalGrupo] = useState(false);
-    const [modalAmigo, setModalAmigo] = useState(false);
-    const [modalAmigoGrupo, setModalAmigoGrupo] = useState(false);
+   
 
     const [grupoSeleccionado, setGrupoSeleccionado] = useState({ id: null, nombre: "" });
 
@@ -107,7 +104,7 @@ const Dashboard = () => {
                 let totalMeDebenTemp = 0;
                 let totalDeboTemp = 0;
                 let gruposConSaldos = [];
-                let listaAmigosTemp = {}; 
+                
 
                 for (let grupo of datosGrupos) {
                     let saldoDelGrupo = 0; 
@@ -125,20 +122,7 @@ const Dashboard = () => {
                         }
                     } catch (e) {}
 
-                    const registrarAmigo = (amigoId, cantidad) => {
-                        const clave = `${grupo.id}-${amigoId}`; 
-                        if (!listaAmigosTemp[clave]) {
-                            const nombreReal = nombresMiembros[amigoId] || `Usuario #${amigoId}`;
-                            listaAmigosTemp[clave] = {
-                                id: clave,
-                                usuario: nombreReal,
-                                inicial: nombreReal.charAt(0).toUpperCase(),
-                                grupo: grupo.name,
-                                saldo: 0
-                            };
-                        }
-                        listaAmigosTemp[clave].saldo += cantidad;
-                    };
+                   
 
                     try {
                         const resGastos = await fetch(`http://localhost:5000/groups/${grupo.id}/expenses`, {
@@ -205,8 +189,7 @@ const Dashboard = () => {
                 setTotalMeDeben(Math.max(0, totalMeDebenTemp));
                 setTotalDebo(Math.max(0, totalDeboTemp));
                 
-                const arrayAmigos = Object.values(listaAmigosTemp).filter(amigo => Math.abs(amigo.saldo) > 0.01);
-                setAmigos(arrayAmigos);
+              
             }
         } catch (error) {
             console.error(error);
@@ -287,89 +270,11 @@ const Dashboard = () => {
         }
     };
 
-  const manejarSubmitAmigo = async (e) => {
-    e.preventDefault();
-    const amigoId = e.target[0].value.trim();
 
-    if (!amigoId) {
-      mostrarToast("Debes ingresar un ID valido", "error");
-      return;
-    }
 
-    setCargando(true);
-    try {
-      const token = localStorage.getItem("token");
-      const respuesta = await fetch("http://localhost:5000/friends/request", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ friend_id: parseInt(amigoId) })
-      });
+    
 
-      if (respuesta.ok) {
-        setHistorial([
-          { id: Date.now(), texto: `Enviaste una solicitud de amistad al usuario con ID: ${amigoId}` },
-          ...historial
-        ]);
-        mostrarToast("Solicitud de amistad enviada");
-        e.target.reset();
-        setModalAmigo(false);
-      } else {
-        const errorData = await respuesta.json();
-        mostrarToast(errorData.error || "Error al enviar solicitud", "error");
-      }
-    } catch (error) {
-      mostrarToast("Error de conexion", "error");
-    } finally {
-      setCargando(false);
-    }
-  };
-
-    const manejarSubmitAmigoGrupo = async (e) => {
-        e.preventDefault();
-        const emailInput = e.target[0].value.trim();
-
-        if (!emailInput) {
-            mostrarToast("El correo no puede estar vacio", "error");
-            return;
-        }
-
-        setCargando(true);
-        try {
-            const token = localStorage.getItem("token");
-            
-            const respuesta = await fetch(`http://localhost:5000/group/${grupoSeleccionado.id}/invite`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    email: emailInput
-                })
-            });
-
-            if (respuesta.ok) {
-                mostrarToast("Invitacion enviada por correo electronico!");
-                e.target.reset();
-                setModalAmigoGrupo(false);
-            } else {
-                const errorData = await respuesta.json();
-                mostrarToast(errorData.error || "Error al enviar la invitacion", "error");
-            }
-        } catch (error) {
-            mostrarToast("Error de conexion con el servidor", "error");
-        } finally {
-            setCargando(false);
-        }
-    };
-
-    const abrirModalAmigoGrupo = (id, nombre) => {
-        setGrupoSeleccionado({ id, nombre });
-        setModalAmigoGrupo(true);
-    };
+   
 
     const salirYBorrarGrupo = async (id, nombre) => {
         const confirmar = window.confirm(`Estas seguro de que quieres salir y borrar el grupo "${nombre}"?`);
@@ -401,17 +306,7 @@ const Dashboard = () => {
         }
     };
 
-    const eliminarAmigo = (id, usuario) => {
-        const confirmar = window.confirm(`Quieres eliminar a ${usuario} de tu lista?`);
-        if (confirmar) {
-            setAmigos(amigos.filter(amigo => amigo.id !== id));
-            setHistorial([
-                { id: Date.now(), texto: `Eliminaste a ${usuario} de tus amigos` },
-                ...historial
-            ]);
-            mostrarToast("Amigo eliminado");
-        }
-    };
+    
 
     const limpiarTodoHistorial = () => {
         setHistorial([]);
@@ -537,12 +432,7 @@ const Dashboard = () => {
                             </div>
 
                             <div className="flex gap-2 justify-end">
-                                <button
-                                    onClick={() => abrirModalAmigoGrupo(grupo.id, grupo.nombre)}
-                                    className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
-                                >
-                                    + Anadir amigo
-                                </button>
+                               
                                 <button
                                     onClick={() => salirYBorrarGrupo(grupo.id, grupo.name)}
                                     className="text-xs border border-red-900 text-red-400 hover:bg-red-900 hover:text-white px-2 py-1 rounded transition-colors"
@@ -557,12 +447,7 @@ const Dashboard = () => {
                 <div className="md:col-span-8">
                     <div className="flex justify-between items-center mb-4">
                         <h4 className="text-sm font-semibold">Transacciones pendientes</h4>
-                        <button
-                            className="border border-gray-500 text-gray-300 hover:text-white hover:border-white text-xs py-1 px-3 rounded-md transition-colors"
-                            onClick={() => setModalAmigo(true)}
-                        >
-                            + Anadir amigo
-                        </button>
+                        
                     </div>
 
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
@@ -573,34 +458,9 @@ const Dashboard = () => {
                             <div className="col-span-1 text-right"></div>
                         </div>
 
-                        {amigos.length === 0 && (
-                            <p className="text-gray-500 text-sm text-center italic mt-6">
-                                No hay deudas registradas con amigos.
-                            </p>
-                        )}
+                        
 
-                        {amigos.map((amigo) => (
-                            <div key={amigo.id} className="grid grid-cols-12 items-center text-sm mb-4 last:mb-0">
-                                <div className="col-span-5 flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
-                                        {amigo.inicial}
-                                    </div>
-                                    {amigo.usuario}
-                                </div>
-                                <div className="col-span-3 text-gray-400 text-center text-xs">{amigo.grupo}</div>
-                                <div className={`col-span-3 text-right font-medium ${amigo.saldo > 0 ? 'text-green-500' : amigo.saldo < 0 ? 'text-blue-400' : 'text-gray-400'}`}>
-                                    {amigo.saldo > 0 ? `Te debe ${amigo.saldo} EUR` : amigo.saldo < 0 ? `Debes ${Math.abs(amigo.saldo)} EUR` : `0.00 EUR`}
-                                </div>
-                                <div className="col-span-1 text-right">
-                                    <button
-                                        onClick={() => eliminarAmigo(amigo.id, amigo.usuario)}
-                                        className="text-gray-500 hover:text-red-500 font-bold px-2 py-1 transition-colors"
-                                    >
-                                        X
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                       
                     </div>
                 </div>
             </div>
@@ -647,55 +507,9 @@ const Dashboard = () => {
                 onGrupoCreado={obtenerDatosDashboard}
             />
 
-            {modalAmigo && (
-                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
-                    <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-4">Enviar solicitud de amistad</h3>
-                        <form onSubmit={manejarSubmitAmigo}>
-                            <label className="block text-xs text-gray-400 mb-1">ID o Correo del Usuario</label>
-                            <input
-                                type="text"
-                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white"
-                                required
-                                placeholder="Ej. 5 o amigo@correo.com"
-                            />
+           
 
-                            <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => setModalAmigo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
-                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
-                                    {cargando ? "Enviando..." : "Enviar solicitud"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {modalAmigoGrupo && (
-                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
-                    <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-2">Invitar al grupo</h3>
-                        <p className="text-gray-400 text-sm mb-4">Grupo seleccionado: <span className="text-white font-bold">{grupoSeleccionado.nombre}</span></p>
-
-                        <form onSubmit={manejarSubmitAmigoGrupo}>
-                            <label className="block text-xs text-gray-400 mb-1">Correo electronico del usuario</label>
-                            <input
-                                type="email"
-                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-white"
-                                required
-                                placeholder="ejemplo@correo.com"
-                            />
-
-                            <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => setModalAmigoGrupo(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
-                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-white text-black font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50">
-                                    {cargando ? "Enviando correo..." : "Enviar invitacion"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            
 
             {toast.mostrar && (
                 <div className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all ${toast.tipo === "error" ? "bg-red-900 border-red-700 text-white" : "bg-green-900 border-green-700 text-white"}`}>

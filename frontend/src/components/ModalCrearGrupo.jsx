@@ -5,26 +5,12 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
   const [categoria, setCategoria] = useState("Casa");
   const [categoriaPersonalizada, setCategoriaPersonalizada] = useState("");
   const [moneda, setMoneda] = useState("EUR (€)");
-  const [emailAmigo, setEmailAmigo] = useState("");
-  const [amigosAInvitar, setAmigosAInvitar] = useState([]);
   const [cargando, setCargando] = useState(false);
 
   if (!estaAbierto) return null;
 
-  const agregarAmigoALista = () => {
-    const email = emailAmigo.trim();
-    if (!email) return;
-    if (amigosAInvitar.includes(email)) {
-      alert("Este correo ya esta en la lista");
-      return;
-    }
-    setAmigosAInvitar([...amigosAInvitar, email]);
-    setEmailAmigo("");
-  };
-
-  const quitarAmigoDeLista = (email) => {
-    setAmigosAInvitar(amigosAInvitar.filter(e => e !== email));
-  };
+ 
+ 
 
   const manejarCrearGrupo = async (e) => {
     e.preventDefault();
@@ -66,22 +52,7 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
       const data = await response.json();
       const grupo = data.group || data;
 
-      if (grupo && grupo.id && amigosAInvitar.length > 0) {
-        for (let email of amigosAInvitar) {
-          try {
-            await fetch(`http://localhost:5000/groups/${grupo.id}/invite`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-              },
-              body: JSON.stringify({ email })
-            });
-          } catch (error) {
-            console.error("Error al invitar amigo:", error);
-          }
-        }
-      }
+      
 
       setNombreGrupo("");
       setCategoria("Casa");
@@ -167,44 +138,6 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
                 <option value="USD ($)">USD - Dolar Estadounidense ($)</option>
                 <option value="GBP (£)">GBP - Libra Esterlina (£)</option>
               </select>
-            </div>
-
-            <div className="border-t border-gray-700 pt-4">
-              <label className="text-xs text-gray-400 mb-2 block">Invitar amigos (Opcional)</label>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="email"
-                  value={emailAmigo}
-                  onChange={(e) => setEmailAmigo(e.target.value)}
-                  placeholder="amigo@correo.com"
-                  className="flex-1 bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:border-white transition-all text-sm placeholder-gray-500"
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), agregarAmigoALista())}
-                />
-                <button
-                  type="button"
-                  onClick={agregarAmigoALista}
-                  className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Anadir
-                </button>
-              </div>
-
-              {amigosAInvitar.length > 0 && (
-                <div className="flex flex-col gap-2 max-h-24 overflow-y-auto pr-1">
-                  {amigosAInvitar.map((email) => (
-                    <div key={email} className="flex justify-between items-center bg-gray-900 px-3 py-2 rounded-md border border-gray-700">
-                      <span className="text-sm text-gray-300 truncate">{email}</span>
-                      <button
-                        type="button"
-                        onClick={() => quitarAmigoDeLista(email)}
-                        className="text-gray-500 hover:text-red-400 font-bold text-xs transition-colors"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             <div className="flex justify-end gap-3 mt-2">
