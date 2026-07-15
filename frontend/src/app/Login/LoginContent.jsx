@@ -217,30 +217,9 @@ export default function LoginContent() {
                 Iniciar sesión <span>→</span>
               </button>
 
-              <div className="flex items-center gap-3 my-2">
-                <div className="flex-1 h-[1px] bg-white/8" />
-                <span className="text-[#94A3B8] text-[10px] font-semibold tracking-widest">
-                  O CONTINUAR CON
-                </span>
-                <div className="flex-1 h-[1px] bg-white/8" />
-              </div>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  className="flex-1 bg-transparent border border-white/8 rounded-md py-2.5 flex items-center justify-center gap-2 text-[#E2E8F0] text-xs font-medium cursor-pointer transition-colors duration-200 hover:bg-white/5"
-                >
-                  <GoogleIcon />
-                  <span>Google</span>
-                </button>
-                <button
-                  type="button"
-                  className="flex-1 bg-transparent border border-white/8 rounded-md py-2.5 flex items-center justify-center gap-2 text-[#E2E8F0] text-xs font-medium cursor-pointer transition-colors duration-200 hover:bg-white/5"
-                >
-                  <AppleIcon />
-                  <span>Apple</span>
-                </button>
-              </div>
+
+
             </form>
           </div>
 

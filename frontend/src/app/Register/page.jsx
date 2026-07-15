@@ -97,17 +97,9 @@ const LogoIcon = () => (
   </svg>
 );
 
-const GoogleIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="#e2e8f0">
-    <path d="M12.24 10.285V13.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l2.427-2.334C17.955 2.192 15.34 1 12.24 1 6.033 1 1 6.033 1 12.24s5.033 11.24 11.24 11.24c6.478 0 10.793-4.537 10.793-10.986 0-.746-.08-1.32-.176-1.884H12.24z" />
-  </svg>
-);
 
-const AppleIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="#e2e8f0">
-    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.7-1.13 1.84-1.01 2.96 1.07.08 2.18-.54 2.84-1.35z" />
-  </svg>
-);
+
+
 
 // ── Componente Principal ────────────────────────────────────────────────────────
 const Register = () => {
@@ -308,22 +300,6 @@ const handleRegister = async (e) => {
           </button>
         </form>
 
-        <div className="relative flex py-5 items-center">
-          <div className="flex-grow border-t border-slate-700"></div>
-          <span className="flex-shrink mx-4 text-[10px] tracking-wider text-gray-500 font-mono font-medium uppercase">
-            o continuar con
-          </span>
-          <div className="flex-grow border-t border-slate-700"></div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <button className="flex items-center justify-center gap-2 bg-transparent border border-slate-700 hover:bg-slate-700/40 py-2.5 rounded-xl text-xs font-semibold transition-colors">
-            <GoogleIcon /> Google
-          </button>
-          <button className="flex items-center justify-center gap-2 bg-transparent border border-slate-700 hover:bg-slate-700/40 py-2.5 rounded-xl text-xs font-semibold transition-colors">
-            <AppleIcon /> Apple
-          </button>
-        </div>
       </div>
 
       <p className="text-xs text-gray-400 mt-6">
