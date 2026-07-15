@@ -2,17 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { IconHome, IconPlane, IconUtensils, IconUsers, IconArrowRight, IconPlus, IconInbox } from "@/components/icons";
+import { IconHome, IconPlane, IconUtensils, IconUsers, IconArrowRight, IconPlus } from "@/components/icons";
 import { ModalCrearGrupo } from "@/components/ModalCrearGrupo";
 
 export default function GroupsPage() {
     const [grupos, setGrupos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [modalCrearGrupo, setModalCrearGrupo] = useState(false);
-    const [modalUnirse, setModalUnirse] = useState(false);
-    const [tokenInvitacion, setTokenInvitacion] = useState("");
-    const [uniendose, setUniendose] = useState(false);
-    const [mensaje, setMensaje] = useState(null);
 
     const obtenerGrupos = async () => {
         try {
@@ -42,38 +38,6 @@ export default function GroupsPage() {
         obtenerGrupos();
     }, []);
 
-    const manejarUnirse = async (e) => {
-        e.preventDefault();
-        if (!tokenInvitacion.trim()) return;
-
-        setUniendose(true);
-        setMensaje(null);
-        try {
-            const token = localStorage.getItem("token");
-            const respuesta = await fetch(`http://localhost:5000/invitation/${tokenInvitacion.trim()}/accept`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                }
-            });
-
-            if (respuesta.ok) {
-                setMensaje({ tipo: "success", texto: "Te has unido al grupo correctamente" });
-                setTokenInvitacion("");
-                setModalUnirse(false);
-                await obtenerGrupos();
-            } else {
-                const errorData = await respuesta.json();
-                setMensaje({ tipo: "error", texto: errorData.error || "Token de invitacion invalido o expirado" });
-            }
-        } catch (error) {
-            setMensaje({ tipo: "error", texto: "Error de conexion" });
-        } finally {
-            setUniendose(false);
-        }
-    };
-
     const IconoCategoria = ({ category }) => {
         switch (category?.toLowerCase()) {
             case "home": case "piso": return <IconHome size={20} />;
@@ -91,13 +55,6 @@ export default function GroupsPage() {
                     <p className="text-sm text-gray-400">Gestiona tus gastos compartidos entre diferentes grupos.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => setModalUnirse(true)}
-                        className="border border-gray-600 text-gray-300 hover:text-white hover:border-white text-sm py-2 px-4 rounded-md transition-colors flex items-center gap-2"
-                    >
-                        <IconInbox size={16} />
-                        Unirse a un grupo
-                    </button>
                     <button
                         onClick={() => setModalCrearGrupo(true)}
                         className="bg-[#3B82F6] text-[#1e293b] font-bold text-sm py-2 px-4 rounded-md hover:bg-[#2563EB] transition-colors flex items-center gap-2"
@@ -120,12 +77,6 @@ export default function GroupsPage() {
                         Crea un nuevo grupo para empezar a dividir gastos con amigos, o unete a uno usando un codigo de invitacion.
                     </p>
                     <div className="flex gap-3 justify-center">
-                        <button
-                            onClick={() => setModalUnirse(true)}
-                            className="border border-gray-600 text-gray-300 hover:text-white hover:border-white text-sm py-2 px-4 rounded-md transition-colors"
-                        >
-                            Unirse a un grupo
-                        </button>
                         <button
                             onClick={() => setModalCrearGrupo(true)}
                             className="bg-[#3B82F6] text-[#1e293b] font-bold text-sm py-2 px-4 rounded-md hover:bg-[#2563EB] transition-colors"
@@ -168,51 +119,6 @@ export default function GroupsPage() {
                 alCerrar={() => setModalCrearGrupo(false)}
                 onGrupoCreado={obtenerGrupos}
             />
-
-            {modalUnirse && (
-                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
-                    <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
-                        <h3 className="text-xl font-bold text-white mb-4">Unirse a un grupo</h3>
-                        <p className="text-sm text-gray-400 mb-4">
-                            Introduce el codigo de invitacion que recibiste por correo electronico.
-                        </p>
-                        <form onSubmit={manejarUnirse}>
-                            <label className="block text-xs text-gray-400 mb-1">Codigo de invitacion</label>
-                            <input
-                                type="text"
-                                value={tokenInvitacion}
-                                onChange={(e) => setTokenInvitacion(e.target.value)}
-                                placeholder="Pega aqui el codigo de invitacion"
-                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-blue-500"
-                                required
-                            />
-
-                            {mensaje && (
-                                <p className={`text-xs mb-4 ${mensaje.tipo === "success" ? "text-green-400" : "text-red-400"}`}>
-                                    {mensaje.texto}
-                                </p>
-                            )}
-
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => { setModalUnirse(false); setMensaje(null); setTokenInvitacion(""); }}
-                                    className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={uniendose}
-                                    className="px-4 py-2 bg-[#3B82F6] text-[#1e293b] font-bold rounded-md hover:bg-[#2563EB] transition-colors disabled:opacity-50"
-                                >
-                                    {uniendose ? "Uniendose..." : "Unirse"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

@@ -1,8 +1,10 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models.models import Group, GroupMember, Expense, ExpenseSplit, Settlement, User, Friendship
+from models.models import Group, GroupMember, Expense, ExpenseSplit, Settlement, User
 from database import db
 from sqlalchemy import or_, and_
+import secrets
+import os
 
 group_bp = Blueprint("group", __name__)
 
@@ -121,6 +123,73 @@ def delete_group(group_id):
     return jsonify({"message": "Grupo eliminado correctamente"}), 200
 
 
+#    INVITACION POR LINK 
+
+@group_bp.route("/groups/<int:group_id>/invite-link", methods=["GET"])
+@jwt_required()
+def get_invite_link(group_id):
+    current_user_id = int(get_jwt_identity())
+
+    admin = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id, role="admin").first()
+    if not admin:
+        return jsonify({"error": "No tienes permiso para obtener el link de invitacion"}), 403
+
+    group = Group.query.get(group_id)
+    if not group:
+        return jsonify({"error": "Grupo no encontrado"}), 404
+
+    if not group.invite_token:
+        group.generate_invite_token()
+        db.session.commit()
+
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    invite_link = f"{frontend_url}/invite/{group.invite_token}"
+
+    return jsonify({"invite_token": group.invite_token, "invite_link": invite_link}), 200
+
+
+@group_bp.route("/groups/<int:group_id>/invite-link", methods=["POST"])
+@jwt_required()
+def regenerate_invite_link(group_id):
+    current_user_id = int(get_jwt_identity())
+
+    admin = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id, role="admin").first()
+    if not admin:
+        return jsonify({"error": "No tienes permiso para regenerar el link de invitacion"}), 403
+
+    group = Group.query.get(group_id)
+    if not group:
+        return jsonify({"error": "Grupo no encontrado"}), 404
+
+    group.generate_invite_token()
+    db.session.commit()
+
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    invite_link = f"{frontend_url}/invite/{group.invite_token}"
+
+    return jsonify({"invite_token": group.invite_token, "invite_link": invite_link}), 200
+
+
+@group_bp.route("/groups/join/<string:token>", methods=["POST"])
+@jwt_required()
+def join_by_token(token):
+    current_user_id = int(get_jwt_identity())
+
+    group = Group.query.filter_by(invite_token=token).first()
+    if not group:
+        return jsonify({"error": "Link de invitacion no valido"}), 404
+
+    existing = GroupMember.query.filter_by(group_id=group.id, user_id=current_user_id).first()
+    if existing:
+        return jsonify({"error": "Ya eres miembro de este grupo", "group_id": group.id}), 200
+
+    new_member = GroupMember(group_id=group.id, user_id=current_user_id, role="member")
+    db.session.add(new_member)
+    db.session.commit()
+
+    return jsonify({"message": "Te has unido al grupo correctamente", "group_id": group.id}), 200
+
+
 #    MIEMBROS 
 
 @group_bp.route("/groups/<int:group_id>/members", methods=["GET"])
@@ -156,18 +225,6 @@ def add_member(group_id):
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "Usuario no encontrado"}), 404
-
-    # comprueba que sea amigo de quien invita
-    is_friend = Friendship.query.filter(
-        or_(
-            and_(Friendship.user_id == current_user_id, Friendship.friend_id == user_id),
-            and_(Friendship.user_id == user_id, Friendship.friend_id == current_user_id)
-        ),
-        Friendship.status == "accepted"
-    ).first()
-
-    if not is_friend:
-        return jsonify({"error": "Solo puedes añadir amigos directamente. Para invitar a alguien nuevo, usa el sistema de invitaciones."}), 403
 
     # comprueba que el usuario no sea ya miembro
     existing = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()

@@ -30,8 +30,6 @@ class User(db.Model):
     settlements_sent: Mapped[List["Settlement"]] = relationship(foreign_keys="Settlement.paid_by", back_populates="payer")
     settlements_received: Mapped[List["Settlement"]] = relationship(foreign_keys="Settlement.paid_to", back_populates="receiver")
     invitations_sent: Mapped[List["Invitation"]] = relationship(back_populates="sender")
-    friendships_sent: Mapped[List["Friendship"]] = relationship(foreign_keys="Friendship.user_id", back_populates="requester")
-    friendships_received: Mapped[List["Friendship"]] = relationship(foreign_keys="Friendship.friend_id", back_populates="friend")
 
     def serialize(self):
         return {
@@ -47,11 +45,6 @@ class User(db.Model):
         }
 
 
-# amigos 
-
-
-
-
 # grupo de gastos
 
 class Group(db.Model):
@@ -63,6 +56,7 @@ class Group(db.Model):
     category: Mapped[Optional[str]] = mapped_column(String(60))
     created_by: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    invite_token: Mapped[Optional[str]] = mapped_column(String(64), unique=True, nullable=True)
 
     # Relaciones
     creator: Mapped["User"] = relationship(back_populates="groups_created")
@@ -71,6 +65,10 @@ class Group(db.Model):
     settlements: Mapped[List["Settlement"]] = relationship(back_populates="group", cascade="all, delete-orphan")
     invitations: Mapped[List["Invitation"]] = relationship(back_populates="group", cascade="all, delete-orphan")
 
+    def generate_invite_token(self):
+        self.invite_token = secrets.token_urlsafe(32)
+        return self.invite_token
+
     def serialize(self):
         return {
             "id": self.id,
@@ -78,7 +76,8 @@ class Group(db.Model):
             "description": self.description,
             "category": self.category,
             "created_by": self.created_by,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
+            "invite_token": self.invite_token
         }
 
 

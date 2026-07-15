@@ -7,13 +7,69 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
     const [nuevoNombre, setNuevoNombre] = useState("");
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState("");
+    const [inviteLink, setInviteLink] = useState("");
+    const [copiado, setCopiado] = useState(false);
 
     useEffect(() => {
         if (grupoActual) {
             setNuevoNombre(grupoActual.name);
             setError("");
+            setCopiado(false);
+            obtenerInviteLink();
         }
     }, [grupoActual, estaAbierto]);
+
+    const obtenerInviteLink = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoActual.id}/invite-link`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (respuesta.ok) {
+                const datos = await respuesta.json();
+                setInviteLink(datos.invite_link);
+            }
+        } catch (err) {
+            console.error("Error al obtener link de invitacion");
+        }
+    };
+
+    const copiarLink = async () => {
+        try {
+            await navigator.clipboard.writeText(inviteLink);
+            setCopiado(true);
+            setTimeout(() => setCopiado(false), 2000);
+        } catch (err) {
+            // fallback para navegadores sin clipboard API
+            const input = document.createElement("input");
+            input.value = inviteLink;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand("copy");
+            document.body.removeChild(input);
+            setCopiado(true);
+            setTimeout(() => setCopiado(false), 2000);
+        }
+    };
+
+    const regenerarLink = async () => {
+        setCargando(true);
+        try {
+            const token = localStorage.getItem("token");
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoActual.id}/invite-link`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (respuesta.ok) {
+                const datos = await respuesta.json();
+                setInviteLink(datos.invite_link);
+            }
+        } catch (err) {
+            console.error("Error al regenerar link");
+        } finally {
+            setCargando(false);
+        }
+    };
 
     if (!estaAbierto || !grupoActual) return null;
 
@@ -114,6 +170,42 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
                         </button>
                     </div>
                 </form>
+
+                <hr className="border-slate-700" />
+
+                <div className="space-y-3">
+                    <div>
+                        <h4 className="text-sm font-bold text-blue-400">Link de invitacion</h4>
+                        <p className="text-xs text-gray-500 mt-0.5">Cualquiera con este link puede unirse al grupo.</p>
+                    </div>
+                    {inviteLink ? (
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={inviteLink}
+                                readOnly
+                                className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-gray-300 focus:outline-none truncate"
+                            />
+                            <button
+                                type="button"
+                                onClick={copiarLink}
+                                className="bg-blue-500 hover:bg-blue-600 text-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors whitespace-nowrap"
+                            >
+                                {copiado ? "Copiado" : "Copiar"}
+                            </button>
+                        </div>
+                    ) : (
+                        <p className="text-xs text-gray-500">Cargando link...</p>
+                    )}
+                    <button
+                        type="button"
+                        onClick={regenerarLink}
+                        disabled={cargando}
+                        className="text-xs text-gray-500 hover:text-gray-300 transition-colors underline"
+                    >
+                        {cargando ? "Regenerando..." : "Regenerar link (invalida el anterior)"}
+                    </button>
+                </div>
 
                 <hr className="border-slate-700" />
 
