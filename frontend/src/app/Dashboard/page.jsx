@@ -19,7 +19,7 @@ const Dashboard = () => {
 
     const [modalLiquidar, setModalLiquidar] = useState(false);
     const [modalGrupo, setModalGrupo] = useState(false);
-   
+    const [modalAmigo, setModalAmigo] = useState(false);
 
     const [grupoSeleccionado, setGrupoSeleccionado] = useState({ id: null, nombre: "" });
 
@@ -306,7 +306,6 @@ const Dashboard = () => {
         }
     };
 
-    
 
     const limpiarTodoHistorial = () => {
         setHistorial([]);
@@ -432,7 +431,6 @@ const Dashboard = () => {
                             </div>
 
                             <div className="flex gap-2 justify-end">
-                               
                                 <button
                                     onClick={() => salirYBorrarGrupo(grupo.id, grupo.name)}
                                     className="text-xs border border-red-900 text-red-400 hover:bg-red-900 hover:text-white px-2 py-1 rounded transition-colors"

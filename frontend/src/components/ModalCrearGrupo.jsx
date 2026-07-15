@@ -9,9 +9,6 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
 
   if (!estaAbierto) return null;
 
- 
- 
-
   const manejarCrearGrupo = async (e) => {
     e.preventDefault();
     if (!nombreGrupo.trim()) return;
@@ -49,15 +46,9 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
         throw new Error(errorData.error || errorData.msg || "Error al crear el grupo");
       }
 
-      const data = await response.json();
-      const grupo = data.group || data;
-
-      
-
       setNombreGrupo("");
       setCategoria("Casa");
       setCategoriaPersonalizada("");
-      setAmigosAInvitar([]);
 
       if (typeof onGrupoCreado === 'function') {
         onGrupoCreado();
@@ -140,7 +131,7 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
               </select>
             </div>
 
-            <div className="flex justify-end gap-3 mt-2">
+            <div className="flex justify-end gap-3 mt-2 border-t border-gray-700 pt-4">
               <button
                 type="button"
                 onClick={alCerrar}
