@@ -4,18 +4,14 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useModales } from "../app/context/ModalContext";
-import { ModalListaAmigos } from "./ModalListaAmigos";
-import { ModalBandejaAmistad } from "./ModalBandejaAmistad";
 import { IconUser, IconChevronLeft, IconChevronRight, IconMoney, IconUsers, IconFriends, IconInbox, IconActivity, IconX } from "./icons";
 
 const Sidebar = () => {
   const router = useRouter();
   const { sidebarCollapsed, setSidebarCollapsed } = useModales();
-  const [verAmigos, setVerAmigos] = useState(false);
-  const [verBandeja, setVerBandeja] = useState(false);
   const [username, setUsername] = useState('Usuario');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [pendientesCount, setPendientesCount] = useState(0);
+  
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -30,30 +26,7 @@ const Sidebar = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const obtenerPendientes = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-        const respuesta = await fetch("http://localhost:5000/friends/requests", {
-          method: "GET",
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (respuesta.ok) {
-          const datos = await respuesta.json();
-          setPendientesCount(Array.isArray(datos) ? datos.length : 0);
-        } else if (respuesta.status === 401) {
-          setPendientesCount(0);
-        }
-      } catch (error) {
-        console.error("Error al consultar solicitudes pendientes:", error);
-      }
-    };
-    obtenerPendientes();
-    const intervalo = setInterval(obtenerPendientes, 30000);
-    return () => clearInterval(intervalo);
-  }, []);
-
+  
   const handleLogout = () => {
     localStorage.clear();
     router.push('/login');
@@ -86,21 +59,7 @@ const Sidebar = () => {
                   <IconUsers size={20} />
                 </Link>
               </li>
-              <li>
-                <div onClick={() => setVerAmigos(true)} className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-700/60 transition-colors cursor-pointer text-slate-400 hover:text-slate-200" title="Amigos">
-                  <IconFriends size={20} />
-                </div>
-              </li>
-              <li>
-                <div onClick={() => setVerBandeja(true)} className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-700/60 transition-colors cursor-pointer relative text-slate-400 hover:text-slate-200" title="Bandeja de solicitudes">
-                  <IconInbox size={20} />
-                  {pendientesCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                      {pendientesCount > 9 ? "9+" : pendientesCount}
-                    </span>
-                  )}
-                </div>
-              </li>
+              
               <li>
                 <Link href="/activity" className="flex items-center justify-center w-10 h-10 rounded-xl hover:bg-slate-700/60 transition-colors text-slate-400 hover:text-slate-200" title="Actividad">
                   <IconActivity size={20} />
@@ -123,30 +82,7 @@ const Sidebar = () => {
                 </Link>
               </li>
 
-              <li>
-                <div
-                  onClick={() => setVerAmigos(true)}
-                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-700/60 hover:text-slate-200 transition-colors text-sm cursor-pointer"
-                >
-                  <IconFriends size={18} />
-                  <span>Amigos</span>
-                </div>
-              </li>
-
-              <li>
-                <div
-                  onClick={() => setVerBandeja(true)}
-                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-700/60 hover:text-slate-200 transition-colors text-sm cursor-pointer relative"
-                >
-                  <IconInbox size={18} />
-                  <span>Bandeja</span>
-                  {pendientesCount > 0 && (
-                    <span className="ml-auto bg-red-500 text-white text-[10px] font-bold min-w-[20px] h-5 rounded-full flex items-center justify-center px-1">
-                      {pendientesCount > 99 ? "99+" : pendientesCount}
-                    </span>
-                  )}
-                </div>
-              </li>
+              
             </ul>
           )}
         </nav>
@@ -216,22 +152,7 @@ const Sidebar = () => {
         </div>
 
       </aside>
-      <ModalListaAmigos
-        estaAbierto={verAmigos}
-        alCerrar={() => setVerAmigos(false)} />
-      <ModalBandejaAmistad
-        estaAbierto={verBandeja}
-        alCerrar={() => {
-          setVerBandeja(false);
-          const token = localStorage.getItem("token");
-          if (token) {
-            fetch("http://localhost:5000/friends/requests", {
-              headers: { "Authorization": `Bearer ${token}` }
-            }).then(r => r.json()).then(d => {
-              setPendientesCount(Array.isArray(d) ? d.length : 0);
-            }).catch(() => {});
-          }
-        }} />
+     
     </>
   );
 };

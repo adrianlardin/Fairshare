@@ -49,27 +49,7 @@ class User(db.Model):
 
 # amigos 
 
-class Friendship(db.Model):
-    __tablename__ = "friendship"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
-    friend_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
-    status: Mapped[str] = mapped_column(String(20), default="pending")
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
-
-    # Relaciones
-    requester: Mapped["User"] = relationship(foreign_keys=[user_id], back_populates="friendships_sent")
-    friend: Mapped["User"] = relationship(foreign_keys=[friend_id], back_populates="friendships_received")
-
-    def serialize(self):
-        return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "friend_id": self.friend_id,
-            "status": self.status,
-            "created_at": self.created_at.isoformat()
-        }
 
 
 # grupo de gastos
