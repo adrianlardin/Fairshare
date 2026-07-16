@@ -21,6 +21,8 @@ export const ModalProvider = ({ children }) => {
     return (
         <ModalContext.Provider value={{ 
             modalGasto, setModalGasto,
+            // Agregamos los estados de liquidación al Provider para que sean accesibles
+            modalLiquidar, setModalLiquidar,
             actualizarDatosTrigger, refrescarDatos,
             sidebarCollapsed, setSidebarCollapsed
         }}>

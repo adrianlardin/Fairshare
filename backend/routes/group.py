@@ -197,12 +197,29 @@ def join_by_token(token):
 def get_members(group_id):
     current_user_id = int(get_jwt_identity())
 
+    # Comprueba que el usuario que consulta pertenece al grupo
     member = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id).first()
     if not member:
         return jsonify({"error": "No tienes acceso a este grupo"}), 403
 
-    members = GroupMember.query.filter_by(group_id=group_id).all()
-    return jsonify([m.serialize() for m in members]), 200
+    # Consulta combinando GroupMember y User
+    members_data = db.session.query(GroupMember, User).join(
+        User, GroupMember.user_id == User.id
+    ).filter(GroupMember.group_id == group_id).all()
+
+    # Construimos la respuesta mapeando exactamente tus campos
+    response = []
+    for member_info, user_info in members_data:
+        response.append({
+            "id": member_info.id,
+            "user_id": member_info.user_id,
+            "group_id": member_info.group_id,
+            "role": member_info.role,
+            "username": user_info.user_name, # Mapea a 'user_name'
+            "avatar_url": user_info.avatar   # <-- ¡Aquí usamos exactamente 'user_info.avatar'!
+        })
+
+    return jsonify(response), 200
 
 
 @group_bp.route("/groups/<int:group_id>/members", methods=["POST"])
