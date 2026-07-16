@@ -36,7 +36,7 @@ const Sidebar = () => {
 
   return (
     <>
-      <aside className={`fixed top-16 left-0 z-40 h-[calc(100vh-64px)] bg-slate-800 text-slate-400 flex flex-col p-3 box-border shadow-2xl border-r border-slate-800 transition-all duration-300 ${sidebarWidth}`}>
+      <aside className={`fixed top-16 left-0 z-40 h-[calc(100vh-64px)] bg-[#0b0f14] text-slate-400 flex flex-col p-3 box-border shadow-2xl border-r border-white/10 transition-all duration-300 ${sidebarWidth}`}>
 
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}

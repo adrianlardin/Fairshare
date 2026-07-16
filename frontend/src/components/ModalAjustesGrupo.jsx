@@ -81,7 +81,7 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
         setError("");
         try {
             const token = localStorage.getItem("token");
-            const respuesta = await fetch(`http://localhost:5000/group/${grupoActual.id}`, {
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoActual.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -113,7 +113,7 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
         setError("");
         try {
             const token = localStorage.getItem("token");
-            const respuesta = await fetch(`http://localhost:5000/group/${grupoActual.id}`, {
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoActual.id}`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${token}`

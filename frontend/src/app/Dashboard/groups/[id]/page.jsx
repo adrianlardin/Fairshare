@@ -25,9 +25,9 @@ export default function GroupDetailPage() {
                 };
 
                 const [resGrupo, resMiembros, resGastos] = await Promise.all([
-                    fetch(`http://localhost:5000/group/${id}`, { headers }),
-                    fetch(`http://localhost:5000/group/${id}/members`, { headers }),
-                    fetch(`http://localhost:5000/group/${id}/expenses`, { headers })
+                    fetch(`http://localhost:5000/groups/${id}`, { headers }),
+                    fetch(`http://localhost:5000/groups/${id}/members`, { headers }),
+                    fetch(`http://localhost:5000/groups/${id}/expenses`, { headers })
                 ]);
 
                 if (resGrupo.ok && resMiembros.ok && resGastos.ok) {
