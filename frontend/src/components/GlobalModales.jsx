@@ -130,14 +130,14 @@ export const GlobalModales = () => {
         setCargando(true);
         try {
             const token = localStorage.getItem("token");
-            const respuesta = await fetch(`http://localhost:5000/groups/${grupoId}/settle`, {
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoId}/settlements`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    pay_to_id: parseInt(destinatarioId),
+                    pay_to: parseInt(destinatarioId),
                     amount: parseFloat(montoLiquidar)
                 })
             });
