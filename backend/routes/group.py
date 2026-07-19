@@ -390,24 +390,24 @@ def create_settlement(group_id):
         return jsonify({"error": "No tienes acceso a este grupo"}), 403
 
     data = request.get_json()
-    paid_to = data.get("paid_to")
+    paid_to = data.get("paid_to", None) 
     amount = data.get("amount")
 
-    if not paid_to or not amount:
-        return jsonify({"error": "paid_to y amount son obligatorios"}), 400
+    if not amount or float(amount) <= 0:
+        return jsonify({"error": "La cantidad a aportar es obligatoria y mayor a 0"}), 400
 
     new_settlement = Settlement(
         group_id=group_id,
         paid_by=current_user_id,
         paid_to=paid_to,
-        amount=amount
+        amount=amount,
+        status="completed" 
     )
 
     db.session.add(new_settlement)
     db.session.commit()
 
     return jsonify(new_settlement.serialize()), 201
-
 @group_bp.route("/settlement/<int:settlement_id>/pay", methods=["PATCH"])
 @jwt_required()
 def pay_settlement(settlement_id):

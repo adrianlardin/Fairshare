@@ -60,11 +60,6 @@ const Sidebar = () => {
                 </Link>
               </li>
               
-              <li>
-                <Link href="/activity" className="flex items-center justify-center w-10 h-10 rounded-xl hover:bg-slate-700/60 transition-colors text-slate-400 hover:text-slate-200" title="Actividad">
-                  <IconActivity size={20} />
-                </Link>
-              </li>
             </ul>
           ) : (
             <ul className="space-y-1.5">

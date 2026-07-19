@@ -9,13 +9,24 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
     const [error, setError] = useState("");
     const [inviteLink, setInviteLink] = useState("");
     const [copiado, setCopiado] = useState(false);
+    const [esAdmin, setEsAdmin] = useState(false);
 
     useEffect(() => {
         if (grupoActual) {
             setNuevoNombre(grupoActual.name);
             setError("");
             setCopiado(false);
-            obtenerInviteLink();
+
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+                const userObj = JSON.parse(storedUser);
+                const administrador = Number(userObj.id) === Number(grupoActual.created_by);
+                setEsAdmin(administrador);
+                
+                if (administrador) {
+                    obtenerInviteLink();
+                }
+            }
         }
     }, [grupoActual, estaAbierto]);
 
@@ -150,79 +161,95 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
                     </div>
                 )}
 
-                <form onSubmit={manejarGuardarNombre} className="space-y-3">
-                    <label className="text-xs font-bold tracking-wider text-gray-400 uppercase block">Cambiar nombre del grupo</label>
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            value={nuevoNombre}
-                            onChange={(e) => setNuevoNombre(e.target.value)}
-                            disabled={cargando}
-                            className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-                            placeholder="Nuevo nombre del grupo"
-                        />
-                        <button
-                            type="submit"
-                            disabled={cargando}
-                            className="bg-blue-500 hover:bg-blue-600 text-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors disabled:opacity-50"
-                        >
-                            {cargando ? "Guardando..." : "Guardar"}
-                        </button>
-                    </div>
-                </form>
+                {esAdmin ? (
+                    <>
+                        <form onSubmit={manejarGuardarNombre} className="space-y-3">
+                            <label className="text-xs font-bold tracking-wider text-gray-400 uppercase block">Cambiar nombre del grupo</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={nuevoNombre}
+                                    onChange={(e) => setNuevoNombre(e.target.value)}
+                                    disabled={cargando}
+                                    className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                    placeholder="Nuevo nombre del grupo"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={cargando}
+                                    className="bg-blue-500 hover:bg-blue-600 text-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors disabled:opacity-50"
+                                >
+                                    {cargando ? "Guardando..." : "Guardar"}
+                                </button>
+                            </div>
+                        </form>
 
-                <hr className="border-slate-700" />
+                        <hr className="border-slate-700" />
 
-                <div className="space-y-3">
-                    <div>
-                        <h4 className="text-sm font-bold text-blue-400">Link de invitacion</h4>
-                        <p className="text-xs text-gray-500 mt-0.5">Cualquiera con este link puede unirse al grupo.</p>
-                    </div>
-                    {inviteLink ? (
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={inviteLink}
-                                readOnly
-                                className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-gray-300 focus:outline-none truncate"
-                            />
+                        <div className="space-y-3">
+                            <div>
+                                <h4 className="text-sm font-bold text-blue-400">Link de invitacion</h4>
+                                <p className="text-xs text-gray-500 mt-0.5">Cualquiera con este link puede unirse al grupo.</p>
+                            </div>
+                            {inviteLink ? (
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={inviteLink}
+                                        readOnly
+                                        className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-gray-300 focus:outline-none truncate"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={copiarLink}
+                                        className="bg-blue-500 hover:bg-blue-600 text-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors whitespace-nowrap"
+                                    >
+                                        {copiado ? "Copiado" : "Copiar"}
+                                    </button>
+                                </div>
+                            ) : (
+                                <p className="text-xs text-gray-500">Cargando link...</p>
+                            )}
                             <button
                                 type="button"
-                                onClick={copiarLink}
-                                className="bg-blue-500 hover:bg-blue-600 text-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors whitespace-nowrap"
+                                onClick={regenerarLink}
+                                disabled={cargando}
+                                className="text-xs text-gray-500 hover:text-gray-300 transition-colors underline"
                             >
-                                {copiado ? "Copiado" : "Copiar"}
+                                {cargando ? "Regenerando..." : "Regenerar link (invalida el anterior)"}
                             </button>
                         </div>
-                    ) : (
-                        <p className="text-xs text-gray-500">Cargando link...</p>
-                    )}
-                    <button
-                        type="button"
-                        onClick={regenerarLink}
-                        disabled={cargando}
-                        className="text-xs text-gray-500 hover:text-gray-300 transition-colors underline"
-                    >
-                        {cargando ? "Regenerando..." : "Regenerar link (invalida el anterior)"}
-                    </button>
-                </div>
 
-                <hr className="border-slate-700" />
+                        <hr className="border-slate-700" />
 
-                <div className="space-y-3 bg-red-950/20 border border-red-900/30 p-4 rounded-xl">
-                    <div>
-                        <h4 className="text-sm font-bold text-red-400">Zona de Peligro</h4>
-                        <p className="text-xs text-gray-500 mt-0.5">Si eliminas este grupo, se perderán todos los balances y registros de forma permanente.</p>
+                        <div className="space-y-3 bg-red-950/20 border border-red-900/30 p-4 rounded-xl">
+                            <div>
+                                <h4 className="text-sm font-bold text-red-400">Zona de Peligro</h4>
+                                <p className="text-xs text-gray-500 mt-0.5">Si eliminas este grupo, se perderán todos los balances y registros de forma permanente.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={manejarEliminarGrupo}
+                                disabled={cargando}
+                                className="w-full bg-red-500/10 hover:bg-red-500 text-red-400 border border-red-500/20 hover:border-red-500 font-bold py-2.5 rounded-xl text-xs transition-all disabled:opacity-50"
+                            >
+                                🗑️ Eliminar Grupo permanentemente
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <div className="text-center py-6">
+                        <p className="text-gray-400 text-sm leading-relaxed">
+                            Solo el administrador (creador del grupo) tiene permiso para editar los ajustes, gestionar invitaciones o eliminar el grupo.
+                        </p>
+                        <button
+                            onClick={alCerrar}
+                            className="mt-6 bg-slate-700 hover:bg-slate-600 text-white font-bold px-6 py-2 rounded-xl text-sm transition-colors"
+                        >
+                            Volver al grupo
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={manejarEliminarGrupo}
-                        disabled={cargando}
-                        className="w-full bg-red-500/10 hover:bg-red-500 text-red-400 border border-red-500/20 hover:border-red-500 font-bold py-2.5 rounded-xl text-xs transition-all disabled:opacity-50"
-                    >
-                        🗑️ Eliminar Grupo permanentemente
-                    </button>
-                </div>
+                )}
 
             </div>
         </div>

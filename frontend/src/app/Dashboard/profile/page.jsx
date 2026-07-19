@@ -32,9 +32,7 @@ const AccountSettings = () => {
   const [userName, setUserName] = useState(usuarioInicial.user_name || '');
   const [email, setEmail] = useState(usuarioInicial.email || '');
   const [avatar, setAvatar] = useState(usuarioInicial.avatar || '');
-  const [currency, setCurrency] = useState(usuarioInicial.currency || 'USD ($)');
-  const [emailNotifications, setEmailNotifications] = useState(usuarioInicial.email_notifications ?? false);
-  const [pushNotifications, setPushNotifications] = useState(usuarioInicial.push_notifications ?? false);
+  const [currency, setCurrency] = useState(usuarioInicial.currency || 'EUR (€)');
   const [userId, setUserId] = useState(usuarioInicial.id || '');
 
   useEffect(() => {
@@ -69,8 +67,6 @@ const AccountSettings = () => {
           setAvatar(data.avatar || '');
           if (data.currency) setCurrency(data.currency);
           setUserId(data.id || userObj.id);
-          if (data.email_notifications !== undefined) setEmailNotifications(data.email_notifications);
-          if (data.push_notifications !== undefined) setPushNotifications(data.push_notifications);
         } else {
           const errMsg = data.error || data.msg || "Error desconocido";
           console.error("Error al obtener perfil:", errMsg);
@@ -108,9 +104,7 @@ const AccountSettings = () => {
           last_name: lastName,
           user_name: userName,
           currency: currency,
-          avatar: avatar,
-          email_notifications: emailNotifications,
-          push_notifications: pushNotifications
+          avatar: avatar
         }),
       });
 
@@ -124,10 +118,8 @@ const AccountSettings = () => {
         setName(data.name || '');
         setLastName(data.last_name || '');
         setUserName(data.user_name || '');
-        setCurrency(data.currency || 'USD ($)');
+        setCurrency(data.currency || 'EUR (€)');
         setAvatar(data.avatar || '');
-        setEmailNotifications(!!data.email_notifications); // El !! asegura que sea un booleano estricto
-        setPushNotifications(!!data.push_notifications);
 
         setIsSaveModalOpen(true);
       } else {
@@ -177,7 +169,6 @@ const AccountSettings = () => {
 
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-white tracking-wide">Configuración de la cuenta</h1>
-        <p className="text-gray-400 text-sm mt-1">Seguridad y preferencias</p>
       </header>
 
       <form onSubmit={handleSaveChanges} className="space-y-6">
@@ -255,30 +246,6 @@ const AccountSettings = () => {
                   className="w-full bg-[#1e293b] border border-slate-700 rounded-lg p-3 text-gray-500 cursor-not-allowed outline-none"
                 />
               </div>
-
-              <div>
-                <label className="block text-[11px] font-mono tracking-wider text-gray-400 mb-1 uppercase">Tu ID de usuario</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={userId}
-                    disabled
-                    placeholder="ID"
-                    className="w-full bg-[#1e293b] border border-slate-700 rounded-lg p-3 text-[#3B82F6] font-mono font-bold text-lg cursor-default outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => { navigator.clipboard.writeText(userId) }}
-                    className="shrink-0 bg-slate-700 hover:bg-slate-600 text-gray-300 px-3 py-3 rounded-lg text-xs font-mono transition-colors border border-slate-600"
-                    title="Copiar ID"
-                  >
-                    Copiar
-                  </button>
-                </div>
-                <p className="text-[10px] text-gray-500 mt-1">
-                  Comparte este ID para que tus amigos te envien solicitudes de amistad o te agreguen a grupos.
-                </p>
-              </div>
             </div>
           </div>
 
@@ -303,45 +270,6 @@ const AccountSettings = () => {
               </div>
             </div>
           )}
-        </section>
-
-        <section className="bg-[#1e293b] border border-slate-700 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Preferencias</h2>
-          <hr className="border-slate-700 mb-6" />
-
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-white">Notificaciones por Email</h3>
-                <p className="text-xs text-gray-400 mt-0.5">Recibe actualizaciones sobre la actividad del grupo.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEmailNotifications(!emailNotifications)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${emailNotifications ? 'bg-blue-600' : 'bg-slate-600'}`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emailNotifications ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-white">Notificaciones Push</h3>
-                <p className="text-xs text-gray-400 mt-0.5">Recibe alertas instantáneas.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPushNotifications(!pushNotifications)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${pushNotifications ? 'bg-blue-600' : 'bg-slate-600'}`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${pushNotifications ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
-            </div>
-
-            <div className="pt-2">
-              
-            </div>
-          </div>
         </section>
 
         {/* Zona de Peligro */}
