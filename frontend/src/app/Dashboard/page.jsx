@@ -13,6 +13,7 @@ const Dashboard = () => {
 
     const [usuario, setUsuario] = useState(null);
     const [grupos, setGrupos] = useState([]);
+    const [miembros, setMiembros] = useState([]);
 
     const [transaccionesPendientes, setTransaccionesPendientes] = useState([]);
     const [totalMeDeben, setTotalMeDeben] = useState(0.00);
@@ -20,9 +21,10 @@ const Dashboard = () => {
 
     const [modalLiquidar, setModalLiquidar] = useState(false);
     const [modalGrupo, setModalGrupo] = useState(false);
-    const [modalAmigo, setModalAmigo] = useState(false);
+    const [modalInvitar, setModalInvitar] = useState(false);
 
     const [grupoSeleccionado, setGrupoSeleccionado] = useState({ id: null, nombre: "" });
+    const [inviteLink, setInviteLink] = useState("");
 
     const [historial, setHistorial] = useState([]);
     const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "success" });
@@ -35,7 +37,6 @@ const Dashboard = () => {
     useEffect(() => {
         obtenerDatosDashboard();
     }, [actualizarDatosTrigger]);
-
 
     const mostrarToast = (mensaje, tipo = "success") => {
         setToast({ mostrar: true, mensaje, tipo });
@@ -84,7 +85,7 @@ const Dashboard = () => {
             if (!token || !storedUser) return;
 
             const userObj = JSON.parse(storedUser);
-            const miId = userObj.id;
+            const miId = Number(userObj.id);
             if (!miId) return;
 
             const resGrupos = await fetch("http://localhost:5000/groups", {
@@ -119,7 +120,10 @@ const Dashboard = () => {
                         if (resGastos.ok) {
                             const gastos = await resGastos.json();
                             gastos.forEach(gasto => {
-                                if (gasto.paid_by === miId) {
+                                const pagadorId = Number(gasto.paid_by || gasto.user_id);
+                                const pagadoPorMi = pagadorId === miId;
+
+                                if (Array.isArray(gasto.splits)) {
                                     gasto.splits.forEach(split => {
                                         if (split.user_id !== miId) {
                                             saldoDelGrupo += split.amount;
@@ -173,7 +177,8 @@ const Dashboard = () => {
                         name: grupo.name,
                         nombre: grupo.name,
                         categoria: grupo.category,
-                        saldo: saldoDelGrupo
+                        saldo: saldoDelGrupo,
+                        esAdmin: Number(grupo.created_by) === miId
                     });
                 }
 
@@ -187,14 +192,60 @@ const Dashboard = () => {
         }
     };
 
-    const manejarSubmitLiquidar = async (e) => {
+    const manejarSubmitGasto = async (e) => {
         e.preventDefault();
         const grupoId = e.target[0].value;
-        const paidTo = parseInt(e.target[1].value.trim());
+        const descripcion = e.target[1].value.trim();
         const cantidad = parseFloat(e.target[2].value);
 
-        if (!grupoId || !paidTo || isNaN(cantidad) || cantidad <= 0) {
-            mostrarToast("Introduce un grupo, un ID valido y un monto mayor a 0", "error");
+        if (!grupoId || !descripcion || isNaN(cantidad) || cantidad <= 0) {
+            mostrarToast("Introduce un grupo, una descripcion valida y un monto mayor a 0", "error");
+            return;
+        }
+
+        setCargando(true);
+        try {
+            const token = localStorage.getItem("token");
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoId}/expenses`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    description: descripcion,
+                    amount: cantidad
+                })
+            });
+
+            if (respuesta.ok) {
+                mostrarToast("Gasto guardado correctamente");
+                setHistorial(prev => [
+                    { id: Date.now(), texto: `Añadiste el gasto "${descripcion}" por ${cantidad} €` },
+                    ...prev
+                ]);
+                e.target.reset();
+                if (setModalGasto) setModalGasto(false);
+                obtenerDatosDashboard(); 
+            } else {
+                const errorData = await respuesta.json();
+                mostrarToast(errorData.error || "Error al guardar el gasto", "error");
+            }
+        } catch (error) {
+            mostrarToast("Error de conexion", "error");
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    // --- FUNCIÓN DE LIQUIDAR ACTUALIZADA AL GRUPO ---
+    const manejarSubmitLiquidar = async (e) => {
+        e.preventDefault();
+        const grupoId = parseInt(e.target[0].value);
+        const cantidad = parseFloat(e.target[1].value);
+
+        if (!grupoId || isNaN(cantidad) || cantidad <= 0) {
+            mostrarToast("Selecciona un grupo válido y un monto mayor a 0", "error");
             return;
         }
 
@@ -207,17 +258,26 @@ const Dashboard = () => {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
+                // ATENCIÓN: El campo paid_to se ha omitido para pagos generales al grupo.
                 body: JSON.stringify({
-                    paid_to: paidTo,
                     amount: cantidad
                 })
             });
 
             if (respuesta.ok) {
-                mostrarToast("Pago registrado correctamente");
+                mostrarToast("Aportación registrada correctamente");
+                
+                const grupoPagado = grupos.find(g => g.id === grupoId);
+                const nombreGrupo = grupoPagado ? grupoPagado.name : `el grupo #${grupoId}`;
+
+                setHistorial(prev => [
+                    { id: Date.now(), texto: `Aportaste ${cantidad} € para saldar deudas en ${nombreGrupo}` },
+                    ...prev
+                ]);
+                
                 e.target.reset();
                 setModalLiquidar(false);
-                await obtenerDatosDashboard();
+                obtenerDatosDashboard();
             } else {
                 const errorData = await respuesta.json();
                 mostrarToast(errorData.error || "Error al registrar el pago", "error");
@@ -229,43 +289,44 @@ const Dashboard = () => {
         }
     };
 
-    const manejarSubmitGrupo = async (e) => {
-        e.preventDefault();
-        const nombreNuevoGrupo = e.target[0].value.trim();
-
-        if (!nombreNuevoGrupo) {
-            mostrarToast("El nombre del grupo no puede estar vacio", "error");
-            return;
-        }
-
-        setCargando(true);
+    const obtenerInviteLink = async (grupoId) => {
+        setInviteLink(""); 
         try {
-            const nuevoGrupo = {
-                id: Date.now(),
-                nombre: nombreNuevoGrupo,
-                saldo: 0
-            };
-
-            setGrupos([...grupos, nuevoGrupo]);
-            setHistorial([
-                { id: Date.now(), texto: `Creaste el grupo "${nombreNuevoGrupo}"` },
-                ...historial
-            ]);
-            mostrarToast("Grupo creado con exito");
-            e.target.reset();
-            setModalGrupo(false);
-        } catch (error) {
-            mostrarToast("Error al crear el grupo", "error");
-        } finally {
-            setCargando(false);
+            const token = localStorage.getItem("token");
+            const respuesta = await fetch(`http://localhost:5000/groups/${grupoId}/invite-link`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (respuesta.ok) {
+                const datos = await respuesta.json();
+                setInviteLink(datos.invite_link);
+            }
+        } catch (err) {
+            console.error("Error al obtener link de invitacion");
         }
     };
 
+    const abrirModalInvitar = (id, nombre) => {
+        setGrupoSeleccionado({ id, nombre });
+        setModalInvitar(true);
+        obtenerInviteLink(id); 
+    };
 
-
-    
-
-   
+    const copiarEnlaceInvitacion = async () => {
+        try {
+            await navigator.clipboard.writeText(inviteLink);
+            mostrarToast("¡Enlace copiado al portapapeles!");
+            setModalInvitar(false);
+        } catch (err) {
+            const input = document.createElement("input");
+            input.value = inviteLink;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand("copy");
+            document.body.removeChild(input);
+            mostrarToast("¡Enlace copiado al portapapeles!");
+            setModalInvitar(false);
+        }
+    };
 
     const salirYBorrarGrupo = async (id, nombre) => {
         const confirmar = window.confirm(`Estas seguro de que quieres salir y borrar el grupo "${nombre}"?`);
@@ -288,6 +349,7 @@ const Dashboard = () => {
                     ...historial
                 ]);
                 mostrarToast("Grupo eliminado correctamente");
+                obtenerDatosDashboard();
             } else {
                 const errorData = await respuesta.json();
                 mostrarToast(errorData.error || "Hubo un problema al eliminar el grupo", "error");
@@ -296,7 +358,6 @@ const Dashboard = () => {
             mostrarToast("Error de conexion con el servidor", "error");
         }
     };
-
 
     const limpiarTodoHistorial = () => {
         setHistorial([]);
@@ -308,9 +369,11 @@ const Dashboard = () => {
         mostrarToast("Actividad eliminada");
     };
 
+    // Calculamos qué grupos tienen deuda negativa para el modal de liquidar
+    const gruposConDeuda = grupos.filter(grupo => grupo.saldo < 0);
+
     return (
         <div className="max-w-5xl mx-auto pb-10">
-
             <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
                 <div>
                     <h1 className="text-2xl font-bold mb-1">Panel de control</h1>
@@ -330,7 +393,7 @@ const Dashboard = () => {
                         className="bg-blue-500 hover:bg-blue-600 text-black font-bold py-2 px-4 rounded-md transition-colors"
                         onClick={() => setModalGasto(true)}
                     >
-                        Anadir un gasto
+                        Añadir un gasto
                     </button>
                     <button
                         className="bg-green-500 hover:bg-green-600 text-black font-bold py-2 px-4 rounded-md transition-colors"
@@ -344,7 +407,6 @@ const Dashboard = () => {
             <div className="mb-10">
                 <h4 className="text-sm text-gray-400 mb-4">Vista general</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                     <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-green-500 border-y border-r border-y-gray-700 border-r-gray-700">
                         <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">ME DEBEN <span className="text-green-500"><IconArrowUp size={14} /></span></p>
                         <h2 className="text-green-500 text-3xl font-bold mb-2">{totalMeDeben.toFixed(2)} EUR</h2>
@@ -390,7 +452,6 @@ const Dashboard = () => {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-
                 <div className="md:col-span-4">
                     <div className="flex justify-between items-center mb-4">
                         <h4 className="text-sm font-semibold text-white">Grupos Activos</h4>
@@ -422,6 +483,14 @@ const Dashboard = () => {
                             </div>
 
                             <div className="flex gap-2 justify-end">
+                                {grupo.esAdmin && (
+                                    <button
+                                        onClick={() => abrirModalInvitar(grupo.id, grupo.nombre)}
+                                        className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
+                                    >
+                                        + Invitar
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => salirYBorrarGrupo(grupo.id, grupo.name)}
                                     className="text-xs border border-red-900 text-red-400 hover:bg-red-900 hover:text-white px-2 py-1 rounded transition-colors"
@@ -436,52 +505,119 @@ const Dashboard = () => {
                 <div className="md:col-span-8">
                     <div className="flex justify-between items-center mb-4">
                         <h4 className="text-sm font-semibold">Transacciones pendientes</h4>
-                        
                     </div>
 
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
                         <div className="grid grid-cols-12 text-xs text-gray-400 mb-4 border-b border-gray-700 pb-2">
-                            <div className="col-span-5">AMIGO</div>
+                            <div className="col-span-6">MIEMBRO</div>
                             <div className="col-span-3 text-center">GRUPO</div>
                             <div className="col-span-3 text-right">BALANCE</div>
-                            <div className="col-span-1 text-right"></div>
                         </div>
 
-                        
+                        {miembros.length === 0 && (
+                            <p className="text-gray-500 text-sm text-center italic mt-6">
+                                No hay deudas registradas actualmente.
+                            </p>
+                        )}
 
-                       
+                        {miembros.map((miembro) => (
+                            <div key={miembro.id} className="grid grid-cols-12 items-center text-sm mb-4 last:mb-0">
+                                <div className="col-span-6 flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
+                                        {miembro.inicial}
+                                    </div>
+                                    {miembro.usuario}
+                                </div>
+                                <div className="col-span-3 text-gray-400 text-center text-xs">{miembro.grupo}</div>
+                                <div className={`col-span-3 text-right font-medium ${miembro.saldo > 0 ? 'text-green-500' : miembro.saldo < 0 ? 'text-blue-400' : 'text-gray-400'}`}>
+                                    {miembro.saldo > 0 ? `Te debe ${miembro.saldo} EUR` : miembro.saldo < 0 ? `Debes ${Math.abs(miembro.saldo)} EUR` : `0.00 EUR`}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
 
-            {modalLiquidar && (
+            {modalGasto && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-4">Liquidar deudas</h3>
-                        <form onSubmit={manejarSubmitLiquidar}>
-                            <label className="block text-xs text-gray-400 mb-1">De que grupo es la deuda?</label>
-                            <select className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500 cursor-pointer" required>
-                                <option value="">Selecciona un grupo</option>
+                        <h3 className="text-xl font-bold mb-4">Anadir un gasto</h3>
+                        <form onSubmit={manejarSubmitGasto}>
+                            <label className="block text-xs text-gray-400 mb-1">A que grupo pertenece?</label>
+                            <select defaultValue="" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400 cursor-pointer" required>
+                                <option value="" disabled>Selecciona un grupo</option>
                                 {grupos.map((grupo) => (
                                     <option key={grupo.id} value={grupo.id}>{grupo.name}</option>
                                 ))}
                             </select>
 
-                            <label className="block text-xs text-gray-400 mb-1">ID del usuario al que le pagas</label>
-                            <input 
-                                type="number" 
-                                min="1" 
-                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                                required 
-                                placeholder="Ej. 3" 
-                            />
+                            <label className="block text-xs text-gray-400 mb-1">Descripcion</label>
+                            <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400" required placeholder="Ej. Cena del viernes" />
 
-                            <label className="block text-xs text-gray-400 mb-1">Cantidad a saldar (EUR)</label>
-                            <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-green-500" required placeholder="0.00" />
+                            <label className="block text-xs text-gray-400 mb-1">Cantidad (EUR)</label>
+                            <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-yellow-400" required placeholder="0.00" />
+
+                            <div className="flex justify-end gap-3">
+                                <button type="button" onClick={() => { if (setModalGasto) setModalGasto(false); }} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
+                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-black font-bold rounded-md hover:bg-yellow-500 transition-colors disabled:opacity-50">
+                                    {cargando ? "Guardando..." : "Guardar gasto"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* --- MODAL DE LIQUIDAR ACTUALIZADO --- */}
+            {modalLiquidar && (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
+                    <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
+                        <h3 className="text-xl font-bold mb-4">Aportar al grupo</h3>
+                        <form onSubmit={manejarSubmitLiquidar}>
+                            
+                            <label className="block text-xs text-gray-400 mb-1">Selecciona el grupo donde quieres aportar</label>
+                            <select 
+                                defaultValue=""
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500 cursor-pointer" 
+                                required
+                                onChange={(e) => {
+                                    const seleccionado = grupos.find(g => g.id === parseInt(e.target.value));
+                                    const inputCantidad = document.getElementById("cantidad-liquidar");
+                                    if (seleccionado && inputCantidad) {
+                                        inputCantidad.value = Math.abs(seleccionado.saldo).toFixed(2);
+                                    } else if (inputCantidad) {
+                                        inputCantidad.value = "";
+                                    }
+                                }}
+                            >
+                                {gruposConDeuda.length === 0 ? (
+                                    <option value="" disabled>No tienes deudas pendientes en ningún grupo</option>
+                                ) : (
+                                    <>
+                                        <option value="" disabled>-- Selecciona un grupo --</option>
+                                        {gruposConDeuda.map((grupo) => (
+                                            <option key={grupo.id} value={grupo.id}>
+                                                {grupo.name} (Deuda total: {Math.abs(grupo.saldo).toFixed(2)} EUR)
+                                            </option>
+                                        ))}
+                                    </>
+                                )}
+                            </select>
+
+                            <label className="block text-xs text-gray-400 mb-1">Cantidad a aportar (EUR)</label>
+                            <input 
+                                id="cantidad-liquidar"
+                                type="number" 
+                                step="0.01" 
+                                min="0.01" 
+                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-green-500" 
+                                required 
+                                placeholder="0.00" 
+                            />
 
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => setModalLiquidar(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
-                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-green-500 text-black font-bold rounded-md hover:bg-green-600 transition-colors disabled:opacity-50">
+                                <button type="submit" disabled={cargando || gruposConDeuda.length === 0} className="px-4 py-2 bg-green-500 text-black font-bold rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                     {cargando ? "Registrando..." : "Registrar pago"}
                                 </button>
                             </div>
@@ -496,9 +632,46 @@ const Dashboard = () => {
                 onGrupoCreado={obtenerDatosDashboard}
             />
 
-           
+            {modalInvitar && (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
+                    <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
+                        <h3 className="text-xl font-bold mb-2">Invitar al grupo</h3>
+                        <p className="text-gray-400 text-sm mb-4">Grupo: <span className="text-white font-bold">{grupoSeleccionado.nombre}</span></p>
 
-            
+                        <div className="mb-6">
+                            <label className="block text-xs text-gray-400 mb-1">Enlace de invitación</label>
+                            {inviteLink ? (
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        readOnly
+                                        value={inviteLink}
+                                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-300 focus:outline-none"
+                                    />
+                                    <button 
+                                        type="button" 
+                                        onClick={copiarEnlaceInvitacion}
+                                        className="bg-white text-black font-bold rounded-md px-4 py-2 hover:bg-gray-200 transition-colors"
+                                    >
+                                        Copiar
+                                    </button>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500 py-2 italic">Generando enlace seguro...</p>
+                            )}
+                            <p className="text-[10px] text-gray-500 mt-2">
+                                Comparte este enlace. Al hacer clic, se unirán automáticamente al grupo.
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button type="button" onClick={() => setModalInvitar(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {toast.mostrar && (
                 <div className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all ${toast.tipo === "error" ? "bg-red-900 border-red-700 text-white" : "bg-green-900 border-green-700 text-white"}`}>

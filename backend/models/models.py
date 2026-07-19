@@ -165,7 +165,7 @@ class Settlement(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("expense_group.id"), nullable=False)
     paid_by: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
-    paid_to: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    paid_to: Mapped[Optional[int]] = mapped_column(ForeignKey("user.id"), nullable=True)
     amount: Mapped[float] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="pending")
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
@@ -173,7 +173,7 @@ class Settlement(db.Model):
     # Relaciones
     group: Mapped["Group"] = relationship(back_populates="settlements")
     payer: Mapped["User"] = relationship(foreign_keys=[paid_by], back_populates="settlements_sent")
-    receiver: Mapped["User"] = relationship(foreign_keys=[paid_to], back_populates="settlements_received")
+    receiver: Mapped[Optional["User"]] = relationship(foreign_keys=[paid_to], back_populates="settlements_received")
 
     def serialize(self):
         return {
