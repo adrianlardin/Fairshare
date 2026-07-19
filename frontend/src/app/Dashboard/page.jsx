@@ -15,6 +15,7 @@ const Dashboard = () => {
     const [grupos, setGrupos] = useState([]);
     const [miembros, setMiembros] = useState([]);
 
+    const [transaccionesPendientes, setTransaccionesPendientes] = useState([]);
     const [totalMeDeben, setTotalMeDeben] = useState(0.00);
     const [totalDebo, setTotalDebo] = useState(0.00);
 
@@ -105,39 +106,11 @@ const Dashboard = () => {
                 let totalMeDebenTemp = 0;
                 let totalDeboTemp = 0;
                 let gruposConSaldos = [];
-                let listaMiembrosTemp = {}; 
 
                 for (let grupo of datosGrupos) {
                     let saldoDelGrupo = 0; 
-                    let nombresMiembros = {};
 
-                    try {
-                        const resMiembros = await fetch(`http://localhost:5000/groups/${grupo.id}/members`, {
-                            headers: { "Authorization": `Bearer ${token}` }
-                        });
-                        if (resMiembros.ok) {
-                            const dataMiembros = await resMiembros.json();
-                            dataMiembros.forEach(m => {
-                                nombresMiembros[m.user_id] = m.user.name || m.user.user_name;
-                            });
-                        }
-                    } catch (e) {}
-
-                    const registrarMiembro = (miembroId, cantidad) => {
-                        const clave = `${grupo.id}-${miembroId}`; 
-                        if (!listaMiembrosTemp[clave]) {
-                            const nombreReal = nombresMiembros[miembroId] || `Usuario #${miembroId}`;
-                            listaMiembrosTemp[clave] = {
-                                id: clave,
-                                usuario: nombreReal,
-                                inicial: nombreReal.charAt(0).toUpperCase(),
-                                grupo: grupo.name,
-                                saldo: 0
-                            };
-                        }
-                        listaMiembrosTemp[clave].saldo += cantidad;
-                    };
-
+                    // 1. Obtener Gastos del Grupo
                     try {
                         const resGastos = await fetch(`http://localhost:5000/groups/${grupo.id}/expenses`, {
                             method: "GET",
@@ -152,24 +125,24 @@ const Dashboard = () => {
 
                                 if (Array.isArray(gasto.splits)) {
                                     gasto.splits.forEach(split => {
-                                        const splitId = Number(split.user_id);
-                                        const splitAmount = Number(split.amount);
-
-                                        if (pagadoPorMi && splitId !== miId) {
-                                            saldoDelGrupo += splitAmount;
-                                            totalMeDebenTemp += splitAmount;
-                                            registrarMiembro(splitId, splitAmount); 
-                                        } else if (!pagadoPorMi && splitId === miId) {
-                                            saldoDelGrupo -= splitAmount;
-                                            totalDeboTemp += splitAmount;
-                                            registrarMiembro(pagadorId, -splitAmount); 
+                                        if (split.user_id !== miId) {
+                                            saldoDelGrupo += split.amount;
+                                        }
+                                    });
+                                } else {
+                                    gasto.splits.forEach(split => {
+                                        if (split.user_id === miId) {
+                                            saldoDelGrupo -= split.amount;
                                         }
                                     });
                                 }
                             });
                         }
-                    } catch(e) {}
+                    } catch(e) {
+                        console.error("Error obteniendo gastos del grupo", grupo.id, e);
+                    }
 
+                    // 2. Obtener Liquidaciones (Pagos) del Grupo
                     try {
                         const resPagos = await fetch(`http://localhost:5000/groups/${grupo.id}/settlements`, {
                             method: "GET",
@@ -179,22 +152,25 @@ const Dashboard = () => {
                         if (resPagos.ok) {
                             const pagos = await resPagos.json();
                             pagos.forEach(pago => {
-                                const pagadorId = Number(pago.paid_by);
-                                const receptorId = Number(pago.paid_to);
-                                const montoPago = Number(pago.amount);
-
-                                if (pagadorId === miId) {
-                                    saldoDelGrupo += montoPago;
-                                    totalDeboTemp -= montoPago;
-                                    registrarMiembro(receptorId, montoPago); 
-                                } else if (receptorId === miId) {
-                                    saldoDelGrupo -= montoPago;
-                                    totalMeDebenTemp -= montoPago;
-                                    registrarMiembro(pagadorId, -montoPago); 
+                                if (pago.paid_by === miId) {
+                                    // Si yo pagué, mi deuda en el grupo disminuye (se acerca a 0 o se vuelve positivo)
+                                    saldoDelGrupo += pago.amount;
+                                } else if (pago.paid_to === miId) {
+                                    // Si me pagaron, lo que me deben en el grupo disminuye
+                                    saldoDelGrupo -= pago.amount;
                                 }
                             });
                         }
-                    } catch(e) {}
+                    } catch(e) {
+                        console.error("Error obteniendo pagos del grupo", grupo.id, e);
+                    }
+
+                    // 3. Acumular a los totales del Dashboard según el saldo final neto del grupo
+                    if (saldoDelGrupo > 0) {
+                        totalMeDebenTemp += saldoDelGrupo;
+                    } else if (saldoDelGrupo < 0) {
+                        totalDeboTemp += Math.abs(saldoDelGrupo); // Lo sumamos como positivo para la tarjeta "Debo"
+                    }
 
                     gruposConSaldos.push({
                         id: grupo.id,
@@ -206,12 +182,10 @@ const Dashboard = () => {
                     });
                 }
 
+                // 4. Actualizar los estados una sola vez al terminar el bucle
                 setGrupos(gruposConSaldos);
-                setTotalMeDeben(Math.max(0, totalMeDebenTemp));
-                setTotalDebo(Math.max(0, totalDeboTemp));
-                
-                const arrayMiembros = Object.values(listaMiembrosTemp).filter(miembro => Math.abs(miembro.saldo) > 0.01);
-                setMiembros(arrayMiembros);
+                setTotalMeDeben(totalMeDebenTemp);
+                setTotalDebo(totalDeboTemp);
             }
         } catch (error) {
             console.error(error);

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ModalAjustesGrupo } from "@/components/ModalAjustesGrupo";
-// IMPORTANTE: Importamos el contexto de tus modales globales
 import { useModales } from "@/app/context/ModalContext";
 import { IconHome, IconSettings, IconPlus, IconReceipt, IconUser, IconDollar, IconFilter } from "@/components/icons";
 
@@ -11,39 +10,49 @@ export default function GroupDetailPage() {
     const { id } = useParams();
     const router = useRouter();
 
-    // Extraemos las acciones del Contexto global
     const { setModalGasto, setModalLiquidar, refrescoTrigger } = useModales();
-    // Nota: Si en tu ModalContext tienes una variable de estado que cambia al llamar a refrescarDatos() 
-    // (por ejemplo un contador o un booleano tipo 'refrescoTrigger'), la añadimos a los dependencies del useEffect.
 
     const [grupo, setGrupo] = useState(null);
     const [miembros, setMiembros] = useState([]);
     const [gastos, setGastos] = useState([]);
+    const [pagos, setPagos] = useState([]); // Añadido para procesar liquidaciones
+    const [miId, setMiId] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [verAjustes, setVerAjustes] = useState(false);
 
     const cargarDatosGrupo = async () => {
         try {
             const token = localStorage.getItem("token");
+            const storedUser = localStorage.getItem("user");
+            
+            if (storedUser) {
+                const userObj = JSON.parse(storedUser);
+                setMiId(Number(userObj.id));
+            }
+
             const headers = {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             };
 
-            const [resGrupo, resMiembros, resGastos] = await Promise.all([
+            // Traemos también las liquidaciones (settlements) para cruzar saldos reales si es necesario
+            const [resGrupo, resMiembros, resGastos, resPagos] = await Promise.all([
                 fetch(`http://localhost:5000/groups/${id}`, { headers }),
                 fetch(`http://localhost:5000/groups/${id}/members`, { headers }),
-                fetch(`http://localhost:5000/groups/${id}/expenses`, { headers })
+                fetch(`http://localhost:5000/groups/${id}/expenses`, { headers }),
+                fetch(`http://localhost:5000/groups/${id}/settlements`, { headers }).catch(() => ({ ok: false }))
             ]);
 
             if (resGrupo.ok && resMiembros.ok && resGastos.ok) {
                 const dataGrupo = await resGrupo.json();
                 const dataMiembros = await resMiembros.json();
                 const dataGastos = await resGastos.json();
+                const dataPagos = resPagos.ok ? await resPagos.json() : [];
 
                 setGrupo(dataGrupo);
                 setMiembros(dataMiembros);
                 setGastos(dataGastos);
+                setPagos(dataPagos);
             } else {
                 console.error("Error al procesar la informacion del grupo.");
             }
@@ -54,19 +63,41 @@ export default function GroupDetailPage() {
         }
     };
 
-    // Sincronizamos la carga de datos del grupo con el ID y el trigger global de refresco
     useEffect(() => {
         if (id) cargarDatosGrupo();
-    }, [id, refrescoTrigger]); // Si refrescoTrigger cambia en tu Context, esta página se actualiza sola automáticamente.
+    }, [id, refrescoTrigger]);
 
     if (cargando) return <div className="text-white flex items-center justify-center font-mono text-xs py-10">Cargando...</div>;
     if (!grupo) return <div className="text-white flex items-center justify-center py-10">Grupo no encontrado.</div>;
 
-    const totalExpensesSum = gastos.reduce((acc, current) => acc + (current.amount || 0), 0);
+    // CORRECCIÓN CRÍTICA: Forzar parseFloat para evitar concatenaciones de texto ("180" + "0"...)
+    const totalExpensesSum = gastos.reduce((acc, current) => acc + parseFloat(current.amount || 0), 0);
+
+    // CÁLCULO OPCIONAL: Tu saldo neto en este grupo específico (Gastos + Liquidaciones)
+    let miSaldoNeto = 0;
+    if (miId) {
+        gastos.forEach(gasto => {
+            const pagadoPor = Number(gasto.paid_by);
+            const monto = parseFloat(gasto.amount || 0);
+            if (pagadoPor === miId) {
+                gasto.splits?.forEach(split => {
+                    if (Number(split.user_id) !== miId) miSaldoNeto += parseFloat(split.amount || 0);
+                });
+            } else {
+                gasto.splits?.forEach(split => {
+                    if (Number(split.user_id) === miId) miSaldoNeto -= parseFloat(split.amount || 0);
+                });
+            }
+        });
+
+        pagos.forEach(pago => {
+            if (Number(pago.paid_by) === miId) miSaldoNeto += parseFloat(pago.amount || 0);
+            if (Number(pago.paid_to) === miId) miSaldoNeto -= parseFloat(pago.amount || 0);
+        });
+    }
 
     return (
         <div className="max-w-6xl mx-auto pb-10">
-
             <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4 border-b border-gray-800 pb-6">
                 <div>
                     <span className="text-xs text-gray-500 uppercase tracking-widest font-mono flex items-center gap-1 mb-1">
@@ -82,7 +113,6 @@ export default function GroupDetailPage() {
                     >
                         <IconSettings size={16} /> Ajustes
                     </button>
-                    {/* BOTÓN GLOBAL DE GASTO */}
                     <button
                         onClick={() => setModalGasto(true)}
                         className="bg-blue-500 hover:bg-blue-600 text-black font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors"
@@ -93,7 +123,6 @@ export default function GroupDetailPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-
                 <div className="md:col-span-7 space-y-4">
                     <div className="flex justify-between items-center mb-2">
                         <h2 className="text-lg font-bold text-gray-200">Actividad Reciente</h2>
@@ -119,7 +148,7 @@ export default function GroupDetailPage() {
                                 <div className="text-right flex gap-6">
                                     <div className="min-w-[60px]">
                                         <p className="text-[10px] text-gray-500 font-mono">total</p>
-                                        <p className="text-sm font-semibold text-gray-400">EUR {gasto.amount.toFixed(2)}</p>
+                                        <p className="text-sm font-semibold text-gray-400">EUR {parseFloat(gasto.amount || 0).toFixed(2)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -136,27 +165,23 @@ export default function GroupDetailPage() {
 
                         <div className="space-y-3 pt-2">
                             {miembros.map((miembro, idx) => {
-                                // Obtenemos el nombre y la foto del miembro según los datos que envíe tu backend
                                 const nombreMostrar = miembro.username || miembro.first_name || `Usuario ${miembro.user_id}`;
                                 const imagenPerfil = miembro.avatar_url || miembro.profile_pic;
 
                                 return (
                                     <div key={idx} className="flex justify-between items-center text-sm bg-gray-900/40 p-2.5 rounded-xl border border-gray-800/40">
                                         <div className="flex items-center gap-3">
-                                            {/* Renderizado de la imagen de perfil o avatar de reemplazo */}
                                             {imagenPerfil ? (
                                                 <img
                                                     src={imagenPerfil}
                                                     alt={nombreMostrar}
                                                     className="w-8 h-8 rounded-full object-cover border border-gray-700"
                                                     onError={(e) => {
-                                                        // Fallback en caso de que la URL de la imagen esté rota
                                                         e.target.onerror = null;
                                                         e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${nombreMostrar}`;
                                                     }}
                                                 />
                                             ) : (
-                                                // Si no hay foto, generamos un contenedor estético con la primera letra
                                                 <div className="w-8 h-8 bg-blue-500/10 text-blue-400 rounded-full flex items-center justify-center border border-blue-500/30 text-xs font-bold uppercase font-mono">
                                                     {nombreMostrar.charAt(0)}
                                                 </div>
@@ -176,7 +201,6 @@ export default function GroupDetailPage() {
                             })}
                         </div>
 
-                        {/* BOTÓN GLOBAL DE LIQUIDAR */}
                         <button
                             onClick={() => setModalLiquidar(true)}
                             className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-black font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors mt-2"
@@ -190,29 +214,31 @@ export default function GroupDetailPage() {
                             <span className="font-semibold text-gray-400">Info del Grupo</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-gray-500">Coste Total</span>
-                            <span className="font-mono text-gray-300">EUR {totalExpensesSum.toFixed(2)}</span>
+                            <span className="text-gray-500">Coste Total del Grupo</span>
+                            <span className="font-mono text-gray-300 font-bold">EUR {totalExpensesSum.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between">
+                        {miId && (
+                            <div className="flex justify-between border-t border-gray-800/60 pt-2">
+                                <span className="text-gray-500">Tu Estado Neto</span>
+                                <span className={`font-mono font-bold ${miSaldoNeto >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {miSaldoNeto >= 0 ? `Te deben: EUR ${miSaldoNeto.toFixed(2)}` : `Debes: EUR ${Math.abs(miSaldoNeto).toFixed(2)}`}
+                                </span>
+                            </div>
+                        )}
+                        <div className="flex justify-between pt-1">
                             <span className="text-gray-500">Categoria</span>
                             <span className="text-gray-300 capitalize">{grupo.category || "General"}</span>
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            {/* Modal de Ajustes (Se mantiene local) */}
             <ModalAjustesGrupo
                 estaAbierto={verAjustes}
                 alCerrar={() => setVerAjustes(false)}
                 grupoActual={grupo}
-                alActualizar={(grupoActualizado) => {
-                    setGrupo(grupoActualizado);
-                }}
-                alEliminar={() => {
-                    router.push("/dashboard/groups");
-                }}
+                alActualizar={(grupoActualizado) => setGrupo(grupoActualizado)}
+                alEliminar={() => router.push("/dashboard/groups")}
             />
         </div>
     );
