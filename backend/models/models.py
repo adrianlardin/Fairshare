@@ -54,6 +54,7 @@ class Group(db.Model):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(255))
     category: Mapped[Optional[str]] = mapped_column(String(60))
+    image: Mapped[Optional[str]] = mapped_column(String(255))
     created_by: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     invite_token: Mapped[Optional[str]] = mapped_column(String(64), unique=True, nullable=True)
@@ -75,6 +76,7 @@ class Group(db.Model):
             "name": self.name,
             "description": self.description,
             "category": self.category,
+            "image": self.image,
             "created_by": self.created_by,
             "created_at": self.created_at.isoformat(),
             "invite_token": self.invite_token

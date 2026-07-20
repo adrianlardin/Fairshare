@@ -54,27 +54,39 @@ const styles = {
   loginBtn: { color: MUTED, textDecoration: "none", fontSize: 14, padding: "6px 12px" },
   dashboardBtn: { color: "#4ADE80", textDecoration: "none", fontSize: 14, padding: "6px 12px", fontWeight: 600 },
   userBtn: { color: TEXT, textDecoration: "none", fontSize: 14, padding: "6px 12px", display: "flex", alignItems: "center", gap: 6 },
-  avatar: { width: 24, height: 24, borderRadius: "50%", objectFit: "cover", background: "#334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 },
+  avatar: { width: 24, height: 24, borderRadius: "50%", objectFit: "cover", background: "#334155", display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "center", fontSize: 12, overflow: "hidden" },
+  avatarImg: { width: "100%", height: "100%", objectFit: "cover" }
 }
 
 export function Navbar() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    if (token && storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setUserName(user.name || user.user_name || "");
-        setLoggedIn(true);
-      } catch (e) {
+    const loadUserData = () => {
+      const token = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+      if (token && storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          setUserName(user.user_name || "");
+          setAvatarUrl(user.avatar || "");
+          setLoggedIn(true);
+        } catch (e) {
+          setLoggedIn(false);
+        }
+      } else {
         setLoggedIn(false);
       }
-    } else {
-      setLoggedIn(false);
-    }
+    };
+
+    
+    loadUserData();
+
+    
+    window.addEventListener("userUpdated", loadUserData);
+    return () => window.removeEventListener("userUpdated", loadUserData);
   }, []);
 
   return (
@@ -99,7 +111,11 @@ export function Navbar() {
               <Link href="/dashboard" style={styles.dashboardBtn}>Dashboard</Link>
               <Link href="/dashboard/profile" style={styles.userBtn}>
                 <span style={styles.avatar}>
-                  {userName ? userName.charAt(0).toUpperCase() : "U"}
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" style={styles.avatarImg} />
+                  ) : (
+                    userName ? userName.charAt(0).toUpperCase() : "U"
+                  )}
                 </span>
                 <span>{userName || "Usuario"}</span>
               </Link>

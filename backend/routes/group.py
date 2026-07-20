@@ -39,6 +39,7 @@ def create_group():
         name=name,
         description=data.get("description"),
         category=data.get("category"),
+        image=data.get("image"),
         created_by=current_user_id
     )
 
@@ -97,6 +98,8 @@ def update_group(group_id):
         group.description = data["description"]
     if "category" in data:
         group.category = data["category"]
+    if "image" in data:                    
+        group.image = data["image"]    
 
     db.session.commit()
 
@@ -260,9 +263,11 @@ def add_member(group_id):
 def remove_member(group_id, user_id):
     current_user_id = int(get_jwt_identity())
 
-    # solo el admin puede eliminar miembros
+    # Comprueba si el que ejecuta la acción es admin
     admin = GroupMember.query.filter_by(group_id=group_id, user_id=current_user_id, role="admin").first()
-    if not admin:
+    
+    # NUEVO: Si NO es admin, pero el usuario que intenta borrarse es él mismo (salir del grupo), lo permitimos.
+    if not admin and current_user_id != user_id:
         return jsonify({"error": "No tienes permiso para eliminar miembros"}), 403
 
     member = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
