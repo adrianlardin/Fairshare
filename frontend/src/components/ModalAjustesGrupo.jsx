@@ -5,6 +5,7 @@ import { IconSettings, IconX } from "./icons";
 
 export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActualizar, alEliminar }) {
     const [nuevoNombre, setNuevoNombre] = useState("");
+    const [nuevaImagen, setNuevaImagen] = useState("");
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState("");
     const [inviteLink, setInviteLink] = useState("");
@@ -14,6 +15,7 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
     useEffect(() => {
         if (grupoActual) {
             setNuevoNombre(grupoActual.name);
+            setNuevaImagen(grupoActual.image || "");
             setError("");
             setCopiado(false);
 
@@ -40,9 +42,7 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
                 const datos = await respuesta.json();
                 setInviteLink(datos.invite_link);
             }
-        } catch (err) {
-            console.error("Error al obtener link de invitacion");
-        }
+        } catch (err) {}
     };
 
     const copiarLink = async () => {
@@ -50,17 +50,7 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
             await navigator.clipboard.writeText(inviteLink);
             setCopiado(true);
             setTimeout(() => setCopiado(false), 2000);
-        } catch (err) {
-            // fallback para navegadores sin clipboard API
-            const input = document.createElement("input");
-            input.value = inviteLink;
-            document.body.appendChild(input);
-            input.select();
-            document.execCommand("copy");
-            document.body.removeChild(input);
-            setCopiado(true);
-            setTimeout(() => setCopiado(false), 2000);
-        }
+        } catch (err) {}
     };
 
     const regenerarLink = async () => {
@@ -75,16 +65,12 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
                 const datos = await respuesta.json();
                 setInviteLink(datos.invite_link);
             }
-        } catch (err) {
-            console.error("Error al regenerar link");
-        } finally {
+        } catch (err) {} finally {
             setCargando(false);
         }
     };
 
-    if (!estaAbierto || !grupoActual) return null;
-
-    const manejarGuardarNombre = async (e) => {
+    const manejarGuardar = async (e) => {
         e.preventDefault();
         if (!nuevoNombre.trim()) return setError("El nombre no puede estar vacío");
 
@@ -98,7 +84,10 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({ name: nuevoNombre })
+                body: JSON.stringify({ 
+                    name: nuevoNombre,
+                    image: nuevaImagen
+                })
             });
 
             const datos = await respuesta.json();
@@ -117,7 +106,7 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
     };
 
     const manejarEliminarGrupo = async () => {
-        const confirmar = window.confirm(`¿Estás completamente seguro de eliminar el grupo "${grupoActual.name}"? Esta acción no se puede deshacer y borrará todos los gastos asociados.`);
+        const confirmar = window.confirm(`¿Estás completamente seguro de eliminar el grupo "${grupoActual.name}"?`);
         if (!confirmar) return;
 
         setCargando(true);
@@ -126,27 +115,32 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
             const token = localStorage.getItem("token");
             const respuesta = await fetch(`http://localhost:5000/groups/${grupoActual.id}`, {
                 method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+                headers: { "Authorization": `Bearer ${token}` }
             });
 
             if (respuesta.ok) {
                 alEliminar();
             } else {
                 const datos = await respuesta.json();
-                setError(datos.error || "No tienes permiso para eliminar este grupo.");
+                setError(datos.error || "No tienes permiso para eliminar.");
             }
-        } catch (err) {
-            setError("Error de conexión al intentar eliminar.");
-        } finally {
+        } catch (err) {} finally {
             setCargando(false);
         }
     };
 
+    const manejarClickImagen = () => {
+        const url = window.prompt("Pega aquí el enlace (URL) de la nueva imagen:");
+        if (url !== null) {
+            setNuevaImagen(url);
+        }
+    };
+
+    if (!estaAbierto || !grupoActual) return null;
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-[#1e293b] border border-slate-700 rounded-2xl w-full max-w-md p-6 text-white shadow-2xl space-y-6">
+            <div className="bg-[#1e293b] border border-slate-700 rounded-2xl w-full max-w-md p-6 text-white shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
 
                 <div className="flex justify-between items-center border-b border-slate-700 pb-3">
                     <h3 className="text-lg font-bold text-gray-100 flex items-center gap-2">
@@ -163,25 +157,44 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
 
                 {esAdmin ? (
                     <>
-                        <form onSubmit={manejarGuardarNombre} className="space-y-3">
-                            <label className="text-xs font-bold tracking-wider text-gray-400 uppercase block">Cambiar nombre del grupo</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={nuevoNombre}
-                                    onChange={(e) => setNuevoNombre(e.target.value)}
-                                    disabled={cargando}
-                                    className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-                                    placeholder="Nuevo nombre del grupo"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={cargando}
-                                    className="bg-blue-500 hover:bg-blue-600 text-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors disabled:opacity-50"
+                        <form onSubmit={manejarGuardar} className="space-y-4">
+                            
+                            <div className="flex gap-4 items-center">
+                                <div 
+                                    onClick={manejarClickImagen}
+                                    className="w-16 h-16 shrink-0 rounded-xl border border-slate-600 bg-slate-800 flex flex-col items-center justify-center text-gray-400 hover:border-blue-500 cursor-pointer transition-colors relative overflow-hidden group"
                                 >
-                                    {cargando ? "Guardando..." : "Guardar"}
-                                </button>
+                                    {nuevaImagen ? (
+                                        <>
+                                            <img src={nuevaImagen} alt="Grupo" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <IconSettings size={14} />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <span className="text-xs text-center font-bold">Cambiar<br/>Foto</span>
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-xs font-bold tracking-wider text-gray-400 uppercase block mb-1">Nombre del grupo</label>
+                                    <input
+                                        type="text"
+                                        value={nuevoNombre}
+                                        onChange={(e) => setNuevoNombre(e.target.value)}
+                                        disabled={cargando}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        placeholder="Nombre del grupo"
+                                    />
+                                </div>
                             </div>
+                            
+                            <button
+                                type="submit"
+                                disabled={cargando}
+                                className="w-full bg-blue-500 hover:bg-blue-600 text-black font-bold px-4 py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
+                            >
+                                {cargando ? "Guardando..." : "Guardar cambios"}
+                            </button>
                         </form>
 
                         <hr className="border-slate-700" />
@@ -216,7 +229,7 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
                                 disabled={cargando}
                                 className="text-xs text-gray-500 hover:text-gray-300 transition-colors underline"
                             >
-                                {cargando ? "Regenerando..." : "Regenerar link (invalida el anterior)"}
+                                Regenerar link (invalida el anterior)
                             </button>
                         </div>
 
@@ -225,7 +238,6 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
                         <div className="space-y-3 bg-red-950/20 border border-red-900/30 p-4 rounded-xl">
                             <div>
                                 <h4 className="text-sm font-bold text-red-400">Zona de Peligro</h4>
-                                <p className="text-xs text-gray-500 mt-0.5">Si eliminas este grupo, se perderán todos los balances y registros de forma permanente.</p>
                             </div>
                             <button
                                 type="button"
@@ -250,7 +262,6 @@ export function ModalAjustesGrupo({ estaAbierto, alCerrar, grupoActual, alActual
                         </button>
                     </div>
                 )}
-
             </div>
         </div>
     );

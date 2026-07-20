@@ -13,17 +13,24 @@ const Sidebar = () => {
   const [avatarUrl, setAvatarUrl] = useState('');
   
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        if (parsedUser.name) setUsername(`${parsedUser.name} ${parsedUser.lastName || ''}`);
-        if (parsedUser.avatar) setAvatarUrl(parsedUser.avatar);
-      } catch (error) {
-        console.error("Error al parsear el usuario desde localStorage:", error);
+ useEffect(() => {
+    const loadUserData = () => {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser.user_name) setUsername(parsedUser.user_name);
+          if (parsedUser.avatar) setAvatarUrl(parsedUser.avatar);
+        } catch (error) {
+          console.error("Error al parsear el usuario:", error);
+        }
       }
-    }
+    };
+
+    loadUserData();
+
+    window.addEventListener("userUpdated", loadUserData);
+    return () => window.removeEventListener("userUpdated", loadUserData);
   }, []);
 
   

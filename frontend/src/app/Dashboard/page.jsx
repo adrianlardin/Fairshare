@@ -257,6 +257,7 @@ const Dashboard = () => {
             setCargando(false);
         }
     };
+
     const obtenerInviteLink = async (grupoId) => {
         setInviteLink(""); 
         try {
@@ -331,7 +332,7 @@ const Dashboard = () => {
                     <h2 className="text-sm text-gray-400">
                         {usuario ? (
                             <Link href="/dashboard/profile" className="hover:text-blue-400 transition-colors cursor-pointer" title="Ir a mi perfil">
-                                Hola, {usuario.name || usuario.user_name}
+                                Hola, {usuario.user_name}
                             </Link>
                         ) : (
                             "Cargando..."

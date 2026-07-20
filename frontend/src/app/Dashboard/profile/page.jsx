@@ -22,11 +22,10 @@ const AccountSettings = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
-  // Intentamos obtener el usuario del localStorage antes de renderizar
+  
   const tuUsuarioLocal = typeof window !== "undefined" ? localStorage.getItem("user") : null;
   const usuarioInicial = tuUsuarioLocal ? JSON.parse(tuUsuarioLocal) : {};
 
-  // Ahora tus estados iniciales tendrán los datos reales de la sesión actual
   const [name, setName] = useState(usuarioInicial.name || '');
   const [lastName, setLastName] = useState(usuarioInicial.last_name || '');
   const [userName, setUserName] = useState(usuarioInicial.user_name || '');
@@ -111,10 +110,11 @@ const AccountSettings = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // 1. Guardamos el JSON fresco en el almacenamiento local
+        
         localStorage.setItem("user", JSON.stringify(data));
 
-        // 2. 🌟 FORZAMOS a los estados a tomar los valores recién devueltos por Flask
+        window.dispatchEvent(new Event("userUpdated"));
+
         setName(data.name || '');
         setLastName(data.last_name || '');
         setUserName(data.user_name || '');
@@ -164,6 +164,14 @@ const AccountSettings = () => {
     }
   };
 
+  const manejarClickImagen = () => {
+    const url = window.prompt("Pega aquí el enlace (URL) de tu nueva imagen de perfil:");
+    if (url) {
+      setAvatar(url);
+      setIsAvatarSelectorOpen(false); // Cierra la lista de avatares si estaba abierta
+    }
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto text-gray-200 font-sans p-6">
 
@@ -178,17 +186,30 @@ const AccountSettings = () => {
           <hr className="border-slate-700 mb-6" />
 
           <div className="flex flex-col md:flex-row gap-6 items-start">
-            {/* Contenedor del Avatar y Selector */}
+            
+            {/* --- CONTENEDOR DE AVATAR ACTUALIZADO --- */}
             <div className="flex flex-col items-center gap-2 min-w-[100px]">
-              <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-[#3B82F6] bg-slate-700 flex items-center justify-center shadow-lg">
+              <div 
+                className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-[#3B82F6] bg-slate-700 flex items-center justify-center shadow-lg group cursor-pointer"
+                onClick={manejarClickImagen}
+                title="Haz clic para pegar una URL personalizada"
+              >
                 {avatar ? (
-                  <img
-                    src={avatar}
-                    alt="Avatar de usuario"
-                    className="w-full h-full object-cover"
-                  />
+                  <>
+                    <img
+                      src={avatar}
+                      alt="Avatar de usuario"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[10px] text-white font-bold uppercase tracking-wider text-center px-1">Pegar URL</span>
+                    </div>
+                  </>
                 ) : (
-                  <span className="text-2xl text-gray-400"><IconUser size={24} /></span>
+                  <>
+                    <span className="text-2xl text-gray-400 group-hover:hidden"><IconUser size={24} /></span>
+                    <span className="text-[10px] text-white font-bold uppercase tracking-wider text-center px-1 hidden group-hover:block">Pegar URL</span>
+                  </>
                 )}
               </div>
 
@@ -197,7 +218,7 @@ const AccountSettings = () => {
                 className="text-[10px] tracking-wider text-[#3B82F6] uppercase font-bold hover:underline mt-1"
                 onClick={() => setIsAvatarSelectorOpen(!isAvatarSelectorOpen)}
               >
-                {isAvatarSelectorOpen ? "Cerrar selección" : "Cambiar avatar"}
+                {isAvatarSelectorOpen ? "Cerrar avatares" : "Ver predeterminados"}
               </button>
             </div>
 

@@ -5,6 +5,7 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
   const [categoria, setCategoria] = useState("Casa");
   const [categoriaPersonalizada, setCategoriaPersonalizada] = useState("");
   const [moneda, setMoneda] = useState("EUR (€)");
+  const [imagenUrl, setImagenUrl] = useState(""); 
   const [cargando, setCargando] = useState(false);
 
   if (!estaAbierto) return null;
@@ -37,7 +38,8 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
         body: JSON.stringify({
           name: nombreGrupo,
           category: categoriaFinal,
-          description: "Grupo creado desde el panel de control"
+          description: "Grupo creado desde el panel de control",
+          image: imagenUrl //
         })
       });
 
@@ -46,9 +48,11 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
         throw new Error(errorData.error || errorData.msg || "Error al crear el grupo");
       }
 
+      // Limpiamos todo al terminar
       setNombreGrupo("");
       setCategoria("Casa");
       setCategoriaPersonalizada("");
+      setImagenUrl("");
 
       if (typeof onGrupoCreado === 'function') {
         onGrupoCreado();
@@ -59,6 +63,14 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
       alert("Error: " + error.message);
     } finally {
       setCargando(false);
+    }
+  };
+
+  
+  const manejarClickImagen = () => {
+    const url = window.prompt("Pega aquí el enlace (URL) de la imagen para el grupo:");
+    if (url) {
+      setImagenUrl(url);
     }
   };
 
@@ -75,10 +87,27 @@ export const ModalCrearGrupo = ({ estaAbierto, alCerrar, onGrupoCreado }) => {
         <div className="overflow-y-auto">
           <form onSubmit={manejarCrearGrupo} className="p-6 flex flex-col gap-6">
             <div className="flex gap-4">
-              <div className="w-20 h-20 shrink-0 rounded-xl border-2 border-dashed border-gray-600 bg-gray-900 flex flex-col items-center justify-center text-gray-400 hover:border-gray-400 cursor-pointer transition-colors relative">
-                <span className="text-2xl mb-1">📷</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider">Subir</span>
+              
+              
+              <div 
+                onClick={manejarClickImagen}
+                className="w-20 h-20 shrink-0 rounded-xl border-2 border-dashed border-gray-600 bg-gray-900 flex flex-col items-center justify-center text-gray-400 hover:border-gray-400 cursor-pointer transition-colors relative overflow-hidden group"
+              >
+                {imagenUrl ? (
+                  <>
+                    <img src={imagenUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-xs text-white font-bold">Cambiar</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-2xl mb-1">📷</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-center px-1">Añadir URL</span>
+                  </>
+                )}
               </div>
+
               <div className="flex-1 flex flex-col justify-center">
                 <label className="text-xs text-gray-400 mb-1 block">Nombre del grupo *</label>
                 <input
