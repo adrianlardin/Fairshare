@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ModalCrearGrupo } from "@/components/ModalCrearGrupo";
 import { IconArrowUp, IconArrowDown } from "@/components/icons";
 import { useModales } from "../context/ModalContext";
+import ForexWidget from "@/components/ForexWidget";
 
 const Dashboard = () => {
     // 1. Añadimos la función para disparar la actualización global desde el Contexto si existe
@@ -488,6 +489,8 @@ const Dashboard = () => {
                     </div>
                 ))}
             </div>
+            
+            <ForexWidget />
 
             {modalGasto && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
