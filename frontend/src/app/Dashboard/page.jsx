@@ -8,7 +8,8 @@ import { IconArrowUp, IconArrowDown } from "@/components/icons";
 import { useModales } from "../context/ModalContext";
 
 const Dashboard = () => {
-    const { modalGasto, setModalGasto, actualizarDatosTrigger } = useModales();
+    // 1. Añadimos la función para disparar la actualización global desde el Contexto si existe
+    const { modalGasto, setModalGasto, actualizarDatosTrigger, refrescarDatos } = useModales();
     const router = useRouter();
 
     const [usuario, setUsuario] = useState(null);
@@ -81,8 +82,9 @@ const Dashboard = () => {
             const storedUser = localStorage.getItem("user");
             if (!token || !storedUser) return;
 
-            const userObj = JSON.parse(storedUser);
-            const miId = Number(userObj.id);
+            // FALLBACK MEJORADO: Intenta obtener el ID del estado 'usuario' o de 'localStorage'
+            const userObj = usuario || JSON.parse(storedUser);
+            const miId = Number(userObj?.id);
             if (!miId) return;
 
             const resGrupos = await fetch("http://localhost:5000/groups", {
@@ -139,13 +141,11 @@ const Dashboard = () => {
                                         const splitMonto = parseFloat(split.amount || 0);
 
                                         if (pagadoPorMi) {
-                                            // Si YO pagué el gasto, la parte de los DEMÁS incrementa "Me Deben" inmediatamente
                                             if (splitUserId !== miId) {
                                                 totalMeDebenTemp += splitMonto;
                                                 saldoNetoGrupo += splitMonto;
                                             }
                                         } else {
-                                            // Si OTRO pagó el gasto, MI parte en el split incrementa "Debo" inmediatamente
                                             if (splitUserId === miId) {
                                                 totalDeboTemp += splitMonto;
                                                 saldoNetoGrupo -= splitMonto;
@@ -159,7 +159,7 @@ const Dashboard = () => {
                         console.error("Error obteniendo gastos del grupo", grupo.id, e);
                     }
 
-                    // 2. Obtener Liquidaciones (Pagos realizados/recibidos para ir descontando de las tarjetas)
+                    // 2. Obtener Liquidaciones
                     try {
                         const resPagos = await fetch(`http://localhost:5000/groups/${grupo.id}/settlements`, {
                             method: "GET",
@@ -187,11 +187,9 @@ const Dashboard = () => {
                                 }
 
                                 if (pagoBy === miId) {
-                                    // Si hice una liquidación (pagué mi deuda), reduce mi marcador "Debo"
                                     totalDeboTemp -= pagoMonto;
                                     saldoNetoGrupo += pagoMonto;
                                 } else if (pagoTo === miId) {
-                                    // Si me hicieron una liquidación (me pagaron), reduce mi marcador "Me deben"
                                     totalMeDebenTemp -= pagoMonto;
                                     saldoNetoGrupo -= pagoMonto;
                                 }
@@ -201,7 +199,7 @@ const Dashboard = () => {
                         console.error("Error obteniendo pagos del grupo", grupo.id, e);
                     }
 
-                    // Guarda el resumen visual de cada tarjeta de grupo individual
+                    // Guarda el resumen visual de cada tarjeta de grupo
                     gruposConSaldos.push({
                         id: grupo.id,
                         name: grupo.name,
@@ -212,7 +210,7 @@ const Dashboard = () => {
                     });
                 }
 
-                // 3. Actualizar los estados finales asegurando que no queden valores negativos por desajustes
+                // 3. Actualizar los estados finales
                 historialItems.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
                 setGrupos(gruposConSaldos);
@@ -254,8 +252,17 @@ const Dashboard = () => {
             if (respuesta.ok) {
                 mostrarToast("Gasto guardado correctamente");
                 e.target.reset();
+                
+                // 1. Cerrar el modal
                 if (setModalGasto) setModalGasto(false);
-                obtenerDatosDashboard();
+
+                // 2. Disparar evento del Contexto si existe
+                if (refrescarDatos) {
+                    refrescarDatos(); 
+                }
+
+                // 3. Re-ejecutar inmediatamente la sincronización local de datos
+                await obtenerDatosDashboard();
             } else {
                 const errorData = await respuesta.json();
                 mostrarToast(errorData.error || "Error al guardar el gasto", "error");
@@ -368,7 +375,7 @@ const Dashboard = () => {
                         <p className="text-gray-400 text-xs">Saldos temporales</p>
                     </div>
 
-                    <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-blue-500 border-y border-r border-y-gray-700 border-r-gray-700">
+                    <div className="bg-gray-800 rounded-2xl p-6 border-l-4 border-blue-500 border-y border-r border-r-gray-700 border-y-gray-700">
                         <p className="text-gray-400 text-xs mb-2 flex items-center gap-1">DEBO <span className="text-blue-400"><IconArrowDown size={14} /></span></p>
                         <h2 className="text-blue-400 text-3xl font-bold mb-2">{totalDebo.toFixed(2)} EUR</h2>
                         <p className="text-gray-400 text-xs">Saldos temporales</p>

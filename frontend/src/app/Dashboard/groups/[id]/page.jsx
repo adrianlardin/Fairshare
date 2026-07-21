@@ -10,7 +10,8 @@ export default function GroupDetailPage() {
     const { id } = useParams();
     const router = useRouter();
 
-    const { setModalGasto, refrescoTrigger } = useModales();
+    // Extraemos setModalLiquidar del contexto global
+    const { setModalGasto, setModalLiquidar, actualizarDatosTrigger } = useModales();
 
     const [grupo, setGrupo] = useState(null);
     const [miembros, setMiembros] = useState([]);
@@ -20,8 +21,6 @@ export default function GroupDetailPage() {
     const [cargando, setCargando] = useState(true);
     
     const [verAjustes, setVerAjustes] = useState(false);
-    const [mostrarModalLiquidar, setMostrarModalLiquidar] = useState(false);
-    const [cargandoAccion, setCargandoAccion] = useState(false);
 
     const cargarDatosGrupo = async () => {
         try {
@@ -56,10 +55,10 @@ export default function GroupDetailPage() {
                 setGastos(dataGastos);
                 setPagos(dataPagos);
             } else {
-                console.error("Error al procesar la informacion del grupo.");
+                console.error("Error al procesar la información del grupo.");
             }
         } catch (error) {
-            console.error("Error de comunicacion con el backend:", error);
+            console.error("Error de comunicación con el backend:", error);
         } finally {
             setCargando(false);
         }
@@ -67,7 +66,7 @@ export default function GroupDetailPage() {
 
     useEffect(() => {
         if (id) cargarDatosGrupo();
-    }, [id, refrescoTrigger]);
+    }, [id, actualizarDatosTrigger]);
 
     // Función auxiliar para traducir IDs a Nombres
     const obtenerNombreMiembro = (userId) => {
@@ -100,48 +99,6 @@ export default function GroupDetailPage() {
             setCargando(false);
         }
     };
-
-    // Función para el formulario de liquidar interno
-    const manejarSubmitLiquidarLocal = async (e) => {
-        e.preventDefault();
-        const receptor = e.target[0].value;
-        const cantidad = parseFloat(e.target[1].value);
-
-        if (!receptor || isNaN(cantidad) || cantidad <= 0) return;
-
-        setCargandoAccion(true);
-        try {
-            const token = localStorage.getItem("token");
-            const bodyData = { amount: cantidad };
-            
-            // Si elige a un usuario en concreto, enviamos el paid_to. Si es al grupo, va nulo.
-            if (receptor !== "group") {
-                bodyData.paid_to = parseInt(receptor);
-            }
-
-            const respuesta = await fetch(`http://localhost:5000/groups/${id}/settlements`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(bodyData)
-            });
-
-            if (respuesta.ok) {
-                setMostrarModalLiquidar(false);
-                cargarDatosGrupo(); // Recargamos para actualizar balances
-            } else {
-                const errorData = await respuesta.json();
-                alert(errorData.error || "Error al registrar el pago.");
-            }
-        } catch (error) {
-            alert("Error de conexión al registrar el pago.");
-        } finally {
-            setCargandoAccion(false);
-        }
-    };
-
 
     if (cargando) return <div className="text-white flex items-center justify-center font-mono text-xs py-10">Cargando...</div>;
     if (!grupo) return <div className="text-white flex items-center justify-center py-10">Grupo no encontrado.</div>;
@@ -222,7 +179,7 @@ export default function GroupDetailPage() {
 
                     {gastos.length === 0 ? (
                         <p className="text-gray-500 text-xs italic font-mono p-4 bg-gray-800/20 rounded-xl border border-gray-800">
-                            No hay gastos registrados en este grupo todavia.
+                            No hay gastos registrados en este grupo todavía.
                         </p>
                     ) : (
                         gastos.map((gasto) => (
@@ -295,8 +252,9 @@ export default function GroupDetailPage() {
                             })}
                         </div>
 
+                        {/* Botón que invoca el modal global pasándole el ID del grupo actual */}
                         <button
-                            onClick={() => setMostrarModalLiquidar(true)}
+                            onClick={() => setModalLiquidar(id)}
                             className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-black font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors mt-2"
                         >
                             <IconDollar size={16} /> Liquidar
@@ -320,7 +278,7 @@ export default function GroupDetailPage() {
                             </div>
                         )}
                         <div className="flex justify-between pt-1">
-                            <span className="text-gray-500">Categoria</span>
+                            <span className="text-gray-500">Categoría</span>
                             <span className="text-gray-300 capitalize">{grupo.category || "General"}</span>
                         </div>
                     </div>
@@ -334,62 +292,6 @@ export default function GroupDetailPage() {
                 alActualizar={(grupoActualizado) => setGrupo(grupoActualizado)}
                 alEliminar={() => router.push("/dashboard/groups")}
             />
-
-            {/* --- MODAL DE LIQUIDAR (ESTILO ORIGINAL RESTAURADO) --- */}
-            {mostrarModalLiquidar && (
-                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
-                    <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-4">Aportar o Pagar</h3>
-                        <form onSubmit={manejarSubmitLiquidarLocal}>
-                            
-                            <label className="block text-xs text-gray-400 mb-1">¿A quién va dirigido el pago?</label>
-                            <select 
-                                required 
-                                defaultValue=""
-                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-green-500 cursor-pointer"
-                            >
-                                <option value="" disabled>-- Selecciona un destinatario --</option>
-                                <option value="group">Al bote general del grupo</option>
-                                
-                                <optgroup label="A un miembro específico">
-                                    {miembros.filter(m => Number(m.user_id) !== miId).map((m) => (
-                                        <option key={m.user_id} value={m.user_id}>
-                                            {m.username || m.first_name || `Usuario ${m.user_id}`}
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            </select>
-
-                            <label className="block text-xs text-gray-400 mb-1">Cantidad (EUR)</label>
-                            <input 
-                                type="number" 
-                                step="0.01" 
-                                min="0.01" 
-                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-green-500" 
-                                required 
-                                placeholder="0.00" 
-                            />
-
-                            <div className="flex justify-end gap-3">
-                                <button 
-                                    type="button" 
-                                    onClick={() => setMostrarModalLiquidar(false)} 
-                                    className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button 
-                                    type="submit" 
-                                    disabled={cargandoAccion} 
-                                    className="px-4 py-2 bg-green-500 text-black font-bold rounded-md hover:bg-green-600 transition-colors disabled:opacity-50"
-                                >
-                                    {cargandoAccion ? "Registrando..." : "Registrar pago"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
