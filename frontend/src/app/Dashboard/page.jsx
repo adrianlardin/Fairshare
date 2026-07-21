@@ -46,7 +46,7 @@ const Dashboard = () => {
             try {
                 const cached = JSON.parse(storedUser);
                 setUsuario(cached);
-            } catch (e) {}
+            } catch (e) { }
         }
 
         try {
@@ -99,14 +99,14 @@ const Dashboard = () => {
             if (resGrupos.ok) {
                 const datosBrutos = await resGrupos.json();
                 const datosGrupos = Array.isArray(datosBrutos) ? datosBrutos : (datosBrutos.groups || []);
-                
+
                 let totalMeDebenTemp = 0;
                 let totalDeboTemp = 0;
                 let gruposConSaldos = [];
                 let historialItems = [];
 
                 for (let grupo of datosGrupos) {
-                    let saldoDelGrupo = 0; 
+                    let saldoDelGrupo = 0;
 
                     // 1. Obtener Gastos del Grupo
                     try {
@@ -125,29 +125,35 @@ const Dashboard = () => {
                                     id: `expense-${gasto.id}`,
                                     tipo: "gasto",
                                     descripcion: gasto.description,
-                                    cantidad: gasto.amount,
+                                    cantidad: parseFloat(gasto.amount || 0),
                                     grupo: grupo.name,
                                     grupoId: grupo.id,
                                     fecha: gasto.created_at,
                                     esPropio: pagadoPorMi
                                 });
 
+                                // --- LÓGICA DE SALDOS CORREGIDA ---
                                 if (Array.isArray(gasto.splits)) {
                                     gasto.splits.forEach(split => {
-                                        if (split.user_id !== miId) {
-                                            saldoDelGrupo += split.amount;
-                                        }
-                                    });
-                                } else {
-                                    gasto.splits.forEach(split => {
-                                        if (split.user_id === miId) {
-                                            saldoDelGrupo -= split.amount;
+                                        const splitUserId = Number(split.user_id);
+                                        const splitMonto = parseFloat(split.amount || 0);
+
+                                        if (pagadoPorMi) {
+                                            // Si YO pagué, los demás me deben la parte que les toca a ellos
+                                            if (splitUserId !== miId) {
+                                                saldoDelGrupo += splitMonto;
+                                            }
+                                        } else {
+                                            // Si PAGÓ OTRO, y yo estoy en el split, yo debo mi parte
+                                            if (splitUserId === miId) {
+                                                saldoDelGrupo -= splitMonto;
+                                            }
                                         }
                                     });
                                 }
                             });
                         }
-                    } catch(e) {
+                    } catch (e) {
                         console.error("Error obteniendo gastos del grupo", grupo.id, e);
                     }
 
@@ -161,36 +167,41 @@ const Dashboard = () => {
                         if (resPagos.ok) {
                             const pagos = await resPagos.json();
                             pagos.forEach(pago => {
-                                if (pago.paid_by === miId || pago.paid_to === miId) {
+                                const pagoBy = Number(pago.paid_by);
+                                const pagoTo = Number(pago.paid_to);
+                                const pagoMonto = parseFloat(pago.amount || 0);
+
+                                if (pagoBy === miId || pagoTo === miId) {
                                     historialItems.push({
                                         id: `settlement-${pago.id}`,
-                                        tipo: pago.paid_by === miId ? "pago_realizado" : "pago_recibido",
-                                        cantidad: pago.amount,
+                                        tipo: pagoBy === miId ? "pago_realizado" : "pago_recibido",
+                                        cantidad: pagoMonto,
                                         grupo: grupo.name,
                                         grupoId: grupo.id,
                                         fecha: pago.created_at,
-                                        paid_by: pago.paid_by,
-                                        paid_to: pago.paid_to
+                                        paid_by: pagoBy,
+                                        paid_to: pagoTo
                                     });
                                 }
-                                if (pago.paid_by === miId) {
-                                    // Si yo pagué, mi deuda en el grupo disminuye (se acerca a 0 o se vuelve positivo)
-                                    saldoDelGrupo += pago.amount;
-                                } else if (pago.paid_to === miId) {
-                                    // Si me pagaron, lo que me deben en el grupo disminuye
-                                    saldoDelGrupo -= pago.amount;
+
+                                if (pagoBy === miId) {
+                                    // Si yo pagué a alguien, mi saldo sube (reduzco lo que debía)
+                                    saldoDelGrupo += pagoMonto;
+                                } else if (pagoTo === miId) {
+                                    // Si me pagaron a mí, mi saldo baja (ya me devolvieron parte de lo que me debían)
+                                    saldoDelGrupo -= pagoMonto;
                                 }
                             });
                         }
-                    } catch(e) {
+                    } catch (e) {
                         console.error("Error obteniendo pagos del grupo", grupo.id, e);
                     }
 
-                    // 3. Acumular a los totales del Dashboard según el saldo final neto del grupo
+                    // 3. Acumular a los totales del Dashboard
                     if (saldoDelGrupo > 0) {
                         totalMeDebenTemp += saldoDelGrupo;
                     } else if (saldoDelGrupo < 0) {
-                        totalDeboTemp += Math.abs(saldoDelGrupo); // Lo sumamos como positivo para la tarjeta "Debo"
+                        totalDeboTemp += Math.abs(saldoDelGrupo);
                     }
 
                     gruposConSaldos.push({
@@ -203,7 +214,7 @@ const Dashboard = () => {
                     });
                 }
 
-                // 4. Actualizar los estados una sola vez al terminar el bucle
+                // 4. Actualizar estados
                 historialItems.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
                 setGrupos(gruposConSaldos);
@@ -212,7 +223,7 @@ const Dashboard = () => {
                 setHistorialGastos(historialItems);
             }
         } catch (error) {
-            console.error(error);
+            console.error("Error en obtenerDatosDashboard:", error);
         }
     };
 
@@ -246,7 +257,7 @@ const Dashboard = () => {
                 mostrarToast("Gasto guardado correctamente");
                 e.target.reset();
                 if (setModalGasto) setModalGasto(false);
-                obtenerDatosDashboard(); 
+                obtenerDatosDashboard();
             } else {
                 const errorData = await respuesta.json();
                 mostrarToast(errorData.error || "Error al guardar el gasto", "error");
@@ -259,7 +270,7 @@ const Dashboard = () => {
     };
 
     const obtenerInviteLink = async (grupoId) => {
-        setInviteLink(""); 
+        setInviteLink("");
         try {
             const token = localStorage.getItem("token");
             const respuesta = await fetch(`http://localhost:5000/groups/${grupoId}/invite-link`, {
@@ -277,7 +288,7 @@ const Dashboard = () => {
     const abrirModalInvitar = (id, nombre) => {
         setGrupoSeleccionado({ id, nombre });
         setModalInvitar(true);
-        obtenerInviteLink(id); 
+        obtenerInviteLink(id);
     };
 
     const copiarEnlaceInvitacion = async () => {
@@ -503,7 +514,7 @@ const Dashboard = () => {
                 </div>
             )}
 
-            <ModalCrearGrupo 
+            <ModalCrearGrupo
                 estaAbierto={modalGrupo}
                 alCerrar={() => setModalGrupo(false)}
                 onGrupoCreado={obtenerDatosDashboard}
@@ -525,8 +536,8 @@ const Dashboard = () => {
                                         value={inviteLink}
                                         className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-300 focus:outline-none"
                                     />
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         onClick={copiarEnlaceInvitacion}
                                         className="bg-white text-black font-bold rounded-md px-4 py-2 hover:bg-gray-200 transition-colors"
                                     >
