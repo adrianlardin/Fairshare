@@ -106,7 +106,7 @@ const Dashboard = () => {
                 let historialItems = [];
 
                 for (let grupo of datosGrupos) {
-                    let saldoDelGrupo = 0;
+                    let saldoNetoGrupo = 0;
 
                     // 1. Obtener Gastos del Grupo
                     try {
@@ -132,21 +132,23 @@ const Dashboard = () => {
                                     esPropio: pagadoPorMi
                                 });
 
-                                // --- LÓGICA DE SALDOS CORREGIDA ---
+                                // --- CÁLCULO DIRECTO POR GASTO AÑADIDO ---
                                 if (Array.isArray(gasto.splits)) {
                                     gasto.splits.forEach(split => {
                                         const splitUserId = Number(split.user_id);
                                         const splitMonto = parseFloat(split.amount || 0);
 
                                         if (pagadoPorMi) {
-                                            // Si YO pagué, los demás me deben la parte que les toca a ellos
+                                            // Si YO pagué el gasto, la parte de los DEMÁS incrementa "Me Deben" inmediatamente
                                             if (splitUserId !== miId) {
-                                                saldoDelGrupo += splitMonto;
+                                                totalMeDebenTemp += splitMonto;
+                                                saldoNetoGrupo += splitMonto;
                                             }
                                         } else {
-                                            // Si PAGÓ OTRO, y yo estoy en el split, yo debo mi parte
+                                            // Si OTRO pagó el gasto, MI parte en el split incrementa "Debo" inmediatamente
                                             if (splitUserId === miId) {
-                                                saldoDelGrupo -= splitMonto;
+                                                totalDeboTemp += splitMonto;
+                                                saldoNetoGrupo -= splitMonto;
                                             }
                                         }
                                     });
@@ -157,7 +159,7 @@ const Dashboard = () => {
                         console.error("Error obteniendo gastos del grupo", grupo.id, e);
                     }
 
-                    // 2. Obtener Liquidaciones (Pagos) del Grupo
+                    // 2. Obtener Liquidaciones (Pagos realizados/recibidos para ir descontando de las tarjetas)
                     try {
                         const resPagos = await fetch(`http://localhost:5000/groups/${grupo.id}/settlements`, {
                             method: "GET",
@@ -185,11 +187,13 @@ const Dashboard = () => {
                                 }
 
                                 if (pagoBy === miId) {
-                                    // Si yo pagué a alguien, mi saldo sube (reduzco lo que debía)
-                                    saldoDelGrupo += pagoMonto;
+                                    // Si hice una liquidación (pagué mi deuda), reduce mi marcador "Debo"
+                                    totalDeboTemp -= pagoMonto;
+                                    saldoNetoGrupo += pagoMonto;
                                 } else if (pagoTo === miId) {
-                                    // Si me pagaron a mí, mi saldo baja (ya me devolvieron parte de lo que me debían)
-                                    saldoDelGrupo -= pagoMonto;
+                                    // Si me hicieron una liquidación (me pagaron), reduce mi marcador "Me deben"
+                                    totalMeDebenTemp -= pagoMonto;
+                                    saldoNetoGrupo -= pagoMonto;
                                 }
                             });
                         }
@@ -197,29 +201,23 @@ const Dashboard = () => {
                         console.error("Error obteniendo pagos del grupo", grupo.id, e);
                     }
 
-                    // 3. Acumular a los totales del Dashboard
-                    if (saldoDelGrupo > 0) {
-                        totalMeDebenTemp += saldoDelGrupo;
-                    } else if (saldoDelGrupo < 0) {
-                        totalDeboTemp += Math.abs(saldoDelGrupo);
-                    }
-
+                    // Guarda el resumen visual de cada tarjeta de grupo individual
                     gruposConSaldos.push({
                         id: grupo.id,
                         name: grupo.name,
                         nombre: grupo.name,
                         categoria: grupo.category,
-                        saldo: saldoDelGrupo,
+                        saldo: saldoNetoGrupo,
                         esAdmin: Number(grupo.created_by) === miId
                     });
                 }
 
-                // 4. Actualizar estados
+                // 3. Actualizar los estados finales asegurando que no queden valores negativos por desajustes
                 historialItems.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
                 setGrupos(gruposConSaldos);
-                setTotalMeDeben(totalMeDebenTemp);
-                setTotalDebo(totalDeboTemp);
+                setTotalMeDeben(Math.max(0, totalMeDebenTemp));
+                setTotalDebo(Math.max(0, totalDeboTemp));
                 setHistorialGastos(historialItems);
             }
         } catch (error) {
