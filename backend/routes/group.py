@@ -309,10 +309,12 @@ def create_expense(group_id):
     data = request.get_json()
     description = data.get("description")
     amount = data.get("amount")
-    splits = data.get("splits")  # lista de { user_id, amount }
+    splits = data.get("splits")  # lista opcional de { user_id, amount }
 
-    if not description or not amount:
-        return jsonify({"error": "Descripcion y cantidad son obligatorios"}), 400
+    if not description or amount is None:
+        return jsonify({"error": "Descripción y cantidad son obligatorios"}), 400
+
+    amount = float(amount)
 
     new_expense = Expense(
         description=description,
@@ -324,25 +326,28 @@ def create_expense(group_id):
     db.session.add(new_expense)
     db.session.flush()
 
-    if splits:
-        # calcula cuanto queda para el pagador
-        total_splits = sum(s["amount"] for s in splits)
-        payer_amount = round(amount - total_splits, 2)
-
-        # split del pagador
-        db.session.add(ExpenseSplit(
-            expense_id=new_expense.id,
-            user_id=current_user_id,
-            amount=payer_amount
-        ))
-
-        # splits del resto
+    # CASO 1: El frontend envía el desglose explícito de los miembros
+    if splits and isinstance(splits, list) and len(splits) > 0:
         for split in splits:
             db.session.add(ExpenseSplit(
                 expense_id=new_expense.id,
-                user_id=split["user_id"],
-                amount=split["amount"]
+                user_id=int(split["user_id"]),
+                amount=float(split["amount"])
             ))
+
+    # CASO 2: No llegan splits desde el frontend -> Dividir automáticamente a partes iguales
+    else:
+        group_members = GroupMember.query.filter_by(group_id=group_id).all()
+        if group_members:
+            num_members = len(group_members)
+            split_amount = round(amount / num_members, 2)
+            
+            for m in group_members:
+                db.session.add(ExpenseSplit(
+                    expense_id=new_expense.id,
+                    user_id=m.user_id,
+                    amount=split_amount
+                ))
 
     db.session.commit()
     return jsonify(new_expense.serialize()), 201
