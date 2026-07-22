@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-
+import { navbar } from '../components/navbar';
 export default function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
