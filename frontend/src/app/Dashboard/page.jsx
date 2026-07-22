@@ -4,12 +4,11 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ModalCrearGrupo } from "@/components/ModalCrearGrupo";
-import { IconArrowUp, IconArrowDown } from "@/components/icons";
+import { IconArrowUp, IconArrowDown, IconHome, IconPlane, IconUtensils, IconUsers } from "@/components/icons";
 import { useModales } from "../context/ModalContext";
 import ForexWidget from "@/components/ForexWidget";
 
 const Dashboard = () => {
-    // 1. Añadimos la función para disparar la actualización global desde el Contexto si existe
     const { modalGasto, setModalGasto, actualizarDatosTrigger, refrescarDatos } = useModales();
     const router = useRouter();
 
@@ -83,7 +82,6 @@ const Dashboard = () => {
             const storedUser = localStorage.getItem("user");
             if (!token || !storedUser) return;
 
-            // FALLBACK MEJORADO: Intenta obtener el ID del estado 'usuario' o de 'localStorage'
             const userObj = usuario || JSON.parse(storedUser);
             const miId = Number(userObj?.id);
             if (!miId) return;
@@ -111,7 +109,6 @@ const Dashboard = () => {
                 for (let grupo of datosGrupos) {
                     let saldoNetoGrupo = 0;
 
-                    // 1. Obtener Gastos del Grupo
                     try {
                         const resGastos = await fetch(`http://localhost:5000/groups/${grupo.id}/expenses`, {
                             method: "GET",
@@ -135,7 +132,6 @@ const Dashboard = () => {
                                     esPropio: pagadoPorMi
                                 });
 
-                                // --- CÁLCULO DIRECTO POR GASTO AÑADIDO ---
                                 if (Array.isArray(gasto.splits)) {
                                     gasto.splits.forEach(split => {
                                         const splitUserId = Number(split.user_id);
@@ -160,7 +156,6 @@ const Dashboard = () => {
                         console.error("Error obteniendo gastos del grupo", grupo.id, e);
                     }
 
-                    // 2. Obtener Liquidaciones
                     try {
                         const resPagos = await fetch(`http://localhost:5000/groups/${grupo.id}/settlements`, {
                             method: "GET",
@@ -200,18 +195,17 @@ const Dashboard = () => {
                         console.error("Error obteniendo pagos del grupo", grupo.id, e);
                     }
 
-                    // Guarda el resumen visual de cada tarjeta de grupo
                     gruposConSaldos.push({
                         id: grupo.id,
                         name: grupo.name,
                         nombre: grupo.name,
                         categoria: grupo.category,
+                        image: grupo.image,
                         saldo: saldoNetoGrupo,
                         esAdmin: Number(grupo.created_by) === miId
                     });
                 }
 
-                // 3. Actualizar los estados finales
                 historialItems.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
                 setGrupos(gruposConSaldos);
@@ -244,25 +238,16 @@ const Dashboard = () => {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    description: descripcion,
-                    amount: cantidad
-                })
+                body: JSON.stringify({ description: descripcion, amount: cantidad })
             });
 
             if (respuesta.ok) {
                 mostrarToast("Gasto guardado correctamente");
                 e.target.reset();
                 
-                // 1. Cerrar el modal
                 if (setModalGasto) setModalGasto(false);
-
-                // 2. Disparar evento del Contexto si existe
-                if (refrescarDatos) {
-                    refrescarDatos(); 
-                }
-
-                // 3. Re-ejecutar inmediatamente la sincronización local de datos
+                if (refrescarDatos) refrescarDatos(); 
+                
                 await obtenerDatosDashboard();
             } else {
                 const errorData = await respuesta.json();
@@ -341,6 +326,15 @@ const Dashboard = () => {
         }
     };
 
+    const IconoCategoria = ({ category }) => {
+        switch (category?.toLowerCase()) {
+            case "home": case "piso": case "casa": return <IconHome size={20} />;
+            case "travel": case "viaje": return <IconPlane size={20} />;
+            case "food": case "comida": return <IconUtensils size={20} />;
+            default: return <IconUsers size={20} />;
+        }
+    };
+
     return (
         <div className="max-w-5xl mx-auto pb-10">
             <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
@@ -362,7 +356,7 @@ const Dashboard = () => {
                         className="bg-blue-500 hover:bg-blue-600 text-black font-bold py-2 px-4 rounded-md transition-colors"
                         onClick={() => setModalGasto(true)}
                     >
-                        Añadir un gasto
+                        Añadir gasto
                     </button>
                 </div>
             </div>
@@ -457,63 +451,88 @@ const Dashboard = () => {
                     </p>
                 )}
 
-                {grupos.map((grupo) => (
-                    <div key={grupo.id} className="bg-gray-800 rounded-xl p-4 mb-3 border border-gray-700">
-                        <div className="flex justify-between items-center mb-3">
-                            <span className="text-sm font-bold">{grupo.name}</span>
-                            {grupo.saldo > 0 ? (
-                                <span className="text-green-500 text-xs m-0">Te deben {grupo.saldo} EUR</span>
-                            ) : grupo.saldo < 0 ? (
-                                <span className="text-blue-400 text-xs m-0">Debes {Math.abs(grupo.saldo)} EUR</span>
-                            ) : (
-                                <span className="text-gray-400 text-xs m-0">Saldado</span>
-                            )}
-                        </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {grupos.map((grupo) => (
+                        <div key={grupo.id} className="bg-[#1e293b] rounded-2xl border border-slate-700 border-l-4 border-l-[#3B82F6] p-5 flex flex-col shadow-lg transition-all h-[220px]">
+                            
+                            <div className="flex gap-4 items-center mb-5">
+                                <div className="w-12 h-12 shrink-0 rounded-xl bg-slate-800 border border-slate-600 flex items-center justify-center overflow-hidden shadow-inner text-gray-400">
+                                    {grupo.image ? (
+                                        <img src={grupo.image} alt={grupo.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <IconoCategoria category={grupo.categoria} />
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-lg font-bold text-white truncate block">
+                                        {grupo.name}
+                                    </h3>
+                                    <p className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold truncate">
+                                        {grupo.categoria || 'General'}
+                                    </p>
+                                </div>
+                            </div>
 
-                        <div className="flex gap-2 justify-end">
-                            {grupo.esAdmin && (
+                            <div className="mb-4 flex-1 flex flex-col justify-center">
+                                <div className="flex justify-between items-center bg-slate-900/50 p-2.5 rounded-lg border border-slate-800">
+                                    <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Tu balance:</span>
+                                    {grupo.saldo > 0 ? (
+                                        <span className="text-[#4ADE80] font-bold text-sm">+{grupo.saldo.toFixed(2)} €</span>
+                                    ) : grupo.saldo < 0 ? (
+                                        <span className="text-[#3B82F6] font-bold text-sm">-{Math.abs(grupo.saldo).toFixed(2)} €</span>
+                                    ) : (
+                                        <span className="text-gray-500 text-sm font-bold">0.00 €</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2 justify-end border-t border-slate-700/50 pt-3 mt-auto w-full">
+                                {grupo.esAdmin && (
+                                    <button
+                                        onClick={() => abrirModalInvitar(grupo.id, grupo.nombre)}
+                                        className="text-xs font-bold bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg transition-colors flex-1"
+                                    >
+                                        Invitar
+                                    </button>
+                                )}
                                 <button
-                                    onClick={() => abrirModalInvitar(grupo.id, grupo.nombre)}
-                                    className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
+                                    onClick={() => salirYBorrarGrupo(grupo.id, grupo.name)}
+                                    className="text-xs font-bold border border-red-900/50 text-red-400 hover:bg-red-900/40 hover:text-red-300 px-3 py-2 rounded-lg transition-colors flex-1"
                                 >
-                                    + Invitar
+                                    Salir / Borrar
                                 </button>
-                            )}
-                            <button
-                                onClick={() => salirYBorrarGrupo(grupo.id, grupo.name)}
-                                className="text-xs border border-red-900 text-red-400 hover:bg-red-900 hover:text-white px-2 py-1 rounded transition-colors"
-                            >
-                                Salir / Borrar
-                            </button>
+                            </div>
+
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
             
+            <br />
             <ForexWidget />
 
             {modalGasto && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-4">Anadir un gasto</h3>
+                        <h3 className="text-xl font-bold mb-4">Añadir un gasto</h3>
                         <form onSubmit={manejarSubmitGasto}>
-                            <label className="block text-xs text-gray-400 mb-1">A que grupo pertenece?</label>
-                            <select defaultValue="" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400 cursor-pointer" required>
+                            <label className="block text-xs text-gray-400 mb-1">¿A qué grupo pertenece?</label>
+                            <select defaultValue="" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-blue-500 cursor-pointer" required>
                                 <option value="" disabled>Selecciona un grupo</option>
                                 {grupos.map((grupo) => (
                                     <option key={grupo.id} value={grupo.id}>{grupo.name}</option>
                                 ))}
                             </select>
 
-                            <label className="block text-xs text-gray-400 mb-1">Descripcion</label>
-                            <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-yellow-400" required placeholder="Ej. Cena del viernes" />
+                            <label className="block text-xs text-gray-400 mb-1">Descripción</label>
+                            <input type="text" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-4 text-white focus:outline-none focus:border-blue-500" required placeholder="Ej. Cena del viernes" />
 
                             <label className="block text-xs text-gray-400 mb-1">Cantidad (EUR)</label>
-                            <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-yellow-400" required placeholder="0.00" />
+                            <input type="number" step="0.01" min="0.01" className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 mb-6 text-white focus:outline-none focus:border-blue-500" required placeholder="0.00" />
 
                             <div className="flex justify-end gap-3">
                                 <button type="button" onClick={() => { if (setModalGasto) setModalGasto(false); }} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
-                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-black font-bold rounded-md hover:bg-yellow-500 transition-colors disabled:opacity-50">
+                                <button type="submit" disabled={cargando} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-black font-bold rounded-md transition-colors disabled:opacity-50">
                                     {cargando ? "Guardando..." : "Guardar gasto"}
                                 </button>
                             </div>
@@ -532,35 +551,50 @@ const Dashboard = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
                         <h3 className="text-xl font-bold mb-2">Invitar al grupo</h3>
-                        <p className="text-gray-400 text-sm mb-4">Grupo: <span className="text-white font-bold">{grupoSeleccionado.nombre}</span></p>
+                        <p className="text-gray-400 text-sm mb-6">Grupo: <span className="text-white font-bold">{grupoSeleccionado.nombre}</span></p>
 
-                        <div className="mb-6">
-                            <label className="block text-xs text-gray-400 mb-1">Enlace de invitación</label>
+                        <div className="mb-6 flex flex-col items-center">
                             {inviteLink ? (
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        readOnly
-                                        value={inviteLink}
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-300 focus:outline-none"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={copiarEnlaceInvitacion}
-                                        className="bg-white text-black font-bold rounded-md px-4 py-2 hover:bg-gray-200 transition-colors"
-                                    >
-                                        Copiar
-                                    </button>
-                                </div>
+                                <>
+                                    <div className="bg-white p-3 rounded-xl shadow-inner mb-6 transition-all hover:scale-105">
+                                        <img 
+                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(inviteLink)}`} 
+                                            alt="QR de Invitación" 
+                                            className="w-[150px] h-[150px]" 
+                                        />
+                                    </div>
+                                    
+                                    <div className="w-full space-y-2">
+                                        <label className="block text-xs text-gray-400 mb-1">Enlace directo</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                value={inviteLink}
+                                                className="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-300 focus:outline-none text-sm"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={copiarEnlaceInvitacion}
+                                                className="bg-blue-500 text-black font-bold rounded-md px-4 py-2 hover:bg-blue-600 transition-colors text-sm"
+                                            >
+                                                Copiar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
                             ) : (
-                                <p className="text-sm text-gray-500 py-2 italic">Generando enlace seguro...</p>
+                                <div className="py-10 flex flex-col items-center">
+                                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                                    <p className="text-sm text-gray-500 italic">Generando código QR e invitación...</p>
+                                </div>
                             )}
-                            <p className="text-[10px] text-gray-500 mt-2">
-                                Comparte este enlace. Al hacer clic, se unirán automáticamente al grupo.
+                            <p className="text-[10px] text-gray-500 mt-4 text-center">
+                                Comparte el enlace o escanea el QR con la cámara del móvil. Al hacerlo, se unirán automáticamente al grupo.
                             </p>
                         </div>
 
-                        <div className="flex justify-end">
+                        <div className="flex justify-end pt-2 border-t border-gray-700">
                             <button type="button" onClick={() => setModalInvitar(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
                                 Cerrar
                             </button>

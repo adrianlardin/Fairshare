@@ -164,7 +164,7 @@ export default function GroupDetailPage() {
                     </button>
                     <button
                         onClick={() => setModalGasto(true)}
-                        className="bg-blue-500 hover:bg-blue-600 text-[#0b0f14] font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 transition-colors shadow-lg shadow-blue-500/20"
+                        className="bg-blue-500 hover:bg-blue-600 text-[#0b0f14] font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 transition-colors"
                     >
                         <IconPlus size={16} /> Añadir Gasto
                     </button>
