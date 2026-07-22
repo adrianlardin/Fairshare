@@ -265,7 +265,7 @@ export const GlobalModales = () => {
                                     <option value="">Selecciona el miembro</option>
                                     {miembros.map((m) => (
                                         <option key={m.user_id} value={m.user_id}>
-                                            User ID: {m.user_id} ({m.role})
+                                            {m.name || m.username || `Usuario ${m.user_id}`} ({m.role})
                                         </option>
                                     ))}
                                 </select>
