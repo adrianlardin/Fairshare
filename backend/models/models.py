@@ -23,13 +23,42 @@ class User(db.Model):
     push_notifications = db.Column(db.Boolean, default=False, nullable=True)
 
     # Relaciones
-    groups_created: Mapped[List["Group"]] = relationship(back_populates="creator")
-    memberships: Mapped[List["GroupMember"]] = relationship(back_populates="user")
-    expenses_paid: Mapped[List["Expense"]] = relationship(back_populates="payer")
-    splits: Mapped[List["ExpenseSplit"]] = relationship(back_populates="user")
-    settlements_sent: Mapped[List["Settlement"]] = relationship(foreign_keys="Settlement.paid_by", back_populates="payer")
-    settlements_received: Mapped[List["Settlement"]] = relationship(foreign_keys="Settlement.paid_to", back_populates="receiver")
-    invitations_sent: Mapped[List["Invitation"]] = relationship(back_populates="sender")
+    groups_created: Mapped[List["Group"]] = relationship(
+        back_populates="creator",
+        cascade="all, delete-orphan"
+    )
+
+    memberships: Mapped[List["GroupMember"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    expenses_paid: Mapped[List["Expense"]] = relationship(
+        back_populates="payer",
+        cascade="all, delete-orphan"
+    )
+
+    splits: Mapped[List["ExpenseSplit"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    settlements_sent: Mapped[List["Settlement"]] = relationship(
+        foreign_keys="Settlement.paid_by",
+        back_populates="payer",
+        cascade="all, delete-orphan"
+    )
+
+    settlements_received: Mapped[List["Settlement"]] = relationship(
+        foreign_keys="Settlement.paid_to",
+        back_populates="receiver",
+        cascade="all, delete-orphan"
+    )
+
+    invitations_sent: Mapped[List["Invitation"]] = relationship(
+        back_populates="sender",
+        cascade="all, delete-orphan"
+    )
 
     def serialize(self):
         return {

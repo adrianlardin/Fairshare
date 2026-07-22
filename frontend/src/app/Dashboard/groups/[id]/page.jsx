@@ -19,14 +19,14 @@ export default function GroupDetailPage() {
     const [pagos, setPagos] = useState([]);
     const [miId, setMiId] = useState(null);
     const [cargando, setCargando] = useState(true);
-    
+
     const [verAjustes, setVerAjustes] = useState(false);
 
     const cargarDatosGrupo = async () => {
         try {
             const token = localStorage.getItem("token");
             const storedUser = localStorage.getItem("user");
-            
+
             if (storedUser) {
                 const userObj = JSON.parse(storedUser);
                 setMiId(Number(userObj.id));
@@ -70,8 +70,17 @@ export default function GroupDetailPage() {
 
     // Función auxiliar para traducir IDs a Nombres
     const obtenerNombreMiembro = (userId) => {
-        const miembro = miembros.find(m => Number(m.user_id) === Number(userId));
-        return miembro ? (miembro.username || miembro.first_name || `Usuario ${userId}`) : `Usuario ${userId}`;
+        // Si el ID viene undefined o null, evitamos evaluar Number(undefined) -> NaN
+        if (userId === undefined || userId === null) return "Usuario";
+
+        // Buscamos evaluando m.user_id O m.id para cubrir ambas posibilidades de la API
+        const miembro = miembros.find(m =>
+            Number(m.user_id) === Number(userId) || Number(m.id) === Number(userId)
+        );
+
+        if (!miembro) return `Usuario ${userId}`;
+
+        return miembro.username || miembro.first_name || miembro.name || `Usuario ${userId}`;
     };
 
     // Función para salir del grupo
@@ -125,11 +134,12 @@ export default function GroupDetailPage() {
             if (Number(pago.paid_to) === miId) miSaldoNeto -= parseFloat(pago.amount || 0);
         });
     }
+    console.log("Ejemplo de pago/settlement:", pagos[0]);
 
     return (
         <div className="max-w-6xl mx-auto pb-10">
             <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4 border-b border-gray-800 pb-6">
-                
+
                 <div className="flex gap-5 items-center w-full md:w-auto">
                     <div className="w-20 h-20 shrink-0 rounded-2xl border border-gray-700 bg-gray-800 flex items-center justify-center overflow-hidden shadow-lg">
                         {grupo.image ? (
@@ -177,36 +187,92 @@ export default function GroupDetailPage() {
                         <h2 className="text-lg font-bold text-gray-200">Actividad Reciente</h2>
                     </div>
 
-                    {gastos.length === 0 ? (
-                        <p className="text-gray-500 text-xs italic font-mono p-4 bg-gray-800/20 rounded-xl border border-gray-800">
-                            No hay gastos registrados en este grupo todavía.
-                        </p>
-                    ) : (
-                        gastos.map((gasto) => (
-                            <div key={gasto.id} className="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50 flex justify-between items-center border-l-4 border-l-green-500">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-700 text-gray-400">
-                                        <IconReceipt size={18} />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-bold text-gray-200">{gasto.description}</h4>
-                                        <p className="text-xs text-gray-500">
-                                            Pagado por: <span className="text-gray-300">{obtenerNombreMiembro(gasto.paid_by)}</span>
-                                        </p>
-                                    </div>
-                                </div>
+                    {/* Combinamos gastos y liquidaciones en un solo array unificado */}
+                    {(() => {
+                        const actividad = [
+                            ...(gastos || []).map((g) => ({ ...g, _tipo: "gasto" })),
+                            ...(pagos || []).map((l) => ({ ...l, _tipo: "pago" }))
+                        ].sort((a, b) => new Date(b.created_at || b.fecha || 0) - new Date(a.created_at || a.fecha || 0));
 
-                                <div className="text-right flex gap-6">
-                                    <div className="min-w-[60px]">
-                                        <p className="text-[10px] text-gray-500 font-mono">total</p>
-                                        <p className="text-sm font-semibold text-gray-400">EUR {parseFloat(gasto.amount || 0).toFixed(2)}</p>
+                        if (actividad.length === 0) {
+                            return (
+                                <p className="text-gray-500 text-xs italic font-mono p-4 bg-gray-800/20 rounded-xl border border-gray-800">
+                                    No hay gastos ni liquidaciones registradas en este grupo todavía.
+                                </p>
+                            );
+                        }
+
+                        return actividad.map((item) => {
+                            const esPago = item._tipo === "pago";
+
+                            if (esPago) {
+                                return (
+                                    <div
+                                        key={`pago-${item.id}`}
+                                        className="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50 flex justify-between items-center border-l-4 border-l-blue-500"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-700 text-blue-400 font-bold">
+                                                <IconDollar size={18} />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-gray-200">Pago registrado</h4>
+                                                <p className="text-xs text-gray-500">
+                                                    <span className="text-gray-300">
+                                                        {obtenerNombreMiembro(item.paid_by || item.payer_id)}
+                                                    </span>
+                                                    {" pagó a "}
+                                                    <span className="text-gray-300">
+                                                        {obtenerNombreMiembro(item.paid_to || item.payee_id || item.pay_to)}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="text-right flex gap-6">
+                                            <div className="min-w-[60px]">
+                                                <p className="text-[10px] text-gray-500 font-mono">monto</p>
+                                                <p className="text-sm font-semibold text-blue-400">
+                                                    EUR {parseFloat(item.amount || 0).toFixed(2)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div
+                                    key={`gasto-${item.id}`}
+                                    className="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50 flex justify-between items-center border-l-4 border-l-green-500"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-700 text-gray-400">
+                                            <IconReceipt size={18} />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-gray-200">{item.description}</h4>
+                                            <p className="text-xs text-gray-500">
+                                                Pagado por: <span className="text-gray-300">{obtenerNombreMiembro(item.paid_by)}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-right flex gap-6">
+                                        <div className="min-w-[60px]">
+                                            <p className="text-[10px] text-gray-500 font-mono">total</p>
+                                            <p className="text-sm font-semibold text-gray-400">
+                                                EUR {parseFloat(item.amount || 0).toFixed(2)}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))
-                    )}
+                            );
+                        });
+                    })()}
                 </div>
 
+                {/* Columna derecha: Balances y Miembros */}
                 <div className="md:col-span-5 space-y-6">
                     <div className="bg-gray-800/90 rounded-2xl p-5 border border-gray-700/70 space-y-4">
                         <div>
@@ -252,7 +318,6 @@ export default function GroupDetailPage() {
                             })}
                         </div>
 
-                        {/* Botón que invoca el modal global pasándole el ID del grupo actual */}
                         <button
                             onClick={() => setModalLiquidar(id)}
                             className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-black font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors mt-2"

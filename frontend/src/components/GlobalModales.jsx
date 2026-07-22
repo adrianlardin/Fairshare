@@ -137,7 +137,7 @@ export const GlobalModales = () => {
                     "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    pay_to: parseInt(destinatarioId),
+                    paid_to: parseInt(destinatarioId),
                     amount: parseFloat(montoLiquidar)
                 })
             });
@@ -263,11 +263,24 @@ export const GlobalModales = () => {
                                     required
                                 >
                                     <option value="">Selecciona el miembro</option>
-                                    {miembros.map((m) => (
-                                        <option key={m.user_id} value={m.user_id}>
-                                            {m.name || m.username || `Usuario ${m.user_id}`} ({m.role})
-                                        </option>
-                                    ))}
+                                    {miembros
+                                        .filter((m) => {
+                                            // Si miId no existe/no está definido, muestra a todos sin romper la app
+                                            if (typeof miId === "undefined" || !miId) return true;
+
+                                            const idUsuario = m.user_id !== undefined ? m.user_id : m.id;
+                                            return Number(idUsuario) !== Number(miId);
+                                        })
+                                        .map((m) => {
+                                            const idMiembro = m.user_id !== undefined ? m.user_id : m.id;
+                                            const nombre = m.name || m.username || m.first_name || `Usuario ${idMiembro}`;
+
+                                            return (
+                                                <option key={idMiembro} value={idMiembro}>
+                                                    {nombre} {m.role ? `(${m.role})` : ""}
+                                                </option>
+                                            );
+                                        })}
                                 </select>
                             </div>
 
